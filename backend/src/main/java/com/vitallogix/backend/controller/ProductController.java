@@ -6,10 +6,10 @@ import com.vitallogix.backend.exception.ResourceNotFoundException;
 import com.vitallogix.backend.model.Product;
 import com.vitallogix.backend.repository.ProductRepository;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/products")
@@ -22,10 +22,9 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<ProductResponse> findAll() {
-        return repository.findAll().stream()
-                .map(this::toResponse)
-                .toList();
+    public Page<ProductResponse> findAll(Pageable pageable) {
+        return repository.findAll(pageable)
+                .map(this::toResponse);
     }
 
     @GetMapping("/{id}")
