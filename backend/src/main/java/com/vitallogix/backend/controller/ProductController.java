@@ -1,5 +1,7 @@
 package com.vitallogix.backend.controller;
 
+import com.vitallogix.backend.dto.ProductRequest;
+import com.vitallogix.backend.dto.ProductResponse;
 import com.vitallogix.backend.exception.ResourceNotFoundException;
 import com.vitallogix.backend.model.Product;
 import com.vitallogix.backend.repository.ProductRepository;
@@ -20,34 +22,42 @@ public class ProductController {
     }
 
     @GetMapping
-    public List<Product> findAll() {
-        return repository.findAll();
+    public List<ProductResponse> findAll() {
+        return repository.findAll().stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @GetMapping("/{id}")
-    public Product findById(@PathVariable Long id) {
-        return repository.findById(id)
+    public ProductResponse findById(@PathVariable Long id) {
+        Product product = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+        return toResponse(product);
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public Product create(@Valid @RequestBody Product product) {
-        product.setId(null);
-        return repository.save(product);
+    public ProductResponse create(@Valid @RequestBody ProductRequest request) {
+        Product product = new Product();
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setStock(request.getStock());
+
+        return toResponse(repository.save(product));
     }
 
     @PutMapping("/{id}")
-    public Product update(@PathVariable Long id, @Valid @RequestBody Product product) {
-        return repository.findById(id)
-                .map(existing -> {
-                    existing.setName(product.getName());
-                    existing.setDescription(product.getDescription());
-                    existing.setPrice(product.getPrice());
-                    existing.setStock(product.getStock());
-                    return repository.save(existing);
-                })
+    public ProductResponse update(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
+        Product product = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
+
+        product.setName(request.getName());
+        product.setDescription(request.getDescription());
+        product.setPrice(request.getPrice());
+        product.setStock(request.getStock());
+
+        return toResponse(repository.save(product));
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -57,5 +67,16 @@ public class ProductController {
             throw new ResourceNotFoundException("Product not found");
         }
         repository.deleteById(id);
+    }
+
+    private ProductResponse toResponse(Product p) {
+        return new ProductResponse(
+                p.getId(),
+                p.getName(),
+                p.getDescription(),
+                p.getPrice(),
+                p.getStock(),
+                p.getCreatedAt()
+        );
     }
 }
