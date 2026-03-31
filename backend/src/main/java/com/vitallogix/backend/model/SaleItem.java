@@ -2,6 +2,9 @@ package com.vitallogix.backend.model;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
+@ManyToOne(fetch = FetchType.LAZY)
+@JoinColumn(name = "sale_id")
+private Sale sale;
 
 @Entity
 @Table(name = "sale_items")
