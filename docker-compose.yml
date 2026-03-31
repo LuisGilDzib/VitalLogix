@@ -1,4 +1,3 @@
-version: "3.9"
 services:
   postgres:
     image: postgres:16
@@ -12,6 +11,20 @@ services:
       - "5432:5432"
     volumes:
       - vitallogix_data:/var/lib/postgresql/data
+
+  vitallogix-app: # <--- Cambié 'backend' por 'vitallogix-app'
+    build: .
+    container_name: vitallogix-app
+    restart: always
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/vitallogix
+      - SPRING_DATASOURCE_USERNAME=vitallogix
+      - SPRING_DATASOURCE_PASSWORD=vitallogix123
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
 
 volumes:
   vitallogix_data:
