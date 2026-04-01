@@ -1,6 +1,6 @@
 # VitalLogix
 
-Pharmacy management platform built with Java, PostgreSQL, React, and Electron.
+Pharmacy management platform built with Java, PostgreSQL, and React.
 
 ## Navigation
 
@@ -12,18 +12,26 @@ Pharmacy management platform built with Java, PostgreSQL, React, and Electron.
 
 - [Backend](backend/)
 - [Frontend](frontend/)
-- [Desktop](desktop/)
+- Desktop module (planned)
 - [Documentation](docs/)
 
 ## Overview
 
-VitalLogix covers inventory, sales, customers, reporting, and category management in a desktop-friendly workflow.
+VitalLogix covers inventory, sales, customers, reporting, and category management in a web-first workflow.
+
+## Beginner-Friendly Architecture Guide
+
+For Spanish-speaking beginners and non-technical readers, we provide a simplified architecture walkthrough:
+
+- [COMO-FUNCIONA.md](COMO-FUNCIONA.md)
+
+This guide explains the full data flow (React -> Spring Boot -> PostgreSQL) in plain language.
 
 ## Repository Map
 
 - [backend/](backend/) Spring Boot API, domain model, and services
 - [frontend/](frontend/) React UI for inventory, sales, and administration
-- [desktop/](desktop/) Electron shell for desktop distribution
+- [desktop/](desktop/) desktop module placeholder (currently not implemented)
 - [docs/](docs/) Project documentation hub
 - [backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java](backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java) category administration endpoints
 - [frontend/src/components/CategoryManagementPanel.jsx](frontend/src/components/CategoryManagementPanel.jsx) admin category panel
@@ -74,6 +82,25 @@ VitalLogix covers inventory, sales, customers, reporting, and category managemen
 
 - The interface must be simple, clear, and easy to use.
 - Navigation should help users quickly identify inventory, sales, customer, and reporting actions.
+
+## SOLID Evidence (at least 3 principles)
+
+### SRP: Single Responsibility Principle
+
+- `App.jsx` delegates customer management to a dedicated panel instead of handling all customer UI logic directly.
+- `CustomerManagementPanel.jsx` owns customer listing and purchase-history behavior in one focused component.
+- Evidence: [frontend/src/App.jsx](frontend/src/App.jsx), [frontend/src/components/CustomerManagementPanel.jsx](frontend/src/components/CustomerManagementPanel.jsx)
+
+### DIP: Dependency Inversion Principle
+
+- `ReportController` depends on the `ReportServicePort` abstraction rather than a concrete reporting implementation.
+- `ReportService` implements the interface and encapsulates report business logic.
+- Evidence: [backend/src/main/java/com/vitallogix/backend/controller/ReportController.java](backend/src/main/java/com/vitallogix/backend/controller/ReportController.java), [backend/src/main/java/com/vitallogix/backend/service/ReportServicePort.java](backend/src/main/java/com/vitallogix/backend/service/ReportServicePort.java), [backend/src/main/java/com/vitallogix/backend/service/ReportService.java](backend/src/main/java/com/vitallogix/backend/service/ReportService.java)
+
+### OCP: Open/Closed Principle
+
+- Recommendation stock bonus behavior is represented through `StockBonusRule` rules to allow extension without changing core scoring flow.
+- Evidence: [backend/src/main/java/com/vitallogix/backend/service/ComboSuggestionService.java](backend/src/main/java/com/vitallogix/backend/service/ComboSuggestionService.java)
 
 ## Role Access Matrix
 

@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { jsPDF } from 'jspdf'
-import { getProducts, createProduct, updateProduct, deleteProduct, addStockToProduct, createSale, getSales, getSalesReport, getInventoryReport, getReceipt, suggestCombo, getCustomers, validateClienteAmigoCode, createCustomCategory } from './services/api'
+import { getProducts, createProduct, updateProduct, deleteProduct, addStockToProduct, createSale, getSales, getSalesReport, getInventoryReport, getReceipt, suggestCombo, validateClienteAmigoCode, createCustomCategory } from './services/api'
 import CategoryManagementPanel from './components/CategoryManagementPanel'
+import CustomerManagementPanel from './components/CustomerManagementPanel'
+import ProductCategoryField from './components/ProductCategoryField'
 import './styles/scrollbar.css'
 
 function App({ auth, onRequireAuth, onLogout }) {
   const [products, setProducts] = useState([])
   const [sales, setSales] = useState([])
-  const [customers, setCustomers] = useState([])
   const [view, setView] = useState('inventory')
   const [reportType, setReportType] = useState(null)
   const [salesReport, setSalesReport] = useState([])
@@ -56,7 +57,7 @@ function App({ auth, onRequireAuth, onLogout }) {
     usoCfdi: 'G03',
     metodoPago: 'PUE',
     formaPago: '01',
-    regimenFiscal: '612'
+    regimenFiscal: ''
   })
 
   // Roles and authentication
@@ -180,9 +181,6 @@ function App({ auth, onRequireAuth, onLogout }) {
     fetchProducts()
     if (auth?.logged) {
       fetchSales()
-      if (isAdmin) {
-        fetchCustomers()
-      }
     }
   }, [auth?.logged, isAdmin])
 
@@ -202,17 +200,6 @@ function App({ auth, onRequireAuth, onLogout }) {
       const response = await getSales()
       setSales(Array.isArray(response.data) ? response.data : [])
     } catch (error) { console.error("Error ventas:", error) }
-  }
-
-  const fetchCustomers = async () => {
-    if (!isAdmin) {
-      setCustomers([])
-      return
-    }
-    try {
-      const response = await getCustomers()
-      setCustomers(response.data)
-    } catch (error) { console.error("Error clientes:", error) }
   }
 
   const categories = [...new Set(products.map((p) => (p.category || '').trim()).filter(Boolean))]
@@ -761,7 +748,7 @@ function App({ auth, onRequireAuth, onLogout }) {
           )}
           {isAdmin && (
             <button 
-              onClick={() => { setView('customers'); fetchCustomers(); }}
+              onClick={() => setView('customers')}
               className={`px-6 py-2 rounded-xl font-black text-xs uppercase transition-all ${view === 'customers' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500'}`}
             >
               👥 Clientes
@@ -795,7 +782,7 @@ function App({ auth, onRequireAuth, onLogout }) {
           {reportType && (
             <button
               onClick={() => { setReportType(null); setSalesReport([]); setInventoryReport([]); }}
-              className="ml-auto rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-black uppercase tracking-widest text-amber-700 hover:bg-amber-100"
+              className="ml-auto rounded-xl border border-red-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-red-700 hover:bg-red-50"
             >
               Cerrar reporte
             </button>
@@ -1222,72 +1209,15 @@ function App({ auth, onRequireAuth, onLogout }) {
           </aside>
         </div>
       ) : view === 'customers' ? (
-        <div className="max-w-7xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
-          <div className="p-6 border-b bg-purple-50/50">
-            <h2 className="text-sm font-black text-purple-700 uppercase tracking-widest">Gestión de Clientes</h2>
-          </div>
-          <div className="custom-scroll">
-            <table className="min-w-[1300px] w-full text-left">
-              <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
-                <tr>
-                  <th className="px-6 py-4 whitespace-nowrap">Nombre</th>
-                  <th className="px-6 py-4 whitespace-nowrap">Teléfono</th>
-                  <th className="px-6 py-4 text-center whitespace-nowrap">Compras Acumuladas</th>
-                  <th className="px-6 py-4 whitespace-nowrap">Estatus ClienteAmigo</th>
-                  <th className="px-6 py-4 whitespace-nowrap">Código ClienteAmigo</th>
-                  <th className="px-6 py-4 text-right whitespace-nowrap">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {customers.map((customer) => (
-                  <tr key={customer.id} className="hover:bg-purple-50/30 transition-colors">
-                    <td className="px-6 py-4 font-bold text-gray-800">{customer.name || 'Sin nombre'}</td>
-                    <td className="px-6 py-4 text-xs font-bold text-gray-500">{customer.phone || 'N/A'}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-[10px] font-black">
-                        {customer.purchaseCount || 0}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {customer.friend ? (
-                        <span className="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase">
-                          ✓ ClienteAmigo
-                        </span>
-                      ) : customer.purchaseCount >= 5 ? (
-                        <span className="inline-block bg-yellow-100 text-yellow-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase">
-                          ⚠ Elegible (5+ compras)
-                        </span>
-                      ) : (
-                        <span className="inline-block bg-gray-100 text-gray-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase">
-                          — No elegible ({customer.purchaseCount || 0}/5)
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs font-black text-gray-700">
-                      {customer.clienteAmigoNumber || 'Pendiente'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => alert(`Historial de ${customer.name}:\n${customer.purchaseCount} compra(s)`)}
-                        className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase hover:bg-blue-700 hover:text-white transition-all"
-                      >
-                        Ver Historial
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <CustomerManagementPanel isAdmin={isAdmin} />
       ) : view === 'categories' ? (
         <div className="max-w-7xl mx-auto">
           <CategoryManagementPanel />
         </div>
       ) : (
         <div className="max-w-7xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
-          <div className="p-6 border-b bg-gray-50/50">
-            <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest">Registro de Ventas Realizadas</h2>
+          <div className="p-6 border-b bg-blue-50/50">
+            <h2 className="text-sm font-black text-blue-700 uppercase tracking-widest">Registro de Ventas Realizadas</h2>
           </div>
           <div className="custom-scroll">
             <table className="w-full text-left">
@@ -1527,39 +1457,19 @@ function App({ auth, onRequireAuth, onLogout }) {
                 onChange={(e) => setNewProduct({...newProduct, code: e.target.value.toUpperCase()})}
               />
               <p className="text-[11px] font-bold text-gray-400">Si lo dejas vacio, el sistema genera un codigo automaticamente.</p>
-              <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500">
-                Categoría del producto *
-              </label>
-              <select
-                className="w-full border-2 border-sky-200 bg-sky-50 rounded-xl p-3 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200 text-sm font-semibold text-slate-700"
+              <ProductCategoryField
                 value={newProduct.category}
-                onChange={(e) => {
-                  setNewProduct({...newProduct, category: e.target.value})
-                  if (e.target.value !== 'OTHER') {
+                categories={categories}
+                suggestedCategories={suggestedCategories}
+                customCategory={customCategory}
+                onCategoryChange={(nextCategory) => {
+                  setNewProduct({ ...newProduct, category: nextCategory })
+                  if (nextCategory !== 'OTHER') {
                     setCustomCategory('')
                   }
                 }}
-                required
-              >
-                <option value="">Selecciona una categoría</option>
-                {Array.from(new Set([...categories, ...suggestedCategories])).map((category) => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-                <option value="OTHER">--- Otra (especificar) ---</option>
-              </select>
-              {newProduct.category === 'OTHER' && (
-                <input
-                  type="text"
-                  placeholder="Nombre de la nueva categoría (ej: Electrolitos, Alimentos)"
-                  className="w-full border-2 border-blue-300 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-sm bg-blue-50"
-                  value={customCategory}
-                  onChange={(e) => setCustomCategory(e.target.value)}
-                  required
-                />
-              )}
-              <p className="text-[11px] font-bold text-gray-400">
-                Sugerencia: escribe o selecciona una categoría existente para mantener consistencia. Si necesitas una nueva, selecciona "Otra" para especificarla.
-              </p>
+                onCustomCategoryChange={setCustomCategory}
+              />
               <input
                 type="text"
                 placeholder="Descripcion (opcional)"

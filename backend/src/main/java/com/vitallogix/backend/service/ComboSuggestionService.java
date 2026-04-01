@@ -19,6 +19,12 @@ import java.util.stream.Collectors;
 @Service
 public class ComboSuggestionService {
 
+    private static final List<StockBonusRule> STOCK_BONUS_RULES = List.of(
+            new StockBonusRule(3, 5000),
+            new StockBonusRule(7, 2000)
+    );
+    private static final int DEFAULT_STOCK_BONUS = 500;
+
     private final ProductRepository productRepository;
 
     public ComboSuggestionService(ProductRepository productRepository) {
@@ -145,15 +151,17 @@ public class ComboSuggestionService {
     // Score: prioritizes low-stock rotation and the product's economic value.
     private int computeScore(Product p, int priceCents) {
         int stock = p.getStock() == null ? 0 : p.getStock();
-        int stockBonus;
-        if (stock <= 3) {
-            stockBonus = 5000;
-        } else if (stock <= 7) {
-            stockBonus = 2000;
-        } else {
-            stockBonus = 500;
-        }
+        int stockBonus = resolveStockBonus(stock);
         return priceCents + stockBonus;
+    }
+
+    private int resolveStockBonus(int stock) {
+        for (StockBonusRule rule : STOCK_BONUS_RULES) {
+            if (stock <= rule.maxStock()) {
+                return rule.bonus();
+            }
+        }
+        return DEFAULT_STOCK_BONUS;
     }
 
     // Maps the product entity to the response item used by the recommendation engine.
@@ -178,4 +186,6 @@ public class ComboSuggestionService {
             this.score = score;
         }
     }
+
+    private record StockBonusRule(int maxStock, int bonus) {}
 }

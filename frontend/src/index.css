@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+.category-select,
+.category-select option {
+	color: #334155;
+}
+
+.category-select option {
+	font-weight: 600;
+}

@@ -147,7 +147,7 @@ const CategoryManagementPanel = () => {
 
   return (
     <div className="space-y-6 p-6 bg-white rounded-2xl shadow-xl">
-      <h2 className="text-2xl font-black text-gray-900 uppercase tracking-wider">📂 Gestión de Categorías</h2>
+      <h2 className="text-sm font-black text-blue-700 uppercase tracking-widest">📂 Gestión de Categorías</h2>
 
       {/* Tabs Navigation */}
       <div className="flex gap-2 border-b border-gray-200">

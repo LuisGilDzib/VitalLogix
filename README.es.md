@@ -1,6 +1,6 @@
 # VitalLogix
 
-Sistema de gestión de farmacia construido con Java, PostgreSQL, React y Electron.
+Sistema de gestión de farmacia construido con Java, PostgreSQL y React.
 
 ## Navegación
 
@@ -12,32 +12,38 @@ Sistema de gestión de farmacia construido con Java, PostgreSQL, React y Electro
 
 - [Backend](backend/)
 - [Frontend](frontend/)
-- [Desktop](desktop/)
+- Módulo desktop (planeado)
 - [Documentación](docs/)
 
 ## Descripción General
 
-VitalLogix cubre inventario, ventas, clientes, reportes y gestión de categorías en un flujo pensado para escritorio.
+VitalLogix cubre inventario, ventas, clientes, reportes y gestión de categorías en un flujo web.
+
+## 📖 ¿Quieres entender cómo funciona este proyecto?
+
+Si eres estudiante, junior o simplemente tienes curiosidad sobre la arquitectura de **VitalLogix**,
+preparamos una guía simplificada y sin tecnicismos innecesarios:
+
+👉 **[Haz clic aquí para leer: COMO-FUNCIONA.md](COMO-FUNCIONA.md)**
+
+En este archivo explicamos de forma clara cómo se comunica PostgreSQL con el servidor en Java
+y cómo esa información llega al frontend en React.
 
 ## Mapa del Repositorio
 
 - [backend/](backend/) API Spring Boot, modelo de dominio y servicios
 - [frontend/](frontend/) Interfaz React para inventario, ventas y administración
-- [desktop/](desktop/) Contenedor Electron para distribución de escritorio
+- [desktop/](desktop/) módulo desktop reservado (actualmente no implementado)
 - [docs/](docs/) Centro de documentación del proyecto
 - [backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java](backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java) endpoints de administración de categorías
 - [frontend/src/components/CategoryManagementPanel.jsx](frontend/src/components/CategoryManagementPanel.jsx) panel de categorías para admin
 - [frontend/src/App.jsx](frontend/src/App.jsx) shell principal y vistas por rol
 
-## Descripción General
-
-VitalLogix es una plataforma de gestión de farmacia para inventarios, ventas, clientes, reportes y uso de escritorio.
-
 ## Estructura del Proyecto
 
 - `backend/` API en Spring Boot y lógica de negocio
 - `frontend/` Interfaz web en React
-- `desktop/` Contenedor de escritorio con Electron
+- `desktop/` Módulo desktop planeado (placeholder)
 - `docs/en/` Documentación en inglés
 - `docs/es/` Documentación en español
 
@@ -86,6 +92,25 @@ VitalLogix es una plataforma de gestión de farmacia para inventarios, ventas, c
 
 - La interfaz debe ser simple, clara y fácil de usar.
 - La navegación debe permitir identificar rápidamente acciones de inventario, ventas, clientes y reportes.
+
+## Evidencias SOLID (mínimo 3 principios)
+
+### SRP: Single Responsibility Principle
+
+- `App.jsx` delega la gestión de clientes en un panel especializado para reducir responsabilidades del componente raíz.
+- `CustomerManagementPanel.jsx` concentra carga de clientes e historial de compras en un solo módulo de UI.
+- Evidencia: [frontend/src/App.jsx](frontend/src/App.jsx), [frontend/src/components/CustomerManagementPanel.jsx](frontend/src/components/CustomerManagementPanel.jsx)
+
+### DIP: Dependency Inversion Principle
+
+- `ReportController` depende de la abstracción `ReportServicePort` en lugar de depender de una implementación concreta.
+- `ReportService` implementa esa interfaz y encapsula la lógica de reportes.
+- Evidencia: [backend/src/main/java/com/vitallogix/backend/controller/ReportController.java](backend/src/main/java/com/vitallogix/backend/controller/ReportController.java), [backend/src/main/java/com/vitallogix/backend/service/ReportServicePort.java](backend/src/main/java/com/vitallogix/backend/service/ReportServicePort.java), [backend/src/main/java/com/vitallogix/backend/service/ReportService.java](backend/src/main/java/com/vitallogix/backend/service/ReportService.java)
+
+### OCP: Open/Closed Principle
+
+- El cálculo del bonus de recomendación por stock fue movido a reglas (`StockBonusRule`) para extender comportamiento sin modificar la lógica principal.
+- Evidencia: [backend/src/main/java/com/vitallogix/backend/service/ComboSuggestionService.java](backend/src/main/java/com/vitallogix/backend/service/ComboSuggestionService.java)
 
 ## Matriz de Acceso por Rol
 
