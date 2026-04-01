@@ -67,4 +67,9 @@ export const approveCategory = (id) => api.put(`/categories/${id}/approve`);
 export const rejectCategory = (id) => api.delete(`/categories/${id}/reject`);
 export const deactivateCategory = (id) => api.put(`/categories/${id}/deactivate`);
 
+// Admin user management
+export const getSystemUsers = () => api.get('/admin/users');
+export const promoteUserToAdmin = (userId) => api.post(`/admin/users/${userId}/promote`);
+export const createAdminUser = (username, password) => api.post('/admin/users', { username, password });
+
 export default api;

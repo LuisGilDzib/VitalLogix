@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { getCustomers, getCustomerPurchaseHistory } from '../services/api'
+import { createAdminUser, getCustomers, getCustomerPurchaseHistory, getSystemUsers, promoteUserToAdmin } from '../services/api'
 
 function CustomerManagementPanel({ isAdmin }) {
   const [customers, setCustomers] = useState([])
@@ -9,6 +9,13 @@ function CustomerManagementPanel({ isAdmin }) {
   const [historyItems, setHistoryItems] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyError, setHistoryError] = useState('')
+  const [systemUsers, setSystemUsers] = useState([])
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [usersError, setUsersError] = useState('')
+  const [newAdminUsername, setNewAdminUsername] = useState('')
+  const [newAdminPassword, setNewAdminPassword] = useState('')
+  const [newAdminLoading, setNewAdminLoading] = useState(false)
+  const [newAdminMessage, setNewAdminMessage] = useState('')
 
   useEffect(() => {
     if (!isAdmin) {
@@ -32,6 +39,28 @@ function CustomerManagementPanel({ isAdmin }) {
     loadCustomers()
   }, [isAdmin])
 
+  useEffect(() => {
+    if (!isAdmin) {
+      setSystemUsers([])
+      return
+    }
+
+    fetchSystemUsers()
+  }, [isAdmin])
+
+  const fetchSystemUsers = async () => {
+    setUsersLoading(true)
+    setUsersError('')
+    try {
+      const response = await getSystemUsers()
+      setSystemUsers(response.data || [])
+    } catch (err) {
+      setUsersError('No se pudo cargar la lista de usuarios del sistema.')
+    } finally {
+      setUsersLoading(false)
+    }
+  }
+
   const openHistory = async (customer) => {
     setHistoryCustomer(customer)
     setHistoryItems([])
@@ -53,6 +82,38 @@ function CustomerManagementPanel({ isAdmin }) {
     setHistoryItems([])
     setHistoryError('')
   }
+
+  const handlePromote = async (user) => {
+    try {
+      await promoteUserToAdmin(user.id)
+      await fetchSystemUsers()
+    } catch (err) {
+      const message = err?.response?.data || 'No se pudo promover el usuario a admin.'
+      setUsersError(String(message))
+    }
+  }
+
+  const handleCreateAdmin = async (e) => {
+    e.preventDefault()
+    setNewAdminMessage('')
+    setUsersError('')
+    setNewAdminLoading(true)
+
+    try {
+      await createAdminUser(newAdminUsername, newAdminPassword)
+      setNewAdminUsername('')
+      setNewAdminPassword('')
+      setNewAdminMessage('Admin creado correctamente.')
+      await fetchSystemUsers()
+    } catch (err) {
+      const message = err?.response?.data || 'No se pudo crear el admin.'
+      setUsersError(String(message))
+    } finally {
+      setNewAdminLoading(false)
+    }
+  }
+
+  const isAdminUser = (user) => user.roles?.includes('ADMIN')
 
   const formatDate = (value) => {
     if (!value) return 'Sin fecha'
@@ -125,6 +186,91 @@ function CustomerManagementPanel({ isAdmin }) {
                       >
                         Ver Historial
                       </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto mt-6 bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
+        <div className="p-6 border-b bg-blue-50/50">
+          <h2 className="text-sm font-black text-blue-700 uppercase tracking-widest">Gestión de Accesos Admin</h2>
+          <p className="mt-2 text-xs font-bold text-blue-900/70">
+            Desde aquí puedes promover usuarios existentes o crear cuentas nuevas con rol admin.
+          </p>
+        </div>
+
+        <div className="p-6 border-b bg-white">
+          <form className="grid gap-3 md:grid-cols-3" onSubmit={handleCreateAdmin}>
+            <input
+              type="text"
+              placeholder="Nuevo usuario admin"
+              className="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-sm"
+              value={newAdminUsername}
+              onChange={(e) => setNewAdminUsername(e.target.value)}
+              required
+            />
+            <input
+              type="password"
+              placeholder="Contraseña"
+              className="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-sm"
+              value={newAdminPassword}
+              onChange={(e) => setNewAdminPassword(e.target.value)}
+              required
+            />
+            <button
+              type="submit"
+              className="rounded-xl bg-blue-700 px-4 py-3 text-xs font-black uppercase tracking-widest text-white hover:bg-blue-800 disabled:opacity-60"
+              disabled={newAdminLoading}
+            >
+              {newAdminLoading ? 'Creando...' : 'Crear Admin'}
+            </button>
+          </form>
+          {newAdminMessage && <p className="mt-3 text-xs font-black text-green-700">{newAdminMessage}</p>}
+          {usersError && <p className="mt-3 text-xs font-black text-red-700">{usersError}</p>}
+        </div>
+
+        <div className="custom-scroll">
+          {usersLoading ? (
+            <div className="p-8 text-sm font-bold text-gray-500">Cargando usuarios...</div>
+          ) : (
+            <table className="w-full min-w-[700px] text-left">
+              <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+                <tr>
+                  <th className="px-6 py-4 whitespace-nowrap">Usuario</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Roles</th>
+                  <th className="px-6 py-4 text-right whitespace-nowrap">Acción</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {systemUsers.map((user) => (
+                  <tr key={user.id}>
+                    <td className="px-6 py-4 text-sm font-bold text-gray-800">{user.username}</td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        {(user.roles || []).map((role) => (
+                          <span key={`${user.id}-${role}`} className="rounded-lg bg-gray-100 px-3 py-1 text-[10px] font-black uppercase text-gray-700">
+                            {role}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      {isAdminUser(user) ? (
+                        <span className="inline-block rounded-lg bg-green-100 px-3 py-1 text-[10px] font-black uppercase text-green-700">
+                          Ya es admin
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handlePromote(user)}
+                          className="rounded-lg bg-blue-50 px-3 py-1 text-[10px] font-black uppercase text-blue-700 hover:bg-blue-700 hover:text-white"
+                        >
+                          Promover a Admin
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
