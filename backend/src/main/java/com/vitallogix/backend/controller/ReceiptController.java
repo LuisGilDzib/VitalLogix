@@ -28,14 +28,13 @@ public class ReceiptController {
             receipt.setCustomerAddress(c.getAddress());
             receipt.setCustomerPhone(c.getPhone());
         }
-        
-        // Usar los valores guardados en la venta (ya incluyen descuento si aplica)
+        // Use the values stored in the sale; they already include the discount if applicable.
         java.math.BigDecimal originalAmount = sale.getOriginalAmount() != null ? sale.getOriginalAmount() : sale.getTotalAmount();
         java.math.BigDecimal discountAmount = sale.getDiscountAmount() != null ? sale.getDiscountAmount() : java.math.BigDecimal.ZERO;
         
-        receipt.setTotalAmount(originalAmount); // Total original antes del descuento
-        receipt.setDiscount(discountAmount);     // Descuento aplicado
-        receipt.setFinalAmount(sale.getTotalAmount()); // Total final ya con descuento
+        receipt.setTotalAmount(originalAmount); // Original total before discount
+        receipt.setDiscount(discountAmount);     // Applied discount
+        receipt.setFinalAmount(sale.getTotalAmount()); // Final total after discount
         
         List<ReceiptResponse.Item> items = sale.getItems().stream().map(item -> {
             ReceiptResponse.Item i = new ReceiptResponse.Item();

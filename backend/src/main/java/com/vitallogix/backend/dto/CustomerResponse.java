@@ -23,7 +23,7 @@ public class CustomerResponse {
         this.purchaseCount = purchaseCount;
     }
 
-    // Getters
+    // Getters and setters
     public Long getId() { return id; }
     public String getName() { return name; }
     public String getAddress() { return address; }

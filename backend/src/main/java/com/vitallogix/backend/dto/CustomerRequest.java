@@ -7,7 +7,7 @@ public class CustomerRequest {
     private String clienteAmigoNumber;
     private boolean friend;
 
-    // Getters y Setters
+    // Getters and setters
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
     public String getAddress() { return address; }

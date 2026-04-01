@@ -16,19 +16,19 @@ public class DataInitializer {
     @Bean
     public CommandLineRunner initUsers(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         return args -> {
-            // Admins
+            // Admin accounts
             List<User> admins = List.of(
                 createUser("admin1", "1admin", Set.of(Role.ADMIN), passwordEncoder),
                 createUser("admin2", "2admin", Set.of(Role.ADMIN), passwordEncoder),
                 createUser("admin3", "3admin", Set.of(Role.ADMIN), passwordEncoder)
             );
-            // Users
+            // User accounts
             List<User> users = List.of(
                 createUser("user1", "1user", Set.of(Role.USER), passwordEncoder),
                 createUser("user2", "2user", Set.of(Role.USER), passwordEncoder),
                 createUser("user3", "3user", Set.of(Role.USER), passwordEncoder)
             );
-            // Guardar si no existen
+            // Save only if they do not already exist
             for (User u : admins) {
                 userRepository.findByUsername(u.getUsername()).orElseGet(() -> userRepository.save(u));
             }

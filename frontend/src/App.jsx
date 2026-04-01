@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { jsPDF } from 'jspdf'
-import { getProducts, createProduct, updateProduct, deleteProduct, addStockToProduct, createSale, getSales, getSalesReport, getInventoryReport, getReceipt, suggestCombo, getCustomers, validateClienteAmigoCode } from './services/api'
+import { getProducts, createProduct, updateProduct, deleteProduct, addStockToProduct, createSale, getSales, getSalesReport, getInventoryReport, getReceipt, suggestCombo, getCustomers, validateClienteAmigoCode, createCustomCategory } from './services/api'
+import CategoryManagementPanel from './components/CategoryManagementPanel'
 import './styles/scrollbar.css'
 
 function App({ auth, onRequireAuth, onLogout }) {
@@ -30,6 +31,7 @@ function App({ auth, onRequireAuth, onLogout }) {
     expirationDate: '',
     requiresPrescription: false
   })
+  const [customCategory, setCustomCategory] = useState('')
   const [expirationSelection, setExpirationSelection] = useState({ day: '', month: '', year: '' })
   const [saleCompleted, setSaleCompleted] = useState(false)
   const [lastSaleId, setLastSaleId] = useState(null)
@@ -57,11 +59,11 @@ function App({ auth, onRequireAuth, onLogout }) {
     regimenFiscal: '612'
   })
 
-  // Roles y autenticación
+  // Roles and authentication
   const isAdmin = auth?.role === 'admin';
   const isGuest = !auth?.logged;
 
-  // --- LÓGICA DE PRODUCTOS ---
+  // --- PRODUCT LOGIC ---
   const addToCart = (product) => {
     if (product.stock <= 0) return alert("Producto sin existencias");
     const existing = cart.find(item => item.id === product.id);
@@ -134,6 +136,7 @@ function App({ auth, onRequireAuth, onLogout }) {
       expirationDate: '',
       requiresPrescription: false
     })
+    setCustomCategory('')
     setExpirationSelection({ day: '', month: '', year: '' })
     setEditingProductId(null)
   }
@@ -147,22 +150,32 @@ function App({ auth, onRequireAuth, onLogout }) {
     const sourceDate = product.expirationDate ? String(product.expirationDate).slice(0, 10) : ''
     const [year = '', month = '', day = ''] = sourceDate ? sourceDate.split('-') : []
 
+    const allExistingCategories = Array.from(new Set([...categories, ...suggestedCategories]))
+    const isKnownCategory = allExistingCategories.includes(product.category)
+    
     setNewProduct({
       name: product.name || '',
       code: product.code || '',
       description: product.description || '',
-      category: product.category || '',
+      category: isKnownCategory ? product.category : 'OTHER',
       stock: String(product.stock ?? ''),
       price: String(product.price ?? ''),
       expirationDate: sourceDate,
       requiresPrescription: Boolean(product.requiresPrescription)
     })
+    
+    if (!isKnownCategory) {
+      setCustomCategory(product.category || '')
+    } else {
+      setCustomCategory('')
+    }
+    
     setExpirationSelection({ day, month, year })
     setEditingProductId(product.id)
     setIsModalOpen(true)
   }
 
-  // --- EFECTOS Y FETCH ---
+  // --- EFFECTS AND FETCHING ---
   useEffect(() => {
     fetchProducts()
     if (auth?.logged) {
@@ -187,7 +200,7 @@ function App({ auth, onRequireAuth, onLogout }) {
     }
     try {
       const response = await getSales()
-      setSales(response.data)
+      setSales(Array.isArray(response.data) ? response.data : [])
     } catch (error) { console.error("Error ventas:", error) }
   }
 
@@ -284,7 +297,7 @@ function App({ auth, onRequireAuth, onLogout }) {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
-    // Si es invitado, pedir login antes de pagar
+    // Prompt for login before checkout when the user is a guest
     if (isGuest) {
       if (onRequireAuth) onRequireAuth();
       return;
@@ -608,17 +621,24 @@ function App({ auth, onRequireAuth, onLogout }) {
       return;
     }
 
+    if (newProduct.category === 'OTHER' && !customCategory.trim()) {
+      alert('Especifica el nombre de la nueva categoría.');
+      return;
+    }
+
     if (!newProduct.expirationDate) {
       alert('La fecha de vencimiento es obligatoria.');
       return;
     }
 
     try {
+      const finalCategory = newProduct.category === 'OTHER' ? customCategory.trim() : newProduct.category.trim();
+      
       const payload = {
         name: newProduct.name,
         code: newProduct.code,
         description: newProduct.description || null,
-        category: newProduct.category.trim(),
+        category: finalCategory,
         stock: parseInt(newProduct.stock),
         price: parseFloat(newProduct.price),
         requiresPrescription: newProduct.requiresPrescription,
@@ -643,7 +663,7 @@ function App({ auth, onRequireAuth, onLogout }) {
     }
   };
 
-  // --- REPORTES ---
+  // --- REPORTS ---
   const fetchSalesReport = async (fromParam, toParam) => {
     const from = fromParam || reportRange.from
     const to = toParam || reportRange.to
@@ -700,7 +720,12 @@ function App({ auth, onRequireAuth, onLogout }) {
           {auth?.logged ? (
             <>
               <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1 rounded-xl">{auth.username}</span>
-              <button onClick={onLogout} className="text-xs text-gray-500 underline hover:text-red-600">Salir</button>
+              <button
+                onClick={onLogout}
+                className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-xs font-black uppercase tracking-widest text-red-700 hover:bg-red-100"
+              >
+                Salir
+              </button>
             </>
           ) : (
             <div className="flex items-center gap-2">
@@ -712,7 +737,7 @@ function App({ auth, onRequireAuth, onLogout }) {
               </button>
               <button
                 onClick={onLogout}
-                className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-gray-600 hover:bg-gray-50"
+                className="rounded-xl border border-red-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-red-700 hover:bg-red-50"
               >
                 Salir
               </button>
@@ -742,9 +767,16 @@ function App({ auth, onRequireAuth, onLogout }) {
               👥 Clientes
             </button>
           )}
+          {isAdmin && (
+            <button 
+              onClick={() => setView('categories')}
+              className={`px-6 py-2 rounded-xl font-black text-xs uppercase transition-all ${view === 'categories' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500'}`}
+            >
+              📂 Categorías
+            </button>
+          )}
         </nav>
       </header>
-      {/* BOTONES DE REPORTE */}
       {isAdmin && (
         <div className="max-w-7xl mx-auto mb-6 flex gap-4">
           <button onClick={fetchInventoryReport} className="bg-gray-200 px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-100">Reporte Inventario</button>
@@ -760,10 +792,16 @@ function App({ auth, onRequireAuth, onLogout }) {
             <input type="date" value={reportRange.to} onChange={e => setReportRange({...reportRange, to: e.target.value})} className="border rounded px-2 py-1 text-xs" />
             <button type="submit" className="bg-gray-200 px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-100">Reporte Ventas</button>
           </form>
-          {reportType && <button onClick={()=>{setReportType(null); setSalesReport([]); setInventoryReport([]);}} className="ml-auto text-xs text-gray-400 underline">Cerrar reporte</button>}
+          {reportType && (
+            <button
+              onClick={() => { setReportType(null); setSalesReport([]); setInventoryReport([]); }}
+              className="ml-auto rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-black uppercase tracking-widest text-amber-700 hover:bg-amber-100"
+            >
+              Cerrar reporte
+            </button>
+          )}
         </div>
       )}
-      {/* VISTA DE REPORTE */}
       {reportType === 'sales' && (
         <div className="max-w-7xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100 mb-8">
           <div className="p-6 border-b bg-blue-50/50">
@@ -824,10 +862,10 @@ function App({ auth, onRequireAuth, onLogout }) {
       {view === 'inventory' ? (
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
           <main className="flex-1 bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
-            <div className="custom-scroll border-b bg-white">
-              <div className="min-w-[1200px] p-6 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="relative w-80">
+            <div className="border-b bg-white">
+              <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                <div className="relative md:col-span-5">
                 <input 
                   type="text"
                   placeholder="Buscar medicamento..."
@@ -840,43 +878,43 @@ function App({ auth, onRequireAuth, onLogout }) {
                 <input
                   type="text"
                   placeholder="Codigo (SKU / barras)"
-                  className="w-44 bg-gray-100 border-none rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm"
+                  className="w-full bg-gray-100 border-none rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm md:col-span-3"
                   value={searchCode}
                   onChange={(e) => setSearchCode(e.target.value)}
                 />
                 <select
-                  className="w-56 bg-gray-100 border-none rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm text-gray-700"
+                  className="w-full bg-gray-100 border-none rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm text-gray-700 md:col-span-4"
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                 >
-                  <option value="">Todas las categorias</option>
+                  <option value="">Todas las categorías</option>
                   {categories.map((category) => (
                     <option key={category} value={category}>{category}</option>
                   ))}
                 </select>
-                {isAdmin && (
-                  <>
-                    <label className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-gray-600 bg-gray-100 px-3 py-2 rounded-xl">
+              </div>
+              {isAdmin && (
+                <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-gray-600 bg-white px-3 py-2 rounded-xl border border-gray-200">
                       <input type="checkbox" checked={hideExpired} onChange={(e) => setHideExpired(e.target.checked)} />
                       Ocultar vencidos
                     </label>
-                    <label className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-gray-600 bg-gray-100 px-3 py-2 rounded-xl">
+                    <label className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wider text-gray-600 bg-white px-3 py-2 rounded-xl border border-gray-200">
                       <input type="checkbox" checked={showExpiringSoon} onChange={(e) => setShowExpiringSoon(e.target.checked)} />
-                      Proximos a vencer
+                      Próximos a vencer
                     </label>
-                  </>
-                )}
-              </div>
-              {isAdmin && (
-                <button onClick={openCreateProductModal} className="shrink-0 bg-blue-700 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-800 transition-all flex items-center gap-2">
-                  ➕ Nuevo Producto
-                </button>
+                  </div>
+                  <button onClick={openCreateProductModal} className="shrink-0 bg-blue-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all flex items-center gap-2 shadow-sm">
+                    ➕ Nuevo Producto
+                  </button>
+                </div>
               )}
             </div>
             </div>
 
             <div className="custom-scroll">
-              <table className="min-w-[1100px] w-full text-left">
+              <table className="w-full text-left table-auto">
                 <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
                   <tr>
                     <th className="px-6 py-4">Producto</th>
@@ -1114,7 +1152,7 @@ function App({ auth, onRequireAuth, onLogout }) {
                       </button>
                       <button
                         onClick={onLogout}
-                        className="w-full rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-gray-700 border border-gray-300 hover:bg-gray-50"
+                        className="w-full rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-red-700 border border-red-200 hover:bg-red-50"
                       >
                         Salir
                       </button>
@@ -1184,7 +1222,6 @@ function App({ auth, onRequireAuth, onLogout }) {
           </aside>
         </div>
       ) : view === 'customers' ? (
-        /* VISTA DE CLIENTES */
         <div className="max-w-7xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
           <div className="p-6 border-b bg-purple-50/50">
             <h2 className="text-sm font-black text-purple-700 uppercase tracking-widest">Gestión de Clientes</h2>
@@ -1243,8 +1280,11 @@ function App({ auth, onRequireAuth, onLogout }) {
             </table>
           </div>
         </div>
+      ) : view === 'categories' ? (
+        <div className="max-w-7xl mx-auto">
+          <CategoryManagementPanel />
+        </div>
       ) : (
-        /* VISTA DE HISTORIAL */
         <div className="max-w-7xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
           <div className="p-6 border-b bg-gray-50/50">
             <h2 className="text-sm font-black text-gray-400 uppercase tracking-widest">Registro de Ventas Realizadas</h2>
@@ -1462,7 +1502,6 @@ function App({ auth, onRequireAuth, onLogout }) {
           </div>
         </div>
       )}
-      {/* MODAL PARA NUEVO PRODUCTO */}
       {isModalOpen && isAdmin && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-300">
@@ -1488,22 +1527,38 @@ function App({ auth, onRequireAuth, onLogout }) {
                 onChange={(e) => setNewProduct({...newProduct, code: e.target.value.toUpperCase()})}
               />
               <p className="text-[11px] font-bold text-gray-400">Si lo dejas vacio, el sistema genera un codigo automaticamente.</p>
-              <input
-                type="text"
-                placeholder="Categoria *"
-                className="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-sm"
+              <label className="block text-[11px] font-black uppercase tracking-wider text-slate-500">
+                Categoría del producto *
+              </label>
+              <select
+                className="w-full border-2 border-sky-200 bg-sky-50 rounded-xl p-3 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200 text-sm font-semibold text-slate-700"
                 value={newProduct.category}
-                onChange={(e) => setNewProduct({...newProduct, category: e.target.value})}
-                list="category-options"
+                onChange={(e) => {
+                  setNewProduct({...newProduct, category: e.target.value})
+                  if (e.target.value !== 'OTHER') {
+                    setCustomCategory('')
+                  }
+                }}
                 required
-              />
-              <datalist id="category-options">
+              >
+                <option value="">Selecciona una categoría</option>
                 {Array.from(new Set([...categories, ...suggestedCategories])).map((category) => (
-                  <option key={category} value={category} />
+                  <option key={category} value={category}>{category}</option>
                 ))}
-              </datalist>
+                <option value="OTHER">--- Otra (especificar) ---</option>
+              </select>
+              {newProduct.category === 'OTHER' && (
+                <input
+                  type="text"
+                  placeholder="Nombre de la nueva categoría (ej: Electrolitos, Alimentos)"
+                  className="w-full border-2 border-blue-300 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-sm bg-blue-50"
+                  value={customCategory}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  required
+                />
+              )}
               <p className="text-[11px] font-bold text-gray-400">
-                Sugerencia: escribe o selecciona una categoria existente para mantener consistencia.
+                Sugerencia: escribe o selecciona una categoría existente para mantener consistencia. Si necesitas una nueva, selecciona "Otra" para especificarla.
               </p>
               <input
                 type="text"

@@ -1,12 +1,8 @@
-/* Estilos personalizados para barra de scroll tipo Google */
-
-/* Para Firefox */
 * {
   scrollbar-width: thin;
   scrollbar-color: #cbd5e1 #f1f5f9;
 }
 
-/* Para Chrome, Safari y Edge */
 *::-webkit-scrollbar {
   height: 8px;
   width: 8px;
@@ -28,7 +24,6 @@
   border: 2px solid #e2e8f0;
 }
 
-/* Clase específica para tabla con scroll visible */
 .custom-scroll {
   scrollbar-width: thin;
   scrollbar-color: #4f46e5 #e0e7ff;

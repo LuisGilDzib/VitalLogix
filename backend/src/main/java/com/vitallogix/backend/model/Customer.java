@@ -1,5 +1,6 @@
 package com.vitallogix.backend.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.List;
 
@@ -23,12 +24,13 @@ public class Customer {
     private String clienteAmigoNumber;
 
     @Column(nullable = false)
-    private boolean friend; // Programa de fidelización
+    private boolean friend; // Loyalty program flag
 
     @OneToMany(mappedBy = "customer")
+    @JsonIgnore
     private List<Sale> sales;
 
-    // Getters y Setters
+    // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getName() { return name; }

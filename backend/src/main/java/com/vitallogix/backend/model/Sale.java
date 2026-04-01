@@ -16,12 +16,12 @@ public class Sale {
 
     private BigDecimal totalAmount;
     
-    private BigDecimal discountAmount = BigDecimal.ZERO; // 10% para clienteamigo
+    private BigDecimal discountAmount = BigDecimal.ZERO; // 10% discount for clienteamigo
     
-    private BigDecimal originalAmount; // Monto antes del descuento
+    private BigDecimal originalAmount; // Amount before discount
 
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "sale") // MappedBy ayuda a la relación bidireccional
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "sale") // MappedBy supports the bidirectional relationship
     private List<SaleItem> items;
 
     @ManyToOne
@@ -40,11 +40,11 @@ public class Sale {
         this.items = new java.util.ArrayList<>();
     }
     items.add(item);
-    item.setSale(this); // Establece la relación hacia atrás automáticamente
+    item.setSale(this); // Establishes the reverse relationship automatically
 }
 
 
-    // GETTERS Y SETTERS 
+    // GETTERS AND SETTERS 
     public Long getId() {
         return id;
     }

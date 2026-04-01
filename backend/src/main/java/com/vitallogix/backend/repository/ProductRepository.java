@@ -7,15 +7,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ProductRepository extends JpaRepository<Product, Long> {
-	/** Busca productos por coincidencia parcial en nombre (case-insensitive). */
+	// Finds products by partial name match (case-insensitive).
 	List<Product> findByNameContainingIgnoreCase(String name);
 
-	/** Busca un producto por codigo de negocio (case-insensitive). */
+	// Finds a product by business code (case-insensitive).
 	Optional<Product> findByCodeIgnoreCase(String code);
 
-	/** Verifica si un codigo de negocio ya existe (case-insensitive). */
+	// Checks whether a business code already exists (case-insensitive).
 	boolean existsByCodeIgnoreCase(String code);
 
-	/** Lista productos con stock mayor al valor enviado. */
+	// Lists products with stock greater than the provided value.
 	List<Product> findByStockGreaterThan(Integer stock);
 }

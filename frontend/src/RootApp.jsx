@@ -6,7 +6,7 @@ import { login as apiLogin, register as apiRegister } from './services/api';
 
 function RootApp() {
   const [auth, setAuth] = useState(() => {
-    // Persistencia simple
+    // Simple persistence
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
     const role = localStorage.getItem('role');

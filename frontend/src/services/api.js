@@ -4,7 +4,7 @@ const api = axios.create({
   baseURL: 'http://localhost:8080/api', 
 });
 
-// Interceptor para añadir el token JWT si existe
+// Interceptor that adds the JWT token if present
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -13,26 +13,26 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Login real
+// Real login
 export const login = (username, password) =>
   api.post('/auth/login', { username, password });
 
-// Registro real
+// Real registration
 export const register = (username, password) =>
   api.post('/auth/register', { username, password });
 
-// reportes
+// Reports
 export const getSalesReport = (from, to) => api.get(`/reports/sales?from=${from}&to=${to}`);
 export const getInventoryReport = () => api.get('/reports/inventory');
 
-//productos
+// Products
 export const getProducts = () => api.get('/products');
 export const createProduct = (product) => api.post('/products', product);
 export const updateProduct = (id, product) => api.put(`/products/${id}`, product);
 export const deleteProduct = (id) => api.delete(`/products/${id}`);
 export const addStockToProduct = (id, quantity) => api.patch(`/products/${id}/stock`, { quantity });
 
-//ventas
+// Sales
 export const createSale = (saleData) => api.post('/sales', saleData);
 export const getReceipt = (saleId) => api.get(`/receipts/${saleId}`);
 export const suggestCombo = (budget, prioritizedProductIds = [], maxRecommendations = 6) =>
@@ -42,12 +42,29 @@ export const suggestCombo = (budget, prioritizedProductIds = [], maxRecommendati
     maxRecommendations,
   });
 
-//clientes
+// Customers
 export const getCustomers = () => api.get('/customers');
 export const getCustomerPurchaseHistory = (customerId) => api.get(`/customers/${customerId}/purchases`);
 export const validateClienteAmigoCode = (code) => api.get(`/customers/validate-clienteamigo?code=${encodeURIComponent(code)}`);
 
-//get ventas
+// Get sales
 export const getSales = () => api.get('/sales');
+
+// Categories
+export const getActiveCategories = () => api.get('/categories/active');
+export const getPredefinedCategories = () => api.get('/categories/predefined');
+export const getCustomCategories = () => api.get('/categories/custom');
+export const getPendingCategories = () => api.get('/categories/pending');
+export const getAllCategories = () => api.get('/categories');
+export const getCategoryById = (id) => api.get(`/categories/${id}`);
+export const createCustomCategory = (name, description = '') => 
+  api.post('/categories/custom', { name, description });
+export const createPredefinedCategory = (name, description = '') =>
+  api.post('/categories/predefined', { name, description });
+export const updateCategory = (id, name, description = '') =>
+  api.put(`/categories/${id}`, { name, description });
+export const approveCategory = (id) => api.put(`/categories/${id}/approve`);
+export const rejectCategory = (id) => api.delete(`/categories/${id}/reject`);
+export const deactivateCategory = (id) => api.put(`/categories/${id}/deactivate`);
 
 export default api;

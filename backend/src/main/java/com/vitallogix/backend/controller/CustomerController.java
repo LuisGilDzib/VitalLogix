@@ -40,13 +40,11 @@ public class CustomerController {
 
     @GetMapping("/{id}/purchases")
     public List<Sale> getPurchaseHistory(@PathVariable Long id) {
-        repository.findById(id).orElseThrow(); // Verificar que el cliente existe
+        repository.findById(id).orElseThrow(); // Verifies that the customer exists
         return saleRepository.findByCustomer_IdOrderBySaleDateDesc(id);
     }
 
-    /**
-     * Valida un código clienteamigo y devuelve estado junto con datos básicos del cliente.
-     */
+    // Validates a clienteamigo code and returns the status plus basic customer data.
     @GetMapping("/validate-clienteamigo")
     public Map<String, Object> validateClienteAmigo(@RequestParam String code) {
         if (code == null || code.trim().isEmpty()) {

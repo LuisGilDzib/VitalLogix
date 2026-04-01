@@ -31,9 +31,7 @@ public class SaleService {
         this.customerRepository = customerRepository;
     }
 
-    /**
-     * Crea una venta, descuenta inventario y aplica descuento clienteamigo cuando corresponde.
-     */
+    // Creates a sale, decreases inventory, and applies the clienteamigo discount when applicable.
     @Transactional
     public Sale createSale(SaleRequest request) {
         Sale sale = new Sale();
@@ -84,9 +82,7 @@ public class SaleService {
         return savedSale;
     }
 
-    /**
-     * Resuelve el cliente de la venta (existente por id/codigo o nuevo registro).
-     */
+    // Resolves the sale customer (existing by id/code or as a new record).
     private Customer resolveCustomer(SaleRequest request) {
         if (request.getCustomerId() != null) {
             return customerRepository.findById(request.getCustomerId()).orElse(null);
@@ -133,9 +129,7 @@ public class SaleService {
         return customerRepository.save(customer);
     }
 
-    /**
-     * Promueve automáticamente a clienteamigo cuando alcanza el umbral de compras.
-     */
+    // Promotes a customer to clienteamigo automatically once the purchase threshold is reached.
     private void promoteToLoyaltyIfEligible(Customer customer) {
         if (customer == null || customer.getId() == null) {
             return;
@@ -157,7 +151,7 @@ public class SaleService {
         customerRepository.save(customer);
     }
 
-    /** Genera un código único con formato CAM-XXXXXX. */
+    // Generates a unique code in the CAM-XXXXXX format.
     private String generateClienteAmigoCode() {
         for (int i = 0; i < 20; i++) {
             String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 6).toUpperCase(Locale.ROOT);

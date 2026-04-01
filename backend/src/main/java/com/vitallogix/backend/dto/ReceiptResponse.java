@@ -20,7 +20,7 @@ public class ReceiptResponse {
         private Integer quantity;
         private BigDecimal unitPrice;
         private BigDecimal subtotal;
-        // Getters y setters
+        // Getters and setters
         public String getProductName() { return productName; }
         public void setProductName(String productName) { this.productName = productName; }
         public Integer getQuantity() { return quantity; }
@@ -31,7 +31,7 @@ public class ReceiptResponse {
         public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
     }
 
-    // Getters y setters
+    // Getters and setters
     public Long getSaleId() { return saleId; }
     public void setSaleId(Long saleId) { this.saleId = saleId; }
     public LocalDateTime getSaleDate() { return saleDate; }

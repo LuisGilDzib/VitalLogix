@@ -9,7 +9,7 @@ public class ReportResponse {
         private LocalDate date;
         private BigDecimal totalSales;
         private Integer totalTransactions;
-        // Getters y setters
+        // Getters and setters
         public LocalDate getDate() { return date; }
         public void setDate(LocalDate date) { this.date = date; }
         public BigDecimal getTotalSales() { return totalSales; }
@@ -22,7 +22,7 @@ public class ReportResponse {
         private Integer stock;
         private String category;
         private String expiration;
-        // Getters y setters
+        // Getters and setters
         public String getProductName() { return productName; }
         public void setProductName(String productName) { this.productName = productName; }
         public Integer getStock() { return stock; }
@@ -34,7 +34,7 @@ public class ReportResponse {
     }
     private List<SaleReport> sales;
     private List<InventoryReport> inventory;
-    // Getters y setters
+    // Getters and setters
     public List<SaleReport> getSales() { return sales; }
     public void setSales(List<SaleReport> sales) { this.sales = sales; }
     public List<InventoryReport> getInventory() { return inventory; }

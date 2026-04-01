@@ -25,9 +25,8 @@ public class ComboSuggestionService {
         this.productRepository = productRepository;
     }
 
-    /**
-     * Genera recomendaciones personalizadas usando mochila 0/1 sobre el presupuesto restante.
-     */
+    // Generates personalized recommendations using a 0/1 knapsack approach over the remaining budget.
+
     public ComboSuggestionResponse suggest(ComboSuggestionRequest request) {
         int capacity = toCents(request.getBudget());
         List<Product> products = productRepository.findByStockGreaterThan(0);
@@ -118,6 +117,7 @@ public class ComboSuggestionService {
 
         int maxRecommendations = request.getMaxRecommendations() == null ? 6 : request.getMaxRecommendations();
         if (maxRecommendations < recommendedItems.size()) {
+            // We trim visible recommendations for UX, while the DP score still reflects the optimal set found.
             recommendedItems = new ArrayList<>(recommendedItems.subList(0, maxRecommendations));
             recommendedCost = recommendedItems.stream()
                     .map(ComboSuggestionResponse.ComboItem::getPrice)
@@ -135,14 +135,14 @@ public class ComboSuggestionService {
         return response;
     }
 
-    /** Convierte un monto a centavos para operar con enteros en la mochila. */
+    // Converts a monetary amount to cents so the knapsack logic can use integers.
     private int toCents(BigDecimal amount) {
         return amount.multiply(BigDecimal.valueOf(100))
                 .setScale(0, RoundingMode.HALF_UP)
                 .intValue();
     }
 
-    /** Puntaje: prioriza rotación de stock bajo y valor económico del producto. */
+    // Score: prioritizes low-stock rotation and the product's economic value.
     private int computeScore(Product p, int priceCents) {
         int stock = p.getStock() == null ? 0 : p.getStock();
         int stockBonus;
@@ -156,7 +156,7 @@ public class ComboSuggestionService {
         return priceCents + stockBonus;
     }
 
-    /** Mapea entidad de producto a item de respuesta del motor de recomendaciones. */
+    // Maps the product entity to the response item used by the recommendation engine.
     private ComboSuggestionResponse.ComboItem toItem(Product p, int score) {
         ComboSuggestionResponse.ComboItem item = new ComboSuggestionResponse.ComboItem();
         item.setId(p.getId());

@@ -52,7 +52,7 @@ public class Product {
         this.createdAt = LocalDateTime.now();
     }
 
-    // Getters & Setters
+    // Getters and setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

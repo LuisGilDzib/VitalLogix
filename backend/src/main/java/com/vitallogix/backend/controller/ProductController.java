@@ -167,9 +167,7 @@ public class ProductController {
         );
     }
 
-    /**
-     * Busca productos por prioridad de filtro: id, código, nombre o categoría.
-     */
+    // Searches products in priority order: id, code, name, then category.
     @GetMapping("/search")
     public java.util.List<ProductResponse> search(@RequestParam(required = false) String name,
                                         @RequestParam(required = false) Long id,
@@ -214,6 +212,6 @@ public class ProductController {
             }
         }
 
-        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "No se pudo generar codigo unico");
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Unable to generate a unique code");
     }
 }

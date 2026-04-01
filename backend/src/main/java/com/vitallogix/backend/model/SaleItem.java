@@ -23,7 +23,7 @@ public class SaleItem {
     private Integer quantity;
     private BigDecimal unitPrice;
 
-    // Getters y Setters
+    // Getters and setters
     public Long getId() { return id; }
     
     public Sale getSale() { return sale; }

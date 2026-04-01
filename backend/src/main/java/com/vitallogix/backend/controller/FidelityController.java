@@ -12,7 +12,7 @@ public class FidelityController {
         this.customerRepository = customerRepository;
     }
 
-    // Asignar número de cliente amigo
+    // Assigns the customer amigo flag.
     @PostMapping("/assign/{id}")
     public void assignFidelity(@PathVariable Long id) {
         Customer c = customerRepository.findById(id).orElseThrow();
@@ -20,7 +20,7 @@ public class FidelityController {
         customerRepository.save(c);
     }
 
-    // Quitar programa de fidelización
+    // Removes the loyalty program flag.
     @PostMapping("/remove/{id}")
     public void removeFidelity(@PathVariable Long id) {
         Customer c = customerRepository.findById(id).orElseThrow();

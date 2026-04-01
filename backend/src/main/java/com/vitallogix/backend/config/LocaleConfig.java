@@ -15,7 +15,7 @@ public class LocaleConfig implements WebMvcConfigurer {
     @Bean
     public LocaleResolver localeResolver() {
         SessionLocaleResolver resolver = new SessionLocaleResolver();
-        // Usamos Locale.forLanguageTag("es") para evitar el aviso de "deprecated"
+        // Use Locale.forLanguageTag("es") to avoid the deprecated warning.
         resolver.setDefaultLocale(Locale.forLanguageTag("es"));
         return resolver;
     }
@@ -23,7 +23,7 @@ public class LocaleConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
-        interceptor.setParamName("lang"); // Ejemplo de uso: http://localhost:8080/api/products?lang=es
+        interceptor.setParamName("lang"); // Example: http://localhost:8080/api/products?lang=es
         registry.addInterceptor(interceptor);
     }
 }

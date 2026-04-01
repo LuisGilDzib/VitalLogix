@@ -25,3 +25,7 @@ replay_pid*
 
 # Credenciales admin (no subir)
 backend/admin-credentials.txt
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
