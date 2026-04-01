@@ -1,0 +1,58 @@
+/* Estilos personalizados para barra de scroll tipo Google */
+
+/* Para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+/* Para Chrome, Safari y Edge */
+*::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  border: 2px solid #f1f5f9;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+  border: 2px solid #e2e8f0;
+}
+
+/* Clase específica para tabla con scroll visible */
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #4f46e5 #e0e7ff;
+  overflow-x: scroll;
+  overflow-y: hidden;
+  scrollbar-gutter: stable both-edges;
+}
+
+.custom-scroll::-webkit-scrollbar {
+  height: 10px;
+}
+
+.custom-scroll::-webkit-scrollbar-track {
+  background: #e0e7ff;
+  border-radius: 5px;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #4f46e5;
+  border-radius: 5px;
+  border: 2px solid #e0e7ff;
+}
+
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #4338ca;
+  border: 2px solid #c7d2fe;
+}

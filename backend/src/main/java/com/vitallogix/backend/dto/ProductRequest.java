@@ -8,7 +8,11 @@ public class ProductRequest {
     @NotBlank(message = "Name is required")
     private String name;
 
+    private String code;
+
+
     private String description;
+    private String category;
 
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.00", message = "Price must be >= 0")
@@ -18,16 +22,32 @@ public class ProductRequest {
     @Min(value = 0, message = "Stock must be >= 0")
     private Integer stock;
 
+    private boolean requiresPrescription;
+
+    private java.time.LocalDateTime expirationDate;
+
     // Getters & Setters
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
+    public String getCode() { return code; }
+    public void setCode(String code) { this.code = code; }
+
+
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+    public String getCategory() { return category; }
+    public void setCategory(String category) { this.category = category; }
 
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
 
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
+
+    public boolean isRequiresPrescription() { return requiresPrescription; }
+    public void setRequiresPrescription(boolean requiresPrescription) { this.requiresPrescription = requiresPrescription; }
+
+    public java.time.LocalDateTime getExpirationDate() { return expirationDate; }
+    public void setExpirationDate(java.time.LocalDateTime expirationDate) { this.expirationDate = expirationDate; }
 }
