@@ -106,6 +106,9 @@ public class SaleService {
         if (!isBlank(customerData.getClienteAmigoNumber())) {
             customer = customerRepository.findByClienteAmigoNumber(customerData.getClienteAmigoNumber().trim()).orElse(null);
         }
+        if (customer == null && !isBlank(customerData.getPhone())) {
+            customer = customerRepository.findFirstByPhoneOrderByIdAsc(customerData.getPhone().trim()).orElse(null);
+        }
 
         if (customer == null) {
             customer = new Customer();
