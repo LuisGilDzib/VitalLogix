@@ -55,7 +55,11 @@ function CustomerManagementPanel({ isAdmin }) {
       const response = await getSystemUsers()
       setSystemUsers(response.data || [])
     } catch (err) {
-      setUsersError('No se pudo cargar la lista de usuarios del sistema.')
+      if (err?.response?.status === 404) {
+        setUsersError('El endpoint de admin no esta disponible en el backend activo. Reinicia backend con: docker compose up -d --build vitallogix-app')
+      } else {
+        setUsersError('No se pudo cargar la lista de usuarios del sistema.')
+      }
     } finally {
       setUsersLoading(false)
     }
