@@ -1,18 +1,33 @@
 # VitalLogix
-Sistema de Gestión de Farmacia.
-Java (Spring Boot) + PostgreSQL + React + Electron.
 
-Elige tu idioma:
+Sistema de gestión de farmacia construido con Java, PostgreSQL, React y Electron.
+
+## Navegación
 
 - [English](README.md)
 - [Español](README.es.md)
+- [Índice de documentación](docs/README.md)
 
-## Estructura
-- /backend
-- /frontend
-- /desktop
-- /docs/en
-- /docs/es
+## Enlaces Rápidos
+
+- [Backend](backend/)
+- [Frontend](frontend/)
+- [Desktop](desktop/)
+- [Documentación](docs/)
+
+## Descripción General
+
+VitalLogix cubre inventario, ventas, clientes, reportes y gestión de categorías en un flujo pensado para escritorio.
+
+## Mapa del Repositorio
+
+- [backend/](backend/) API Spring Boot, modelo de dominio y servicios
+- [frontend/](frontend/) Interfaz React para inventario, ventas y administración
+- [desktop/](desktop/) Contenedor Electron para distribución de escritorio
+- [docs/](docs/) Centro de documentación del proyecto
+- [backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java](backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java) endpoints de administración de categorías
+- [frontend/src/components/CategoryManagementPanel.jsx](frontend/src/components/CategoryManagementPanel.jsx) panel de categorías para admin
+- [frontend/src/App.jsx](frontend/src/App.jsx) shell principal y vistas por rol
 
 ## Descripción General
 
@@ -78,31 +93,25 @@ VitalLogix es una plataforma de gestión de farmacia para inventarios, ventas, c
 - Usuario: puede operar ventas; no puede administrar productos, reportes ni módulos administrativos.
 - Admin: acceso completo a productos, reportes, clientes, historial y categorías (incluyendo aprobaciones).
 
-## Capturas de Pantalla
+## Primeros Pasos
 
-Aquí puedes agregar capturas de pantalla del avance del proyecto.
+1. Levantar base de datos y backend:
+	- `docker compose up -d --build vitallogix-app`
+2. Levantar frontend:
+	- `npm --prefix frontend run dev`
+3. Abrir la aplicación e iniciar sesión con una cuenta de admin o usuario.
 
-### Estado Inicial
+## Puntos de Entrada Importantes
 
-- [ ] Dashboard inicial
-- [ ] Módulo de inventario
-- [ ] Flujo de ventas
-- [ ] Gestión de clientes
-- [ ] Reportes
+- [SecurityConfig.java](backend/src/main/java/com/vitallogix/backend/config/SecurityConfig.java)
+- [CategoryService.java](backend/src/main/java/com/vitallogix/backend/service/CategoryService.java)
+- [CategoryManagementPanel.jsx](frontend/src/components/CategoryManagementPanel.jsx)
+- [api.js](frontend/src/services/api.js)
 
-### Estado Final
+## Documentación
 
-- [ ] Dashboard final
-- [ ] Módulo de inventario final
-- [ ] Flujo de ventas final
-- [ ] Gestión de clientes final
-- [ ] Reportes finales
-
-## Instalación
-
-Aquí se pueden agregar los pasos para instalar y ejecutar el proyecto.
-
-## Enlaces de Documentación
-
-- Documentación en inglés: `README.md`
-- Documentación en español: `README.es.md`
+- [Índice de documentación](docs/README.md)
+- [Página principal de docs en inglés](docs/en/README.md)
+- [Página principal de docs en español](docs/es/README.md)
+- [Notas del sistema de categorías](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
+- [Notas del panel de administración de categorías](docs/ADMIN_CATEGORY_PANEL.md)

@@ -1,23 +1,33 @@
 # VitalLogix
 
-Pharmacy management system built with Java, PostgreSQL, React, and Electron.
+Pharmacy management platform built with Java, PostgreSQL, React, and Electron.
 
-Choose your language:
+## Navigation
 
 - [English](README.md)
 - [Español](README.es.md)
+- [Documentation Index](docs/README.md)
+
+## Quick Links
+
+- [Backend](backend/)
+- [Frontend](frontend/)
+- [Desktop](desktop/)
+- [Documentation](docs/)
 
 ## Overview
 
-VitalLogix is a pharmacy management platform for inventory, sales, customers, reporting, and desktop usage.
+VitalLogix covers inventory, sales, customers, reporting, and category management in a desktop-friendly workflow.
 
-## Project Structure
+## Repository Map
 
-- `backend/` Spring Boot API and business logic
-- `frontend/` React web interface
-- `desktop/` Electron desktop wrapper
-- `docs/en/` English documentation
-- `docs/es/` Spanish documentation
+- [backend/](backend/) Spring Boot API, domain model, and services
+- [frontend/](frontend/) React UI for inventory, sales, and administration
+- [desktop/](desktop/) Electron shell for desktop distribution
+- [docs/](docs/) Project documentation hub
+- [backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java](backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java) category administration endpoints
+- [frontend/src/components/CategoryManagementPanel.jsx](frontend/src/components/CategoryManagementPanel.jsx) admin category panel
+- [frontend/src/App.jsx](frontend/src/App.jsx) main application shell and role-based views
 
 ## Functional Requirements
 
@@ -71,31 +81,25 @@ VitalLogix is a pharmacy management platform for inventory, sales, customers, re
 - User: can create and consult sales operations; cannot manage products, reports, or admin modules.
 - Admin: full access to products, reports, customers, history, and categories (including approvals).
 
-## Screenshots
+## Getting Started
 
-Add progress screenshots here during development.
+1. Start the database and backend:
+	- `docker compose up -d --build vitallogix-app`
+2. Start the frontend:
+	- `npm --prefix frontend run dev`
+3. Open the app in the browser and sign in with an admin or user account.
 
-### Current State
+## Important Entry Points
 
-- [ ] Initial dashboard
-- [ ] Inventory module
-- [ ] Sales flow
-- [ ] Customer management
-- [ ] Reports
+- [SecurityConfig.java](backend/src/main/java/com/vitallogix/backend/config/SecurityConfig.java)
+- [CategoryService.java](backend/src/main/java/com/vitallogix/backend/service/CategoryService.java)
+- [CategoryManagementPanel.jsx](frontend/src/components/CategoryManagementPanel.jsx)
+- [api.js](frontend/src/services/api.js)
 
-### Final State
+## Documentation
 
-- [ ] Final dashboard
-- [ ] Final inventory module
-- [ ] Final sales flow
-- [ ] Final customer management
-- [ ] Final reports
-
-## Setup
-
-Add environment setup and run instructions here when ready.
-
-## Documentation Links
-
-- English documentation: `README.md`
-- Spanish documentation: `README.es.md`
+- [Documentation Index](docs/README.md)
+- [English docs landing page](docs/en/README.md)
+- [Spanish docs landing page](docs/es/README.md)
+- [Category management notes](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
+- [Admin category panel notes](docs/ADMIN_CATEGORY_PANEL.md)
