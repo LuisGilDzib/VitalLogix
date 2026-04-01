@@ -3,13 +3,11 @@
 Este documento es para personas junior, estudiantes o cualquier persona curiosa.
 La idea no es memorizar código: la idea es entender el flujo de la informacion.
 
-## 0) Espacio para Diagramas e Imagenes (lo completas tu)
+## 0) Espacio para Diagramas e Imagenes
 
 Aqui pondre los diagramas de arquitectura y flujo.
 
 Aqui pondre capturas de la evolucion del proyecto (inicio -> avances -> version actual).
-
-Sugerencia de orden para tus imagenes:
 
 1. Pantalla inicial del proyecto.
 2. Primer flujo funcional (por ejemplo, inventario o login).
