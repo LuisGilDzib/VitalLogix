@@ -27,6 +27,8 @@ For Spanish-speaking beginners and non-technical readers, we provide a simplifie
 
 This guide explains the full data flow (React -> Spring Boot -> PostgreSQL) in plain language.
 
+It can also serve as a visual project journal (screenshots and timeline of the app evolution).
+
 ## Repository Map
 
 - [backend/](backend/) Spring Boot API, domain model, and services

@@ -3,6 +3,19 @@
 Este documento es para personas junior, estudiantes o cualquier persona curiosa.
 La idea no es memorizar código: la idea es entender el flujo de la informacion.
 
+## 0) Espacio para Diagramas e Imagenes (lo completas tu)
+
+Aqui pondre los diagramas de arquitectura y flujo.
+
+Aqui pondre capturas de la evolucion del proyecto (inicio -> avances -> version actual).
+
+Sugerencia de orden para tus imagenes:
+
+1. Pantalla inicial del proyecto.
+2. Primer flujo funcional (por ejemplo, inventario o login).
+3. Flujo de venta en una version intermedia.
+4. Estado actual con modulos principales (ventas, clientes, categorias, reportes).
+
 ## 1) La Gran Imagen
 
 Imagina una mensajeria:
@@ -40,6 +53,11 @@ Cuando una persona hace clic en "Vender", ocurre esto:
 4. Respuesta (Response)
 - El backend responde con exito o error.
 - El frontend muestra confirmacion y, si aplica, el ticket/resultado final.
+
+Ejemplo real de logica de negocio (clienteamigo):
+
+- Si la venta se asocia a un cliente con programa clienteamigo activo, el backend aplica 10% de descuento antes de guardar el total final.
+- Ese descuento queda registrado y luego se refleja en el ticket/recibo.
 
 ## 3) El Lenguaje de las Entidades (Los actores)
 
@@ -116,6 +134,19 @@ Ruta recomendada para alguien junior:
 2. Identifica que llamada API hace esa accion.
 3. Revisa el controlador/servicio del backend que recibe esa llamada.
 4. Sigue hasta el repositorio/modelo para ver que se guarda en PostgreSQL.
+
+Rutas reales para ubicarte rapido:
+
+1. Frontend (pantallas y componentes):
+- [frontend/src/components](frontend/src/components)
+- [frontend/src/App.jsx](frontend/src/App.jsx)
+- [frontend/src/services/api.js](frontend/src/services/api.js)
+
+2. Backend (entrada HTTP y reglas):
+- [backend/src/main/java/com/vitallogix/backend/controller](backend/src/main/java/com/vitallogix/backend/controller)
+- [backend/src/main/java/com/vitallogix/backend/service](backend/src/main/java/com/vitallogix/backend/service)
+- [backend/src/main/java/com/vitallogix/backend/repository](backend/src/main/java/com/vitallogix/backend/repository)
+- [backend/src/main/resources/application.properties](backend/src/main/resources/application.properties)
 
 Si sigues ese camino, el proyecto deja de verse grande y empieza a verse logico.
 

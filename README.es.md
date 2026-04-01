@@ -29,6 +29,8 @@ preparamos una guía simplificada y sin tecnicismos innecesarios:
 En este archivo explicamos de forma clara cómo se comunica PostgreSQL con el servidor en Java
 y cómo esa información llega al frontend en React.
 
+Tambien lo usamos como bitacora visual para documentar la evolucion del proyecto con capturas de interfaz.
+
 ## Mapa del Repositorio
 
 - [backend/](backend/) API Spring Boot, modelo de dominio y servicios
