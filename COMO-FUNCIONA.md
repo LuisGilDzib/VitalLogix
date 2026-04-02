@@ -3,17 +3,6 @@
 Este documento es para personas junior, estudiantes o cualquier persona curiosa.
 La idea no es memorizar código: la idea es entender el flujo de la información.
 
-## 0) Espacio para Diagramas e Imagenes
-
-Aqui pondre los diagramas de arquitectura y flujo.
-
-Aqui pondre capturas de la evolucion del proyecto (inicio -> avances -> version actual).
-
-1. Pantalla inicial del proyecto.
-2. Primer flujo funcional (por ejemplo, inventario o login).
-3. Flujo de venta en una version intermedia.
-4. Estado actual con modulos principales (ventas, clientes, categorias, reportes).
-
 ## 1) La gran imagen
 
 Imagina una mensajería:
