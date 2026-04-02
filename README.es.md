@@ -122,11 +122,22 @@ Tambien lo usamos como bitacora visual para documentar la evolucion del proyecto
 
 ## Primeros Pasos
 
-1. Levantar base de datos y backend:
+1. En tu terminal asegurate de estar en la dirección del proyecto:
+   		- `cd VitalLogix`
+2. Levantar base de datos y backend:
 	- `docker compose up -d --build vitallogix-app`
-2. Levantar frontend:
+3. Abre otra terminal y ve a la dirección del proyecto;
+    - `cd VitalLogix`
+4. Levantar frontend:
 	- `npm --prefix frontend run dev`
-3. Abrir la aplicación e iniciar sesión con una cuenta de admin o usuario.
+5. Acceder a la aplicación
+Una vez que el comando anterior termine de ejecutarse, verás en la terminal un mensaje similar al de la siguiente imagen:
+
+Para abrir la interfaz, puedes:
+En macOS: Mantener presionada la tecla Command (⌘) y hacer clic sobre el enlace http://localhost:5173/.
+En Windows/Linux: Mantener presionada la tecla Ctrl y hacer clic sobre el enlace.
+Manual: Copiar la dirección que aparece después de Local: y pegarla manualmente en la barra de direcciones de tu navegador favorito.
+Nota: Por defecto, Vite utiliza el puerto 5173. Si ese puerto está ocupado, el sistema te asignará uno nuevo automáticamente (como el 5174); asegúrate de usar siempre el que indique tu terminal.
 
 ## Puntos de Entrada Importantes
 
