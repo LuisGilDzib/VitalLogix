@@ -122,22 +122,28 @@ Tambien lo usamos como bitacora visual para documentar la evolucion del proyecto
 
 ## Primeros Pasos
 
-1. En tu terminal asegurate de estar en la dirección del proyecto:
-   		- `cd VitalLogix`
-2. Levantar base de datos y backend:
+1. Abre una terminal y entra a la carpeta del proyecto:
+	- `cd VitalLogix`
+2. Levanta la base de datos y el backend:
 	- `docker compose up -d --build vitallogix-app`
-3. Abre otra terminal y ve a la dirección del proyecto;
-    - `cd VitalLogix`
-4. Levantar frontend:
+3. Abre una segunda terminal y vuelve a la carpeta del proyecto:
+	- `cd VitalLogix`
+4. Levanta el frontend:
 	- `npm --prefix frontend run dev`
-5. Acceder a la aplicación
-Una vez que el comando anterior termine de ejecutarse, verás en la terminal un mensaje similar al de la siguiente imagen:
+5. Abre la aplicación en tu navegador:
 
-Para abrir la interfaz, puedes:
-En macOS: Mantener presionada la tecla Command (⌘) y hacer clic sobre el enlace http://localhost:5173/.
-En Windows/Linux: Mantener presionada la tecla Ctrl y hacer clic sobre el enlace.
-Manual: Copiar la dirección que aparece después de Local: y pegarla manualmente en la barra de direcciones de tu navegador favorito.
-Nota: Por defecto, Vite utiliza el puerto 5173. Si ese puerto está ocupado, el sistema te asignará uno nuevo automáticamente (como el 5174); asegúrate de usar siempre el que indique tu terminal.
+   Cuando el comando termine, verás un mensaje parecido al de esta imagen:
+
+   ![terminal para ir a la página](./img/irWeb.png)
+
+   Luego abre el enlace que aparece en la terminal:
+
+   - En macOS: mantén presionada la tecla Command (⌘) y haz clic sobre el enlace.
+   - En Windows/Linux: mantén presionada la tecla Ctrl y haz clic sobre el enlace.
+   - Manualmente: copia la dirección que aparece después de `Local:` y pégala en la barra de direcciones de tu navegador.
+
+   > **Nota:** Vite usa normalmente el puerto `5173`. Si está ocupado, te asignará otro automáticamente, como `5174`.
+   > Usa siempre el puerto que te indique la terminal.
 
 ## Puntos de Entrada Importantes
 

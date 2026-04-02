@@ -112,11 +112,28 @@ It can also serve as a visual project journal (screenshots and timeline of the a
 
 ## Getting Started
 
-1. Start the database and backend:
+1. Open a terminal and go to the project folder:
+	- `cd VitalLogix`
+2. Start the database and backend:
 	- `docker compose up -d --build vitallogix-app`
-2. Start the frontend:
+3. Open a second terminal and go back to the project folder:
+	- `cd VitalLogix`
+4. Start the frontend:
 	- `npm --prefix frontend run dev`
-3. Open the app in the browser and sign in with an admin or user account.
+5. Open the app in your browser:
+
+	When the command finishes, you will see a message similar to this:
+
+	![terminal for opening the app](./img/irWeb.png)
+
+	Then open the link shown in the terminal:
+
+	- On macOS: hold Command (⌘) and click the link.
+	- On Windows/Linux: hold Ctrl and click the link.
+	- Manually: copy the address shown after `Local:` and paste it into your browser.
+
+	> **Tip:** Vite usually uses port `5173`. If it is busy, it will automatically assign another one, such as `5174`.
+	> Always use the port shown in your terminal.
 
 ## Important Entry Points
 
