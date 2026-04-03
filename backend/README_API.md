@@ -8,8 +8,8 @@
 - `POST /api/products` — Crear producto
 - `PUT /api/products/{id}` — Editar producto
 - `DELETE /api/products/{id}` — Eliminar producto
-- `DELETE /api/products/expired` — Eliminar productos vencidos
-- `GET /api/products/search?name=&id=&category=` — Buscar por nombre, código o categoría
+- `PATCH /api/products/{id}/stock` — Agregar stock a un producto
+- `GET /api/products/search?name=&id=&code=&category=` — Buscar por nombre, ID, código o categoría
 
 ### Clientes
 - `GET /api/customers` — Listar clientes
@@ -17,7 +17,8 @@
 - `POST /api/customers` — Crear cliente
 - `PUT /api/customers/{id}` — Editar cliente
 - `DELETE /api/customers/{id}` — Eliminar cliente
-- `GET /api/customers/{id}/sales` — Historial de compras del cliente
+- `GET /api/customers/{id}/purchases` — Historial de compras del cliente
+- `GET /api/customers/validate-clienteamigo?code=` — Validar código clienteamigo
 
 ### Ventas
 - `POST /api/sales` — Registrar venta (requiere lista de productos y opcionalmente customerId)
