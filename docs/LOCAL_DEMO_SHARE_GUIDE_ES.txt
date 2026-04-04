@@ -1,0 +1,114 @@
+VitalLogix: guia local para compartir demo gratis con companeros
+
+Objetivo
+- Permitir que otros dispositivos abran tu app desde tu computadora en la misma red Wi-Fi.
+- Mantener todo local (sin pagar nube).
+
+Opcion 1: Misma red Wi-Fi (recomendada)
+
+1) Iniciar backend
+- Abre terminal en la raiz del proyecto.
+- Ejecuta:
+  cd /Users/diancie/VitalLogix
+  docker compose up -d --build vitallogix-app
+
+2) Iniciar frontend en puerto fijo para LAN
+- Ejecutar desde carpeta frontend:
+  cd /Users/diancie/VitalLogix/frontend
+  npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
+
+- O desde la raiz del proyecto:
+  npm --prefix /Users/diancie/VitalLogix/frontend run dev -- --host 0.0.0.0 --port 5173 --strictPort
+
+Por que strictPort:
+- Si 5173 esta ocupado, Vite falla en lugar de pasar a 5174/5175.
+- Asi evitas romper CORS durante la demo.
+
+3) Si el puerto 5173 esta ocupado
+- Buscar proceso:
+  macOS/Linux:
+  lsof -nP -iTCP:5173 -sTCP:LISTEN
+
+  Windows (PowerShell):
+  netstat -ano | findstr :5173
+
+- Verificar si es seguro cerrarlo:
+  macOS/Linux:
+  ps -p <PID> -o pid,ppid,comm,args
+
+- Es seguro cerrarlo si es tu proceso viejo de frontend (vite/node).
+- No cierres procesos de sistema o servicios que no reconozcas.
+
+- Cerrar proceso:
+  macOS/Linux:
+  kill <PID>
+  (si hace falta) kill -9 <PID>
+
+  Windows (PowerShell/cmd):
+  taskkill /PID <PID> /F
+
+4) Obtener IP local
+- macOS:
+  ipconfig getifaddr en1
+  Si no devuelve nada, revisar interfaz con:
+  networksetup -listallhardwareports
+
+- Linux:
+  hostname -I
+  o
+  ip -4 addr
+
+- Windows (PowerShell/cmd):
+  ipconfig
+
+Ejemplo de IP: 192.168.1.50
+
+5) URL del API en frontend (version sanitizada)
+- Mantener frontend con variable de entorno.
+- Definir VITE_API_BASE_URL antes de levantar frontend.
+
+Ejemplos:
+- macOS/Linux:
+  export VITE_API_BASE_URL=http://TU_IP_LOCAL:8080/api
+
+- Windows PowerShell:
+  $env:VITE_API_BASE_URL="http://TU_IP_LOCAL:8080/api"
+
+Despues ejecuta frontend como en el paso 2.
+
+6) CORS para demo LAN
+- Backend debe permitir origenes:
+  http://localhost:5173
+  http://TU_IP_LOCAL:5173
+
+- Mantener CORS restringido (sin comodin) para demo mas segura.
+
+7) Abrir desde otro dispositivo en la misma red
+- URL frontend:
+  http://TU_IP_LOCAL:5173
+
+8) Si no abre en el otro dispositivo
+- Verifica backend y frontend activos.
+- Verifica misma red Wi-Fi.
+- Verifica IP local correcta.
+- Verifica que frontend corre en 5173.
+- Revisa firewall del sistema operativo.
+
+Opcion 2: Si no estan en la misma red Wi-Fi
+- Usa un tunel temporal gratuito (por ejemplo Cloudflare Tunnel) solo si es necesario.
+- Desactivalo al terminar.
+
+Notas de seguridad para demo escolar
+- Usa cuentas y passwords de demo.
+- No subas IP privada local al repositorio.
+- Al terminar demo:
+  frontend: Ctrl + C
+  backend/db: docker compose down
+
+Checklist rapido
+- Backend activo: si/no
+- Frontend activo en 5173: si/no
+- IP local confirmada: si/no
+- VITE_API_BASE_URL definida: si/no
+- CORS con localhost y IP local: si/no
+- Abierto desde otro dispositivo: si/no

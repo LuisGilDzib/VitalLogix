@@ -147,5 +147,6 @@ It can also serve as a visual project journal (screenshots and timeline of the a
 - [Documentation Index](docs/README.md)
 - [English docs landing page](docs/en/README.md)
 - [Spanish docs landing page](docs/es/README.md)
+- [Local free demo sharing guide (English)](docs/LOCAL_DEMO_SHARE_GUIDE_EN.txt)
 - [Category management notes](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
 - [Admin category panel notes](docs/ADMIN_CATEGORY_PANEL.md)

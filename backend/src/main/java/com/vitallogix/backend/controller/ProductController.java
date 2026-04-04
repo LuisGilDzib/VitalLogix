@@ -24,7 +24,6 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/products")
-@CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "Products", description = "product.tag.description")
 public class ProductController {
 

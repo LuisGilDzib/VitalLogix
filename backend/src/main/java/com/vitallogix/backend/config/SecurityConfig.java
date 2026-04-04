@@ -31,6 +31,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Matcher order matters: specific public GET rules must be declared before broader admin-only rules.
                 .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/register").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api", "/api/", "/api/health").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/categories/active", "/api/categories/predefined", "/api/categories/custom").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/customers/validate-clienteamigo").permitAll()
