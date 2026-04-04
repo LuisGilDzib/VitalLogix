@@ -12,7 +12,7 @@ Sistema de gestión de farmacia construido con Java, PostgreSQL y React.
 
 - [Backend](backend/)
 - [Frontend](frontend/)
-- Módulo desktop (planeado)
+- Módulo desktop: reservado para trabajo futuro, actualmente vacío.
 - [Documentación](docs/)
 
 ## Descripción General
@@ -35,7 +35,7 @@ Tambien lo usamos como bitacora visual para documentar la evolucion del proyecto
 
 - [backend/](backend/) API Spring Boot, modelo de dominio y servicios
 - [frontend/](frontend/) Interfaz React para inventario, ventas y administración
-- [desktop/](desktop/) módulo desktop reservado (actualmente no implementado)
+- [desktop/](desktop/) Módulo desktop: reservado para trabajo futuro, actualmente vacío.
 - [docs/](docs/) Centro de documentación del proyecto
 - [backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java](backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java) endpoints de administración de categorías
 - [frontend/src/components/CategoryManagementPanel.jsx](frontend/src/components/CategoryManagementPanel.jsx) panel de categorías para admin
@@ -153,6 +153,8 @@ Tambien lo usamos como bitacora visual para documentar la evolucion del proyecto
 - [api.js](frontend/src/services/api.js)
 
 ## Documentación
+
+Preparé una guía local para que cualquiera pueda compartir este proyecto con compañeros o amigos usando una configuración gratuita y local:
 
 - [Índice de documentación](docs/README.md)
 - [Página principal de docs en inglés](docs/en/README.md)

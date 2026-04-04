@@ -12,7 +12,7 @@ Pharmacy management platform built with Java, PostgreSQL, and React.
 
 - [Backend](backend/)
 - [Frontend](frontend/)
-- Desktop module (planned)
+- Desktop module: reserved for future work, currently empty.
 - [Documentation](docs/)
 
 ## Overview
@@ -33,7 +33,7 @@ It can also serve as a visual project journal (screenshots and timeline of the a
 
 - [backend/](backend/) Spring Boot API, domain model, and services
 - [frontend/](frontend/) React UI for inventory, sales, and administration
-- [desktop/](desktop/) desktop module placeholder (currently not implemented)
+- [desktop/](desktop/) Desktop module: reserved for future work, currently empty.
 - [docs/](docs/) Project documentation hub
 - [backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java](backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java) category administration endpoints
 - [frontend/src/components/CategoryManagementPanel.jsx](frontend/src/components/CategoryManagementPanel.jsx) admin category panel
@@ -143,6 +143,8 @@ It can also serve as a visual project journal (screenshots and timeline of the a
 - [api.js](frontend/src/services/api.js)
 
 ## Documentation
+
+I prepared a local sharing guide so anyone can run and share this project with classmates or friends using a free local setup:
 
 - [Documentation Index](docs/README.md)
 - [English docs landing page](docs/en/README.md)

@@ -98,7 +98,7 @@ Option 2: Not on same Wi-Fi
 - Use a temporary free tunnel (for example Cloudflare Tunnel) only when necessary.
 - Disable it after the demo.
 
-Security notes for school demos
+Security notes
 - Use demo accounts/passwords only.
 - Do not commit private local IPs to repo.
 - Stop services after demo:

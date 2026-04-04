@@ -98,7 +98,7 @@ Opcion 2: Si no estan en la misma red Wi-Fi
 - Usa un tunel temporal gratuito (por ejemplo Cloudflare Tunnel) solo si es necesario.
 - Desactivalo al terminar.
 
-Notas de seguridad para demo escolar
+Notas de seguridad
 - Usa cuentas y passwords de demo.
 - No subas IP privada local al repositorio.
 - Al terminar demo:
