@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { createAdminUser, getCustomers, getCustomerPurchaseHistory, getSystemUsers, promoteUserToAdmin } from '../services/api'
+import { createAdminUser, createCustomer, deleteCustomer, deleteSystemUser, getCustomers, getCustomerPurchaseHistory, getSystemUsers, promoteUserToAdmin, updateCustomer } from '../services/api'
 
 function CustomerManagementPanel({ isAdmin }) {
   const [customers, setCustomers] = useState([])
@@ -9,6 +9,16 @@ function CustomerManagementPanel({ isAdmin }) {
   const [historyItems, setHistoryItems] = useState([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [historyError, setHistoryError] = useState('')
+  const [customerForm, setCustomerForm] = useState({
+    name: '',
+    address: '',
+    phone: '',
+    clienteAmigoNumber: '',
+    friend: false
+  })
+  const [editingCustomerId, setEditingCustomerId] = useState(null)
+  const [customerSaving, setCustomerSaving] = useState(false)
+  const [customerMessage, setCustomerMessage] = useState('')
   const [systemUsers, setSystemUsers] = useState([])
   const [usersLoading, setUsersLoading] = useState(false)
   const [usersError, setUsersError] = useState('')
@@ -23,21 +33,21 @@ function CustomerManagementPanel({ isAdmin }) {
       return
     }
 
-    const loadCustomers = async () => {
-      setLoading(true)
-      setError('')
-      try {
-        const response = await getCustomers()
-        setCustomers(response.data || [])
-      } catch (err) {
-        setError('No se pudo cargar la lista de clientes.')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadCustomers()
+    fetchCustomers()
   }, [isAdmin])
+
+  const fetchCustomers = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await getCustomers()
+      setCustomers(response.data || [])
+    } catch (err) {
+      setError('No se pudo cargar la lista de clientes.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
     if (!isAdmin) {
@@ -87,12 +97,95 @@ function CustomerManagementPanel({ isAdmin }) {
     setHistoryError('')
   }
 
+  const resetCustomerForm = () => {
+    setCustomerForm({
+      name: '',
+      address: '',
+      phone: '',
+      clienteAmigoNumber: '',
+      friend: false
+    })
+    setEditingCustomerId(null)
+  }
+
+  const extractErrorMessage = (err, fallbackMessage) => {
+    const errorData = err?.response?.data
+    if (typeof errorData === 'string') return errorData
+    return errorData?.message || fallbackMessage
+  }
+
+  const handleSubmitCustomer = async (e) => {
+    e.preventDefault()
+    setCustomerSaving(true)
+    setCustomerMessage('')
+    setError('')
+
+    const payload = {
+      ...customerForm,
+      name: customerForm.name.trim(),
+      address: customerForm.address.trim(),
+      phone: customerForm.phone.trim(),
+      clienteAmigoNumber: customerForm.clienteAmigoNumber.trim().toUpperCase(),
+      friend: Boolean(customerForm.friend)
+    }
+
+    try {
+      if (editingCustomerId) {
+        await updateCustomer(editingCustomerId, payload)
+        setCustomerMessage('Cliente actualizado correctamente.')
+      } else {
+        await createCustomer(payload)
+        setCustomerMessage('Cliente creado correctamente.')
+      }
+      resetCustomerForm()
+      await fetchCustomers()
+    } catch (err) {
+      setError(extractErrorMessage(err, 'No se pudo guardar el cliente.'))
+    } finally {
+      setCustomerSaving(false)
+    }
+  }
+
+  const handleEditCustomer = (customer) => {
+    setCustomerMessage('')
+    setError('')
+    setEditingCustomerId(customer.id)
+    setCustomerForm({
+      name: customer.name || '',
+      address: customer.address || '',
+      phone: customer.phone || '',
+      clienteAmigoNumber: customer.clienteAmigoNumber || '',
+      friend: Boolean(customer.friend)
+    })
+  }
+
+  const handleDeleteCustomer = async (customer) => {
+    const confirmed = window.confirm(`¿Seguro que deseas eliminar al cliente ${customer.name || 'sin nombre'}?`)
+    if (!confirmed) return
+
+    setError('')
+    setCustomerMessage('')
+    try {
+      await deleteCustomer(customer.id)
+      if (historyCustomer?.id === customer.id) {
+        closeHistory()
+      }
+      if (editingCustomerId === customer.id) {
+        resetCustomerForm()
+      }
+      await fetchCustomers()
+      setCustomerMessage('Cliente eliminado correctamente.')
+    } catch (err) {
+      setError(extractErrorMessage(err, 'No se pudo eliminar el cliente.'))
+    }
+  }
+
   const handlePromote = async (user) => {
     try {
       await promoteUserToAdmin(user.id)
       await fetchSystemUsers()
     } catch (err) {
-      const message = err?.response?.data || 'No se pudo promover el usuario a admin.'
+      const message = extractErrorMessage(err, 'No se pudo promover el usuario a admin.')
       setUsersError(String(message))
     }
   }
@@ -110,10 +203,24 @@ function CustomerManagementPanel({ isAdmin }) {
       setNewAdminMessage('Admin creado correctamente.')
       await fetchSystemUsers()
     } catch (err) {
-      const message = err?.response?.data || 'No se pudo crear el admin.'
+      const message = extractErrorMessage(err, 'No se pudo crear el admin.')
       setUsersError(String(message))
     } finally {
       setNewAdminLoading(false)
+    }
+  }
+
+  const handleDeleteUser = async (user) => {
+    const confirmed = window.confirm(`¿Seguro que deseas eliminar al usuario ${user.username}? Esta acción no se puede deshacer.`)
+    if (!confirmed) return
+
+    setUsersError('')
+    try {
+      await deleteSystemUser(user.id)
+      await fetchSystemUsers()
+    } catch (err) {
+      const message = extractErrorMessage(err, 'No se pudo eliminar el usuario.')
+      setUsersError(String(message))
     }
   }
 
@@ -137,6 +244,69 @@ function CustomerManagementPanel({ isAdmin }) {
       <div className="max-w-7xl mx-auto bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
         <div className="p-6 border-b bg-blue-50/50">
           <h2 className="text-sm font-black text-blue-700 uppercase tracking-widest">Gestión de Clientes</h2>
+          <p className="mt-2 text-xs font-bold text-blue-900/70">
+            Puedes crear, editar o eliminar registros de clientes.
+          </p>
+        </div>
+        <div className="p-6 border-b bg-white">
+          <form className="grid gap-3 md:grid-cols-3" onSubmit={handleSubmitCustomer}>
+            <input
+              type="text"
+              placeholder="Nombre"
+              className="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-sm"
+              value={customerForm.name}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, name: e.target.value }))}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Teléfono"
+              className="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-sm"
+              value={customerForm.phone}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, phone: e.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Dirección"
+              className="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-sm"
+              value={customerForm.address}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, address: e.target.value }))}
+            />
+            <input
+              type="text"
+              placeholder="Código ClienteAmigo (opcional)"
+              className="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-sm md:col-span-2"
+              value={customerForm.clienteAmigoNumber}
+              onChange={(e) => setCustomerForm((prev) => ({ ...prev, clienteAmigoNumber: e.target.value.toUpperCase() }))}
+            />
+            <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-blue-800">
+              <input
+                type="checkbox"
+                checked={customerForm.friend}
+                onChange={(e) => setCustomerForm((prev) => ({ ...prev, friend: e.target.checked }))}
+              />
+              ClienteAmigo activo
+            </label>
+            <div className="flex gap-2 md:col-span-3">
+              <button
+                type="submit"
+                className="rounded-xl bg-blue-700 px-4 py-3 text-xs font-black uppercase tracking-widest text-white hover:bg-blue-800 disabled:opacity-60"
+                disabled={customerSaving}
+              >
+                {customerSaving ? 'Guardando...' : editingCustomerId ? 'Actualizar Cliente' : 'Crear Cliente'}
+              </button>
+              {editingCustomerId && (
+                <button
+                  type="button"
+                  onClick={resetCustomerForm}
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-3 text-xs font-black uppercase tracking-widest text-gray-700 hover:bg-gray-50"
+                >
+                  Cancelar edición
+                </button>
+              )}
+            </div>
+          </form>
+          {customerMessage && <p className="mt-3 text-xs font-black text-green-700">{customerMessage}</p>}
         </div>
         <div className="custom-scroll">
           {loading ? (
@@ -184,12 +354,26 @@ function CustomerManagementPanel({ isAdmin }) {
                       {customer.clienteAmigoNumber || 'Pendiente'}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => openHistory(customer)}
-                        className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase hover:bg-blue-700 hover:text-white transition-all"
-                      >
-                        Ver Historial
-                      </button>
+                      <div className="flex flex-wrap justify-end gap-2">
+                        <button
+                          onClick={() => openHistory(customer)}
+                          className="bg-blue-50 text-blue-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase hover:bg-blue-700 hover:text-white transition-all"
+                        >
+                          Ver Historial
+                        </button>
+                        <button
+                          onClick={() => handleEditCustomer(customer)}
+                          className="bg-amber-50 text-amber-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase hover:bg-amber-700 hover:text-white transition-all"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCustomer(customer)}
+                          className="bg-red-50 text-red-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase hover:bg-red-700 hover:text-white transition-all"
+                        >
+                          Eliminar
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -263,18 +447,26 @@ function CustomerManagementPanel({ isAdmin }) {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      {isAdminUser(user) ? (
-                        <span className="inline-block rounded-lg bg-green-100 px-3 py-1 text-[10px] font-black uppercase text-green-700">
-                          Ya es admin
-                        </span>
-                      ) : (
+                      <div className="flex flex-wrap justify-end gap-2">
+                        {isAdminUser(user) ? (
+                          <span className="inline-block rounded-lg bg-green-100 px-3 py-1 text-[10px] font-black uppercase text-green-700">
+                            Ya es admin
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handlePromote(user)}
+                            className="rounded-lg bg-blue-50 px-3 py-1 text-[10px] font-black uppercase text-blue-700 hover:bg-blue-700 hover:text-white"
+                          >
+                            Promover a Admin
+                          </button>
+                        )}
                         <button
-                          onClick={() => handlePromote(user)}
-                          className="rounded-lg bg-blue-50 px-3 py-1 text-[10px] font-black uppercase text-blue-700 hover:bg-blue-700 hover:text-white"
+                          onClick={() => handleDeleteUser(user)}
+                          className="rounded-lg bg-red-50 px-3 py-1 text-[10px] font-black uppercase text-red-700 hover:bg-red-700 hover:text-white"
                         >
-                          Promover a Admin
+                          Eliminar
                         </button>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}

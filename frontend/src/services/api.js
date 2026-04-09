@@ -44,6 +44,9 @@ export const suggestCombo = (budget, prioritizedProductIds = [], maxRecommendati
 
 // Customers
 export const getCustomers = () => api.get('/customers');
+export const createCustomer = (customerData) => api.post('/customers', customerData);
+export const updateCustomer = (customerId, customerData) => api.put(`/customers/${customerId}`, customerData);
+export const deleteCustomer = (customerId) => api.delete(`/customers/${customerId}`);
 export const getCustomerPurchaseHistory = (customerId) => api.get(`/customers/${customerId}/purchases`);
 export const validateClienteAmigoCode = (code) => api.get(`/customers/validate-clienteamigo?code=${encodeURIComponent(code)}`);
 
@@ -70,6 +73,7 @@ export const deactivateCategory = (id) => api.put(`/categories/${id}/deactivate`
 // Admin user management
 export const getSystemUsers = () => api.get('/admin/users');
 export const promoteUserToAdmin = (userId) => api.post(`/admin/users/${userId}/promote`);
+export const deleteSystemUser = (userId) => api.delete(`/admin/users/${userId}`);
 export const createAdminUser = (username, password) => api.post('/admin/users', { username, password });
 
 export default api;

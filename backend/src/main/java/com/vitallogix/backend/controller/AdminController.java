@@ -7,7 +7,9 @@ import com.vitallogix.backend.model.User;
 import com.vitallogix.backend.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -54,7 +57,9 @@ public class AdminController {
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
-        user.setRoles(Set.of(Role.ADMIN));
+        Set<Role> adminRoles = new HashSet<>();
+        adminRoles.add(Role.ADMIN);
+        user.setRoles(adminRoles);
         User saved = userRepository.save(user);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
@@ -72,9 +77,37 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("User is already admin");
         }
 
-        user.setRoles(Set.of(Role.ADMIN));
+        Set<Role> adminRoles = new HashSet<>();
+        adminRoles.add(Role.ADMIN);
+        user.setRoles(adminRoles);
         User saved = userRepository.save(user);
         return ResponseEntity.ok(toResponse(saved));
+    }
+
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId, Authentication authentication) {
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        String currentUsername = authentication != null ? authentication.getName() : null;
+        if (currentUsername != null && currentUsername.equalsIgnoreCase(user.getUsername())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No puedes eliminar tu propia cuenta");
+        }
+
+        boolean isTargetAdmin = user.getRoles() != null && user.getRoles().contains(Role.ADMIN);
+        if (isTargetAdmin) {
+            long adminCount = userRepository.findAll().stream()
+                    .filter(u -> u.getRoles() != null && u.getRoles().contains(Role.ADMIN))
+                    .count();
+            if (adminCount <= 1) {
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("No se puede eliminar el ultimo administrador");
+            }
+        }
+
+        userRepository.delete(user);
+        return ResponseEntity.noContent().build();
     }
 
     private AdminUserResponse toResponse(User user) {
