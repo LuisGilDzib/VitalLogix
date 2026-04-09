@@ -110,6 +110,13 @@ It can also serve as a visual project journal (screenshots and timeline of the a
 - User: can create and consult sales operations; cannot manage products, reports, or admin modules.
 - Admin: full access to products, reports, customers, history, and categories (including approvals).
 
+## Clone The Repository
+
+1. Clone the full project:
+	- `git clone https://github.com/diancie/VitalLogix.git`
+2. Enter the project root folder:
+	- `cd VitalLogix`
+
 ## Getting Started
 
 1. Open a terminal and go to the project folder:

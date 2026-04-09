@@ -120,17 +120,22 @@ Tambien lo usamos como bitacora visual para documentar la evolucion del proyecto
 - Usuario: puede operar ventas; no puede administrar productos, reportes ni módulos administrativos.
 - Admin: acceso completo a productos, reportes, clientes, historial y categorías (incluyendo aprobaciones).
 
+## Clonar El Repo
+
+1. Abre una terminal y clona el proyecto completo, escribiendo:
+   - `git clone https://github.com/diancie/VitalLogix.git`
+2. Entra a la carpeta raíz del proyecto:
+   - `cd VitalLogix`
+
 ## Primeros Pasos
 
-1. Abre una terminal y entra a la carpeta del proyecto:
-	- `cd VitalLogix`
-2. Levanta la base de datos y el backend:
+1. Desde la carpeta raíz del proyecto (`VitalLogix`), levanta la base de datos y el backend:
 	- `docker compose up -d --build vitallogix-app`
-3. Abre una segunda terminal y vuelve a la carpeta del proyecto:
+2. Abre una segunda terminal y vuelve a la carpeta del proyecto:
 	- `cd VitalLogix`
-4. Levanta el frontend:
+3. Levanta el frontend:
 	- `npm --prefix frontend run dev`
-5. Abre la aplicación en tu navegador:
+4. Abre la aplicación en tu navegador:
 
    Cuando el comando termine, verás un mensaje parecido al de esta imagen:
 
