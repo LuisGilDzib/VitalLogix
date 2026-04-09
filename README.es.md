@@ -150,6 +150,29 @@ Tambien lo usamos como bitacora visual para documentar la evolucion del proyecto
    > **Nota:** Vite usa normalmente el puerto `5173`. Si está ocupado, te asignará otro automáticamente, como `5174`.
    > Usa siempre el puerto que te indique la terminal.
 
+## Ejecutar Sin Docker
+
+Si prefieres no usar Docker, también puedes ejecutar el proyecto completamente en local.
+
+Requisitos previos:
+- Java 21
+- Maven (o usar el Maven Wrapper incluido en este repo)
+- PostgreSQL 16
+- Node.js 18+ y npm
+
+1. Crea la base de datos y credenciales en PostgreSQL:
+   - Base de datos: `vitallogix`
+   - Usuario: `vitallogix`
+   - Contraseña: `vitallogix123`
+2. Levanta el backend desde la raíz del repositorio:
+   - macOS/Linux: `./backend/mvnw -f backend/pom.xml spring-boot:run`
+   - Windows: `backend\\mvnw.cmd -f backend\\pom.xml spring-boot:run`
+3. Levanta el frontend en una segunda terminal desde la raíz del repositorio:
+   - `npm --prefix frontend install`
+   - `npm --prefix frontend run dev`
+
+Si tus credenciales locales de PostgreSQL son diferentes, actualiza `backend/src/main/resources/application.properties` antes de iniciar el backend.
+
 ## Puntos de Entrada Importantes
 
 - [SecurityConfig.java](backend/src/main/java/com/vitallogix/backend/config/SecurityConfig.java)
