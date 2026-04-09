@@ -5,10 +5,12 @@ import com.vitallogix.backend.dto.CreateAdminUserRequest;
 import com.vitallogix.backend.model.Role;
 import com.vitallogix.backend.model.User;
 import com.vitallogix.backend.repository.UserRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -84,6 +86,7 @@ public class AdminController {
         return ResponseEntity.ok(toResponse(saved));
     }
 
+    @Transactional
     @DeleteMapping("/users/{userId}")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId, Authentication authentication) {
         User user = userRepository.findById(userId).orElse(null);
@@ -106,8 +109,18 @@ public class AdminController {
             }
         }
 
-        userRepository.delete(user);
-        return ResponseEntity.noContent().build();
+        try {
+            userRepository.deleteRolesByUserId(userId);
+            userRepository.delete(user);
+            userRepository.flush();
+            return ResponseEntity.noContent().build();
+        } catch (DataIntegrityViolationException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body("No se puede eliminar este usuario porque tiene referencias asociadas");
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error interno al eliminar usuario");
+        }
     }
 
     private AdminUserResponse toResponse(User user) {

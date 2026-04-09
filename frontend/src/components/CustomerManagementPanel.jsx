@@ -111,7 +111,7 @@ function CustomerManagementPanel({ isAdmin }) {
   const extractErrorMessage = (err, fallbackMessage) => {
     const errorData = err?.response?.data
     if (typeof errorData === 'string') return errorData
-    return errorData?.message || fallbackMessage
+    return errorData?.message || errorData?.error || fallbackMessage
   }
 
   const handleSubmitCustomer = async (e) => {

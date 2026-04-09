@@ -290,6 +290,12 @@ function App({ auth, onRequireAuth, onLogout }) {
       return;
     }
 
+    const hasPrescriptionProducts = cart.some((item) => Boolean(item.requiresPrescription));
+    if (hasPrescriptionProducts && !isPrescriptionSale) {
+      alert('No se puede concretar la venta: el carrito contiene productos con receta. Activa "Venta con receta" y captura los datos del cliente.');
+      return;
+    }
+
     if (saleCustomer.friend && !saleCustomer.clienteAmigoNumber.trim()) {
       alert('Si aplicas clienteamigo, captura su numero clienteamigo.');
       return;
@@ -340,7 +346,25 @@ function App({ auth, onRequireAuth, onLogout }) {
       fetchProducts();
       fetchSales();
       setView('inventory');
-    } catch (e) { alert("Error al procesar la venta"); }
+    } catch (e) {
+      const backendError = e?.response?.data;
+      const backendMessage =
+        typeof backendError === 'string'
+          ? backendError
+          : backendError?.message;
+
+      if (backendMessage && backendMessage.trim()) {
+        alert(backendMessage);
+        return;
+      }
+
+      if (hasPrescriptionProducts && (!saleCustomer.name || !saleCustomer.address || !saleCustomer.phone || !isPrescriptionSale)) {
+        alert('No se puede concretar la venta con receta porque faltan datos del cliente o no activaste la opción de receta.');
+        return;
+      }
+
+      alert("No se pudo concretar la venta.");
+    }
   };
 
   const handleValidateClienteAmigo = async () => {
