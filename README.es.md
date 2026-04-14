@@ -188,7 +188,7 @@ Preparé una guía local para que cualquiera pueda compartir este proyecto con c
 - [Índice de documentación](docs/README.md)
 - [Página principal de docs en inglés](docs/en/README.md)
 - [Página principal de docs en español](docs/es/README.md)
-Diagrama de casos de uso:
+- Diagrama de casos de uso:
 - [Diagrama de casos de uso VitalLogix (Astah)](docs/diagrams/UseCase%20VitalLogix.asta)
 - Diagrama de clases:
 - [Diagrama de clases de VitalLogix (Astah 1er versión)](docs/diagrams/ClassDiagram%20VitalLogix.asta)
