@@ -183,12 +183,14 @@ Si tus credenciales locales de PostgreSQL son diferentes, actualiza `backend/src
 ## Documentación
 
 Preparé una guía local para que cualquiera pueda compartir este proyecto con compañeros o amigos usando una configuración gratuita y local:
+- [Guía local para compartir demo gratis (Español)](docs/LOCAL_DEMO_SHARE_GUIDE_ES.txt)
 
 - [Índice de documentación](docs/README.md)
 - [Página principal de docs en inglés](docs/en/README.md)
 - [Página principal de docs en español](docs/es/README.md)
+Diagrama de casos de uso:
 - [Diagrama de casos de uso VitalLogix (Astah)](docs/diagrams/UseCase%20VitalLogix.asta)
+- Diagrama de clases:
 - [Diagrama de clases de VitalLogix (Astah 1er versión)](docs/diagrams/ClassDiagram%20VitalLogix.asta)
-- [Guía local para compartir demo gratis (Español)](docs/LOCAL_DEMO_SHARE_GUIDE_ES.txt)
 - [Notas del sistema de categorías](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
 - [Notas del panel de administración de categorías](docs/ADMIN_CATEGORY_PANEL.md)
