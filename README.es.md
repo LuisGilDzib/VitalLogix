@@ -191,7 +191,7 @@ Preparé una guía local para que cualquiera pueda compartir este proyecto con c
 - Vista previa del diagrama de casos de uso:
 
    ![Vista previa del diagrama de casos de uso VitalLogix](img/vistaPreviUseCase.png)
-- [Diagrama de clases de VitalLogix (Astah 1er versión)](docs/diagrams/ClassDiagram%20VitalLogix.asta)
+- [Diagrama de clases de VitalLogix (Astah 1er versión)](docs/diagrams/ClassDiagramVitalLogix.asta)
 - [Guía local para compartir demo gratis (Español)](docs/LOCAL_DEMO_SHARE_GUIDE_ES.txt)
 - [Notas del sistema de categorías](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
 - [Notas del panel de administración de categorías](docs/ADMIN_CATEGORY_PANEL.md)
