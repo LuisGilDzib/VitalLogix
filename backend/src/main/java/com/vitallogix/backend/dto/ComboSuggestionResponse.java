@@ -6,23 +6,13 @@ import java.util.List;
 
 public class ComboSuggestionResponse {
 
-    private BigDecimal budget;
     private BigDecimal prioritizedCost;
     private BigDecimal recommendedCost;
     private BigDecimal totalCost;
     private int totalScore;
-    private boolean budgetExceededByPrioritized;
     private String message;
     private List<ComboItem> prioritizedItems = new ArrayList<>();
     private List<ComboItem> recommendedItems = new ArrayList<>();
-
-    public BigDecimal getBudget() {
-        return budget;
-    }
-
-    public void setBudget(BigDecimal budget) {
-        this.budget = budget;
-    }
 
     public BigDecimal getTotalCost() {
         return totalCost;
@@ -54,14 +44,6 @@ public class ComboSuggestionResponse {
 
     public void setTotalScore(int totalScore) {
         this.totalScore = totalScore;
-    }
-
-    public boolean isBudgetExceededByPrioritized() {
-        return budgetExceededByPrioritized;
-    }
-
-    public void setBudgetExceededByPrioritized(boolean budgetExceededByPrioritized) {
-        this.budgetExceededByPrioritized = budgetExceededByPrioritized;
     }
 
     public String getMessage() {

@@ -97,6 +97,10 @@ Tambien lo usamos como bitacora visual para documentar la evolucion del proyecto
 
 ## Evidencias SOLID (mínimo 3 principios)
 
+Para un análisis completo de la arquitectura del backend incluyendo **5 principios SOLID**, **7 patrones de diseño** y evidencia específica de código, consulta:
+- 📖 [Principios SOLID y Patrones de Diseño (Español)](docs/SOLID_Y_PATRONES_DISEÑO.md)
+- 📖 [SOLID & Design Patterns Documentation (English)](docs/SOLID_AND_DESIGN_PATTERNS.md)
+
 ### SRP: Single Responsibility Principle
 
 - `App.jsx` delega la gestión de clientes en un panel especializado para reducir responsabilidades del componente raíz.

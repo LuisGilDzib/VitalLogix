@@ -18,4 +18,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
 	// Lists products with stock greater than the provided value.
 	List<Product> findByStockGreaterThan(Integer stock);
+
+	// Lists products that are publicly visible for non-admin users.
+	List<Product> findByVisibleToUsersTrue();
 }

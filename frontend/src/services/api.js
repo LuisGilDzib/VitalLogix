@@ -35,9 +35,8 @@ export const addStockToProduct = (id, quantity) => api.patch(`/products/${id}/st
 // Sales
 export const createSale = (saleData) => api.post('/sales', saleData);
 export const getReceipt = (saleId) => api.get(`/receipts/${saleId}`);
-export const suggestCombo = (budget, prioritizedProductIds = [], maxRecommendations = 6) =>
+export const suggestCombo = (prioritizedProductIds = [], maxRecommendations = 6) =>
   api.post('/optimization/personalized-recommendations', {
-    budget,
     prioritizedProductIds,
     maxRecommendations,
   });
@@ -66,9 +65,13 @@ export const createPredefinedCategory = (name, description = '') =>
   api.post('/categories/predefined', { name, description });
 export const updateCategory = (id, name, description = '') =>
   api.put(`/categories/${id}`, { name, description });
+export const updateCategorySuggestionVisibility = (id, visibleInSuggestions) =>
+  api.patch(`/categories/${id}/suggestion-visibility`, { visibleInSuggestions });
 export const approveCategory = (id) => api.put(`/categories/${id}/approve`);
 export const rejectCategory = (id) => api.delete(`/categories/${id}/reject`);
 export const deactivateCategory = (id) => api.put(`/categories/${id}/deactivate`);
+export const updateProductVisibility = (id, visibilityPatch) =>
+  api.patch(`/products/${id}/visibility`, visibilityPatch);
 
 // Admin user management
 export const getSystemUsers = () => api.get('/admin/users');

@@ -13,13 +13,14 @@ public class CategoryResponse {
     private String createdBy;
     private String approvedBy;
     private LocalDateTime approvedAt;
+    private boolean visibleInSuggestions;
 
     // Constructores
     public CategoryResponse() {}
 
     public CategoryResponse(Long id, String name, String description, String status, String type,
                           LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy,
-                          String approvedBy, LocalDateTime approvedAt) {
+                          String approvedBy, LocalDateTime approvedAt, boolean visibleInSuggestions) {
         this.id = id;
         this.name = name;
         this.description = description;
@@ -30,6 +31,7 @@ public class CategoryResponse {
         this.createdBy = createdBy;
         this.approvedBy = approvedBy;
         this.approvedAt = approvedAt;
+        this.visibleInSuggestions = visibleInSuggestions;
     }
 
     // Getters and Setters
@@ -62,4 +64,7 @@ public class CategoryResponse {
 
     public LocalDateTime getApprovedAt() { return approvedAt; }
     public void setApprovedAt(LocalDateTime approvedAt) { this.approvedAt = approvedAt; }
+
+    public boolean isVisibleInSuggestions() { return visibleInSuggestions; }
+    public void setVisibleInSuggestions(boolean visibleInSuggestions) { this.visibleInSuggestions = visibleInSuggestions; }
 }

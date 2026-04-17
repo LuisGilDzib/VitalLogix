@@ -27,6 +27,11 @@ public class Category {
     @Column(nullable = false)
     private TypeEnum type;
 
+    @Column(nullable = false)
+    // Controls visibility in product recommendations. Admin can toggle per category.
+    // When false, products in this category won't appear in suggestion engine.
+    private boolean visibleInSuggestions = true;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -40,26 +45,30 @@ public class Category {
     private String approvedBy;
 
     @Column
+    // Timestamp of admin approval. Null if status != ACTIVE or still pending.
     private LocalDateTime approvedAt;
 
+    // Auto-set creation and update timestamps on entity lifecycle.
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
+    // Update timestamp on every modification.
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 
-    // Enums
+    // Status enum: ACTIVE (visible), INACTIVE (hidden), PENDING_APPROVAL (custom categories awaiting admin review).
     public enum StatusEnum {
         ACTIVE,
         INACTIVE,
         PENDING_APPROVAL
     }
 
+    // Type enum: PREDEFINED (system defaults), CUSTOM (user-created through API).
     public enum TypeEnum {
         PREDEFINED,
         CUSTOM
@@ -80,6 +89,9 @@ public class Category {
 
     public TypeEnum getType() { return type; }
     public void setType(TypeEnum type) { this.type = type; }
+
+    public boolean isVisibleInSuggestions() { return visibleInSuggestions; }
+    public void setVisibleInSuggestions(boolean visibleInSuggestions) { this.visibleInSuggestions = visibleInSuggestions; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

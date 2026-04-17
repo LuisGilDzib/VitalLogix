@@ -24,6 +24,10 @@ public class Product {
     @Column(length = 500)
     private String description;
 
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String imageUrl;
+
     @Column(length = 100)
     private String category;
 
@@ -39,6 +43,12 @@ public class Product {
 
     @Column(nullable = false)
     private boolean requiresPrescription;
+
+    @Column(nullable = false)
+    private boolean visibleToUsers = true;
+
+    @Column(nullable = false)
+    private boolean visibleInSuggestions = true;
 
 
     @Column(nullable = false, updatable = false)
@@ -66,6 +76,9 @@ public class Product {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
@@ -77,6 +90,12 @@ public class Product {
 
     public boolean isRequiresPrescription() { return requiresPrescription; }
     public void setRequiresPrescription(boolean requiresPrescription) { this.requiresPrescription = requiresPrescription; }
+
+    public boolean isVisibleToUsers() { return visibleToUsers; }
+    public void setVisibleToUsers(boolean visibleToUsers) { this.visibleToUsers = visibleToUsers; }
+
+    public boolean isVisibleInSuggestions() { return visibleInSuggestions; }
+    public void setVisibleInSuggestions(boolean visibleInSuggestions) { this.visibleInSuggestions = visibleInSuggestions; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

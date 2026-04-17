@@ -16,27 +16,32 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    // Obtener todas las categorías activas
+    // Get all active categories. Used in catalog views and dropdown lists.
     public List<Category> getActiveCategories() {
         return categoryRepository.findByStatusOrderByNameAsc(Category.StatusEnum.ACTIVE);
     }
 
-    // Obtener categorías predefinidas
+    // Get predefined system categories (e.g., Vitamins, Pain Relief).
+    // These are created by admins during system setup and cannot be modified by users.
     public List<Category> getPredefinedCategories() {
         return categoryRepository.findByTypeOrderByNameAsc(Category.TypeEnum.PREDEFINED);
     }
 
-    // Obtener categorías custom
+    // Get custom user-created categories.
+    // Note: Some may still be in PENDING_APPROVAL status waiting for admin review.
     public List<Category> getCustomCategories() {
         return categoryRepository.findByTypeOrderByNameAsc(Category.TypeEnum.CUSTOM);
     }
 
-    // Obtener categorías pendientes de aprobación
+    // Get categories pending admin approval. Used in admin approval workflow.
+    // These are custom categories awaiting verification before becoming visible to users.
     public List<Category> getPendingApprovals() {
         return categoryRepository.findPendingApprovals();
     }
 
-    // Crear categoría predefinida (solo admin, desde backend setup)
+    // Create predefined category (admin only, from backend setup).
+    // Predefined categories are system defaults and automatically visible in suggestions.
+    // Throws IllegalArgumentException if category name already exists.
     public Category createPredefinedCategory(String name, String description) {
         if (categoryRepository.existsByNameIgnoreCase(name)) {
             throw new IllegalArgumentException("La categoría '" + name + "' ya existe");
@@ -47,12 +52,15 @@ public class CategoryService {
         category.setDescription(description);
         category.setType(Category.TypeEnum.PREDEFINED);
         category.setStatus(Category.StatusEnum.ACTIVE);
+        category.setVisibleInSuggestions(true);
         category.setCreatedBy("SYSTEM");
 
         return categoryRepository.save(category);
     }
 
-    // Crear categoría custom (desde formulario de producto)
+    // Create custom category from product form.
+    // Custom categories start in PENDING_APPROVAL status and are invisible in suggestions until approved.
+    // If category already exists and is ACTIVE, returns the existing one to avoid duplicates.
     public Category createCustomCategory(String name, String createdBy) {
         if (categoryRepository.existsByNameIgnoreCase(name)) {
             Category existing = categoryRepository.findByNameIgnoreCase(name).orElse(null);
@@ -65,12 +73,15 @@ public class CategoryService {
         category.setName(name);
         category.setType(Category.TypeEnum.CUSTOM);
         category.setStatus(Category.StatusEnum.PENDING_APPROVAL);
+        category.setVisibleInSuggestions(false);
         category.setCreatedBy(createdBy);
 
         return categoryRepository.save(category);
     }
 
-    // Aprobar categoría
+    // Approve category and activate it. Records admin ID and approval timestamp for audit trail.
+    // Makes category visible in suggestions engine as part of approval workflow.
+    // Throws RuntimeException if category not found.
     public Category approveCategory(Long id, String approvedBy) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
@@ -78,11 +89,13 @@ public class CategoryService {
         category.setStatus(Category.StatusEnum.ACTIVE);
         category.setApprovedBy(approvedBy);
         category.setApprovedAt(LocalDateTime.now());
+        category.setVisibleInSuggestions(true);
 
         return categoryRepository.save(category);
     }
 
-    // Rechazar categoría
+    // Reject and delete category. Used in admin approval workflow to discard unwanted custom categories.
+    // Throws RuntimeException if category not found.
     public void rejectCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
@@ -90,7 +103,9 @@ public class CategoryService {
         categoryRepository.delete(category);
     }
 
-    // Actualizar categoría
+    // Update category name and description.
+    // Validates that new name is not already in use by another category (case-insensitive check).
+    // Throws IllegalArgumentException if name conflicts, RuntimeException if category not found.
     public Category updateCategory(Long id, String name, String description) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
@@ -105,7 +120,17 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    // Desactivar categoría
+    public Category setCategorySuggestionVisibility(Long id, boolean visibleInSuggestions) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+        category.setVisibleInSuggestions(visibleInSuggestions);
+        return categoryRepository.save(category);
+    }
+
+    // Deactivate category (change status to INACTIVE). Keeps record in database for audit trail.
+    // Inactive categories won't appear in user-facing views but remain queryable for admin reports.
+    // Throws RuntimeException if category not found.
     public Category deactivateCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
@@ -114,12 +139,12 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    // Obtener categoría por ID
+    // Get category by ID. Returns Optional (empty if not found).
     public Optional<Category> getCategoryById(Long id) {
         return categoryRepository.findById(id);
     }
 
-    // Obtener todas las categorías (incluyendo inactivas)
+    // Get all categories including inactive ones. Admin use case for full inventory review.
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
     }

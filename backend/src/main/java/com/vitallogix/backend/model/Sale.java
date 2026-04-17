@@ -16,12 +16,17 @@ public class Sale {
 
     private BigDecimal totalAmount;
     
-    private BigDecimal discountAmount = BigDecimal.ZERO; // 10% discount for clienteamigo
+    // 10% discount applied when customer has clienteamigo loyalty status.
+    // Always set to ZERO if customer is not a friend (loyalty member).
+    private BigDecimal discountAmount = BigDecimal.ZERO;
     
-    private BigDecimal originalAmount; // Amount before discount
+    // Original total amount before applying any discounts. Useful for audit trail and reporting.
+    private BigDecimal originalAmount;
 
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "sale") // MappedBy supports the bidirectional relationship
+    // Bidirectional relationship with SaleItem. Cascade ensures items are deleted when sale is deleted.
+    // MappedBy indicates the reverse side of the relationship (SaleItem owns the foreign key).
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "sale")
     private List<SaleItem> items;
 
     @ManyToOne
@@ -31,20 +36,23 @@ public class Sale {
     public Customer getCustomer() { return customer; }
     public void setCustomer(Customer customer) { this.customer = customer; }
 
+    // Auto-set sale timestamp when record is first persisted to database.
     @PrePersist
     protected void onCreate() {
         this.saleDate = LocalDateTime.now();
     }
+
+    // Add item to sale and establish bidirectional relationship.
+    // Initializes items list if null. Use this instead of directly modifying items list.
     public void addItem(SaleItem item) {
-    if (items == null) {
-        this.items = new java.util.ArrayList<>();
+        if (items == null) {
+            this.items = new java.util.ArrayList<>();
+        }
+        items.add(item);
+        item.setSale(this);
     }
-    items.add(item);
-    item.setSale(this); // Establishes the reverse relationship automatically
-}
 
-
-    // GETTERS AND SETTERS 
+    // Getters and setters 
     public Long getId() {
         return id;
     }
@@ -69,6 +77,7 @@ public class Sale {
         this.totalAmount = totalAmount;
     }
 
+    // Returns discount amount applied to this sale.
     public BigDecimal getDiscountAmount() {
         return discountAmount;
     }
@@ -77,6 +86,7 @@ public class Sale {
         this.discountAmount = discountAmount;
     }
 
+    // Returns amount before discount. Used for reporting and audit trail.
     public BigDecimal getOriginalAmount() {
         return originalAmount;
     }

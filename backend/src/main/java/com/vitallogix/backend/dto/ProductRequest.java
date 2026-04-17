@@ -12,6 +12,7 @@ public class ProductRequest {
 
 
     private String description;
+    private String imageUrl;
     private String category;
 
     @NotNull(message = "Price is required")
@@ -23,6 +24,10 @@ public class ProductRequest {
     private Integer stock;
 
     private boolean requiresPrescription;
+
+    private boolean visibleToUsers = true;
+
+    private boolean visibleInSuggestions = true;
 
     private java.time.LocalDateTime expirationDate;
 
@@ -36,6 +41,10 @@ public class ProductRequest {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
 
@@ -47,6 +56,12 @@ public class ProductRequest {
 
     public boolean isRequiresPrescription() { return requiresPrescription; }
     public void setRequiresPrescription(boolean requiresPrescription) { this.requiresPrescription = requiresPrescription; }
+
+    public boolean isVisibleToUsers() { return visibleToUsers; }
+    public void setVisibleToUsers(boolean visibleToUsers) { this.visibleToUsers = visibleToUsers; }
+
+    public boolean isVisibleInSuggestions() { return visibleInSuggestions; }
+    public void setVisibleInSuggestions(boolean visibleInSuggestions) { this.visibleInSuggestions = visibleInSuggestions; }
 
     public java.time.LocalDateTime getExpirationDate() { return expirationDate; }
     public void setExpirationDate(java.time.LocalDateTime expirationDate) { this.expirationDate = expirationDate; }

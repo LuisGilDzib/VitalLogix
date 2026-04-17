@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { getAllCategories, approveCategory, rejectCategory, updateCategory, deactivateCategory, getPendingCategories, getProducts } from '../services/api'
+import { getAllCategories, approveCategory, rejectCategory, updateCategory, deactivateCategory, getPendingCategories, getProducts, updateCategorySuggestionVisibility } from '../services/api'
 
 const CategoryManagementPanel = () => {
   const [categories, setCategories] = useState([])
@@ -114,6 +114,15 @@ const CategoryManagementPanel = () => {
       fetchCategories()
     } catch (err) {
       alert('Error al actualizar')
+    }
+  }
+
+  const handleToggleCategorySuggestionVisibility = async (category) => {
+    try {
+      await updateCategorySuggestionVisibility(category.id, !category.visibleInSuggestions)
+      fetchCategories()
+    } catch (err) {
+      alert('No se pudo actualizar la visibilidad de la categoría en sugerencias')
     }
   }
 
@@ -250,6 +259,12 @@ const CategoryManagementPanel = () => {
                     <div className="flex gap-2">
                       {category.status !== 'INACTIVE' && (
                         <>
+                          <button
+                            onClick={() => handleToggleCategorySuggestionVisibility(category)}
+                            className={`flex-1 font-bold py-2 rounded-lg transition-all text-xs uppercase ${category.visibleInSuggestions ? 'bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-700 hover:text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-700 hover:text-white'}`}
+                          >
+                            {category.visibleInSuggestions ? 'Visible Sug.' : 'Oculta Sug.'}
+                          </button>
                           <button
                             onClick={() => startEdit(category)}
                             className="flex-1 bg-amber-100 text-amber-700 font-bold py-2 rounded-lg hover:bg-amber-700 hover:text-white transition-all text-xs uppercase"

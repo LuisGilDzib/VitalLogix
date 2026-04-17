@@ -21,7 +21,7 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
-    // Obtener todas las categorías activas
+    // Get all active categories. Used in user-facing product catalog and dropdown lists.
     @GetMapping("/active")
     public ResponseEntity<List<CategoryResponse>> getActiveCategories() {
         List<Category> categories = categoryService.getActiveCategories();
@@ -31,7 +31,7 @@ public class CategoryController {
         return ResponseEntity.ok(responses);
     }
 
-    // Obtener categorías predefinidas
+    // Get predefined system categories.
     @GetMapping("/predefined")
     public ResponseEntity<List<CategoryResponse>> getPredefinedCategories() {
         List<Category> categories = categoryService.getPredefinedCategories();
@@ -41,7 +41,7 @@ public class CategoryController {
         return ResponseEntity.ok(responses);
     }
 
-    // Obtener categorías custom
+    // Get custom user-created categories.
     @GetMapping("/custom")
     public ResponseEntity<List<CategoryResponse>> getCustomCategories() {
         List<Category> categories = categoryService.getCustomCategories();
@@ -51,7 +51,7 @@ public class CategoryController {
         return ResponseEntity.ok(responses);
     }
 
-    // Obtener categorías pendientes de aprobación (solo para admin)
+    // Get categories pending approval (admin only). Used in admin approval workflow.
     @GetMapping("/pending")
     public ResponseEntity<List<CategoryResponse>> getPendingApprovals() {
         List<Category> categories = categoryService.getPendingApprovals();
@@ -61,7 +61,7 @@ public class CategoryController {
         return ResponseEntity.ok(responses);
     }
 
-    // Obtener una categoría por ID
+    // Get single category by ID. Returns 404 if not found.
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long id) {
         return categoryService.getCategoryById(id)
@@ -69,7 +69,7 @@ public class CategoryController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // Obtener todas las categorías (admin only)
+    // Get all categories including inactive (admin only).
     @GetMapping
     public ResponseEntity<List<CategoryResponse>> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
@@ -79,7 +79,8 @@ public class CategoryController {
         return ResponseEntity.ok(responses);
     }
 
-    // Crear categoría custom (desde formulario de producto)
+    // Create custom category from product form.
+    // X-User-ID header identifies the creator. Falls back to "ANONYMOUS" if not provided.
     @PostMapping("/custom")
     public ResponseEntity<?> createCustomCategory(@RequestBody CategoryRequest request,
                                                    @RequestHeader(value = "X-User-ID", required = false) String userId) {
@@ -92,7 +93,7 @@ public class CategoryController {
         }
     }
 
-    // Crear categoría predefinida (admin only, desde backend setup)
+    // Create predefined category (admin only). Used during initial system setup.
     @PostMapping("/predefined")
     public ResponseEntity<?> createPredefinedCategory(@RequestBody CategoryRequest request) {
         try {
@@ -103,7 +104,7 @@ public class CategoryController {
         }
     }
 
-    // Aprobar categoría (admin only)
+    // Approve category and activate it (admin only). X-Admin-ID header identifies approver.
     @PutMapping("/{id}/approve")
     public ResponseEntity<?> approveCategory(@PathVariable Long id,
                                              @RequestHeader(value = "X-Admin-ID", required = false) String adminId) {
@@ -116,7 +117,7 @@ public class CategoryController {
         }
     }
 
-    // Rechazar categoría (admin only)
+    // Reject and delete category (admin only). Used in approval workflow.
     @DeleteMapping("/{id}/reject")
     public ResponseEntity<?> rejectCategory(@PathVariable Long id) {
         try {
@@ -127,7 +128,7 @@ public class CategoryController {
         }
     }
 
-    // Actualizar categoría
+    // Update category metadata. Validates name uniqueness.
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateCategory(@PathVariable Long id, @RequestBody CategoryRequest request) {
         try {
@@ -140,7 +141,7 @@ public class CategoryController {
         }
     }
 
-    // Desactivar categoría
+    // Deactivate category (change status to INACTIVE).
     @PutMapping("/{id}/deactivate")
     public ResponseEntity<?> deactivateCategory(@PathVariable Long id) {
         try {
@@ -151,7 +152,22 @@ public class CategoryController {
         }
     }
 
-    // Mapear Category a CategoryResponse
+    // Toggle category visibility in product recommendations.
+    // visibleInSuggestions field is required in request body.
+    @PatchMapping("/{id}/suggestion-visibility")
+    public ResponseEntity<?> setSuggestionVisibility(@PathVariable Long id, @RequestBody CategoryRequest request) {
+        if (request.getVisibleInSuggestions() == null) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("visibleInSuggestions es obligatorio"));
+        }
+        try {
+            Category category = categoryService.setCategorySuggestionVisibility(id, request.getVisibleInSuggestions());
+            return ResponseEntity.ok(mapToResponse(category));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));
+        }
+    }
+
+    // Convert Category entity to response DTO. Includes all audit fields (createdAt, approvedAt) and visibility flags.
     private CategoryResponse mapToResponse(Category category) {
         return new CategoryResponse(
                 category.getId(),
@@ -163,11 +179,12 @@ public class CategoryController {
                 category.getUpdatedAt(),
                 category.getCreatedBy(),
                 category.getApprovedBy(),
-                category.getApprovedAt()
+            category.getApprovedAt(),
+            category.isVisibleInSuggestions()
         );
     }
 
-    // Clase interna para respuestas de error
+    // Internal error response structure for API error messages.
     public static class ErrorResponse {
         private String message;
 

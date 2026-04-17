@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { jsPDF } from 'jspdf'
-import { getProducts, createProduct, updateProduct, deleteProduct, addStockToProduct, createSale, getSales, getSalesReport, getInventoryReport, getReceipt, suggestCombo, validateClienteAmigoCode, createCustomCategory } from './services/api'
+import { getProducts, createProduct, updateProduct, deleteProduct, addStockToProduct, createSale, getSales, getSalesReport, getInventoryReport, getReceipt, suggestCombo, validateClienteAmigoCode, createCustomCategory, updateProductVisibility } from './services/api'
 import CategoryManagementPanel from './components/CategoryManagementPanel'
 import CustomerManagementPanel from './components/CustomerManagementPanel'
 import ProductCategoryField from './components/ProductCategoryField'
@@ -16,7 +16,9 @@ function App({ auth, onRequireAuth, onLogout }) {
   const [reportRange, setReportRange] = useState({from: '', to: ''})
   const [searchTerm, setSearchTerm] = useState('')
   const [searchCode, setSearchCode] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('')
+  const [selectedCategories, setSelectedCategories] = useState([])
+  const [priceBounds, setPriceBounds] = useState({ min: 0, max: 0 })
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 0 })
   const [hideExpired, setHideExpired] = useState(false)
   const [showExpiringSoon, setShowExpiringSoon] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -26,18 +28,20 @@ function App({ auth, onRequireAuth, onLogout }) {
     name: '',
     code: '',
     description: '',
+    imageUrl: '',
     category: '',
     stock: '',
     price: '',
     expirationDate: '',
-    requiresPrescription: false
+    requiresPrescription: false,
+    visibleToUsers: true,
+    visibleInSuggestions: true
   })
   const [customCategory, setCustomCategory] = useState('')
   const [expirationSelection, setExpirationSelection] = useState({ day: '', month: '', year: '' })
   const [saleCompleted, setSaleCompleted] = useState(false)
   const [lastSaleId, setLastSaleId] = useState(null)
   const [showRecommendationModal, setShowRecommendationModal] = useState(false)
-  const [recommendBudget, setRecommendBudget] = useState('150.00')
   const [recommendationResult, setRecommendationResult] = useState(null)
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false)
   const [isPrescriptionSale, setIsPrescriptionSale] = useState(false)
@@ -131,11 +135,14 @@ function App({ auth, onRequireAuth, onLogout }) {
       name: '',
       code: '',
       description: '',
+      imageUrl: '',
       category: '',
       stock: '',
       price: '',
       expirationDate: '',
-      requiresPrescription: false
+      requiresPrescription: false,
+      visibleToUsers: true,
+      visibleInSuggestions: true
     })
     setCustomCategory('')
     setExpirationSelection({ day: '', month: '', year: '' })
@@ -158,11 +165,14 @@ function App({ auth, onRequireAuth, onLogout }) {
       name: product.name || '',
       code: product.code || '',
       description: product.description || '',
+      imageUrl: product.imageUrl || '',
       category: isKnownCategory ? product.category : 'OTHER',
       stock: String(product.stock ?? ''),
       price: String(product.price ?? ''),
       expirationDate: sourceDate,
-      requiresPrescription: Boolean(product.requiresPrescription)
+      requiresPrescription: Boolean(product.requiresPrescription),
+      visibleToUsers: product.visibleToUsers !== false,
+      visibleInSuggestions: product.visibleInSuggestions !== false
     })
     
     if (!isKnownCategory) {
@@ -203,6 +213,65 @@ function App({ auth, onRequireAuth, onLogout }) {
   }
 
   const categories = [...new Set(products.map((p) => (p.category || '').trim()).filter(Boolean))]
+
+  useEffect(() => {
+    if (!products.length) {
+      setPriceBounds({ min: 0, max: 0 })
+      setPriceRange({ min: 0, max: 0 })
+      return
+    }
+
+    const prices = products.map((p) => Number(p.price || 0)).filter((price) => Number.isFinite(price))
+    const min = Math.floor(Math.min(...prices))
+    const max = Math.ceil(Math.max(...prices))
+
+    setPriceBounds({ min, max })
+    setPriceRange((prev) => {
+      if (prev.min === 0 && prev.max === 0) {
+        return { min, max }
+      }
+      return {
+        min: Math.max(min, Math.min(prev.min, max)),
+        max: Math.min(max, Math.max(prev.max, min))
+      }
+    })
+  }, [products])
+
+  const buildDefaultProductImage = (name = 'Producto') => {
+    const label = (name || 'Producto').slice(0, 28)
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><rect width="800" height="600" fill="#d1d5db"/><rect x="40" y="40" width="720" height="520" rx="24" fill="#e5e7eb" stroke="#9ca3af" stroke-width="6" stroke-dasharray="18 12"/><text x="400" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="38" font-weight="700" fill="#4b5563">No hay imagen</text><text x="400" y="335" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#6b7280">${label}</text></svg>`
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`
+  }
+
+  const handleProductImageUpload = (event) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onload = () => {
+      setNewProduct((prev) => ({ ...prev, imageUrl: String(reader.result || '') }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const toggleCategorySelection = (category) => {
+    setSelectedCategories((prev) => {
+      if (prev.includes(category)) {
+        return prev.filter((item) => item !== category)
+      }
+      return [...prev, category]
+    })
+  }
+
+  const handlePriceMinChange = (value) => {
+    const numeric = Number(value)
+    setPriceRange((prev) => ({ min: Math.min(numeric, prev.max), max: prev.max }))
+  }
+
+  const handlePriceMaxChange = (value) => {
+    const numeric = Number(value)
+    setPriceRange((prev) => ({ min: prev.min, max: Math.max(numeric, prev.min) }))
+  }
   const expirationMonths = [
     { value: '01', label: 'Enero' },
     { value: '02', label: 'Febrero' },
@@ -276,10 +345,14 @@ function App({ auth, onRequireAuth, onLogout }) {
   const filteredProducts = products.filter((p) => {
     const matchesName = p.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCode = !searchCode || (p.code || '').toLowerCase().includes(searchCode.trim().toLowerCase())
-    const matchesCategory = !categoryFilter || (p.category || '').toLowerCase() === categoryFilter.toLowerCase()
+    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes((p.category || '').trim())
+    const numericPrice = Number(p.price || 0)
+    const matchesPrice = (priceBounds.max === 0 && priceBounds.min === 0)
+      ? true
+      : numericPrice >= priceRange.min && numericPrice <= priceRange.max
     const matchesExpiredFilter = !hideExpired || !isProductExpired(p)
     const matchesSoonFilter = !showExpiringSoon || isProductExpiringSoon(p)
-    return matchesName && matchesCode && matchesCategory && matchesExpiredFilter && matchesSoonFilter
+    return matchesName && matchesCode && matchesCategory && matchesPrice && matchesExpiredFilter && matchesSoonFilter
   })
 
   const handleCheckout = async () => {
@@ -407,14 +480,10 @@ function App({ auth, onRequireAuth, onLogout }) {
       alert('Agrega al menos un producto al carrito para recibir sugerencias personalizadas.');
       return;
     }
-    if (!recommendBudget || Number(recommendBudget) <= 0) {
-      alert('Ingresa un presupuesto valido para sugerir recomendaciones.');
-      return;
-    }
     try {
       setIsRecommendationLoading(true);
       const prioritizedProductIds = [...new Set(cart.map((item) => item.id))];
-      const res = await suggestCombo(recommendBudget, prioritizedProductIds, 6);
+      const res = await suggestCombo(prioritizedProductIds, 6);
       setRecommendationResult(res.data);
     } catch (e) {
       alert('No se pudieron generar recomendaciones personalizadas.');
@@ -455,6 +524,16 @@ function App({ auth, onRequireAuth, onLogout }) {
     }
     setRecommendationResult(null);
     setShowRecommendationModal(true);
+  };
+
+  const handleToggleProductVisibility = async (product, field) => {
+    const nextValue = !Boolean(product[field]);
+    try {
+      await updateProductVisibility(product.id, { [field]: nextValue });
+      await fetchProducts();
+    } catch (e) {
+      alert('No se pudo actualizar la visibilidad del producto.');
+    }
   };
 
   const fetchLastReceipt = async () => {
@@ -649,10 +728,13 @@ function App({ auth, onRequireAuth, onLogout }) {
         name: newProduct.name,
         code: newProduct.code,
         description: newProduct.description || null,
+        imageUrl: newProduct.imageUrl || buildDefaultProductImage(newProduct.name),
         category: finalCategory,
         stock: parseInt(newProduct.stock),
         price: parseFloat(newProduct.price),
         requiresPrescription: newProduct.requiresPrescription,
+        visibleToUsers: newProduct.visibleToUsers,
+        visibleInSuggestions: newProduct.visibleInSuggestions,
         expirationDate: `${newProduct.expirationDate}T00:00:00`
       };
 
@@ -735,7 +817,7 @@ function App({ auth, onRequireAuth, onLogout }) {
                 onClick={onLogout}
                 className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-xs font-black uppercase tracking-widest text-red-700 hover:bg-red-100"
               >
-                Salir
+                Cerrar Sesión
               </button>
             </>
           ) : (
@@ -873,36 +955,25 @@ function App({ auth, onRequireAuth, onLogout }) {
       {view === 'inventory' ? (
         <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
           <main className="flex-1 bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
-            <div className="border-b bg-white">
-              <div className="p-6 space-y-4">
+            <div className="border-b bg-white p-6 space-y-4">
               <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
-                <div className="relative md:col-span-5">
-                <input 
-                  type="text"
-                  placeholder="Buscar medicamento..."
-                  className="w-full bg-gray-100 border-none rounded-xl p-3 pl-10 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <span className="absolute left-3 top-3 opacity-30">🔍</span>
+                <div className="relative md:col-span-7">
+                  <input
+                    type="text"
+                    placeholder="Buscar medicamento..."
+                    className="w-full bg-gray-100 border-none rounded-xl p-3 pl-10 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <span className="absolute left-3 top-3 opacity-30">🔍</span>
                 </div>
                 <input
                   type="text"
                   placeholder="Codigo (SKU / barras)"
-                  className="w-full bg-gray-100 border-none rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm md:col-span-3"
+                  className="w-full bg-gray-100 border-none rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm md:col-span-5"
                   value={searchCode}
                   onChange={(e) => setSearchCode(e.target.value)}
                 />
-                <select
-                  className="w-full bg-gray-100 border-none rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm text-gray-700 md:col-span-4"
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                >
-                  <option value="">Todas las categorías</option>
-                  {categories.map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
               </div>
               {isAdmin && (
                 <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2">
@@ -922,93 +993,131 @@ function App({ auth, onRequireAuth, onLogout }) {
                 </div>
               )}
             </div>
-            </div>
 
-            <div className="custom-scroll">
-              <table className="w-full text-left table-auto">
-                <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
-                  <tr>
-                    <th className="px-6 py-4">Producto</th>
-                    <th className="px-6 py-4">Categoria</th>
-                    <th className="px-6 py-4 text-center">Stock</th>
-                    <th className="px-6 py-4">Precio</th>
-                    <th className="px-6 py-4">Vencimiento</th>
-                    <th className="px-6 py-4 text-right">Acción</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {filteredProducts.map((p) => (
-                    <tr key={p.id} className={`${p.stock <= 0 ? 'bg-gray-100/70 text-gray-400' : 'hover:bg-blue-50/30'} transition-colors`}>
-                      <td className="relative px-6 py-4 font-bold">
-                        <span className={p.stock <= 0 ? 'line-through' : ''}>{p.name}</span>
-                        {p.code && (
-                          <span className="ml-2 rounded bg-slate-100 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-slate-700">
-                            {p.code}
-                          </span>
-                        )}
-                        {isAdmin && (
-                          <span className="ml-2 text-[10px] font-bold text-gray-400">ID:{p.id}</span>
-                        )}
-                        {p.requiresPrescription && (
-                          <span className="ml-2 rounded bg-violet-100 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-violet-700">
-                            Receta
-                          </span>
-                        )}
-                        {p.stock <= 0 && (
-                          <>
-                            <span className="ml-2 rounded bg-gray-300 px-2 py-1 text-[9px] font-black uppercase tracking-wider text-gray-700">
-                              Agotado
-                            </span>
-                            <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rotate-[-18deg] text-[11px] font-black uppercase tracking-[0.2em] text-gray-300/80">
-                              AGOTADO
-                            </span>
-                          </>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">{p.category || 'Sin categoria'}</td>
-                      <td className="px-6 py-4 text-center">
-                        <span className={`text-[10px] font-black px-2 py-1 rounded-md ${p.stock <= 0 ? 'bg-gray-200 text-gray-500' : p.stock < 5 ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-700'}`}>
-                          {p.stock} UN.
-                        </span>
-                      </td>
-                      <td className={`px-6 py-4 font-bold text-gray-500 ${p.stock <= 0 ? 'line-through opacity-70' : ''}`}>${p.price.toFixed(2)}</td>
-                      <td className="px-6 py-4 text-xs font-bold text-gray-500">
-                        {p.expirationDate ? new Date(p.expirationDate).toLocaleDateString() : 'Sin fecha'}
-                      </td>
-                      <td className="px-6 py-4 text-right flex gap-2 justify-end">
-                        {p.stock <= 0 ? (
-                          <span className="bg-gray-200 text-gray-500 px-4 py-2 rounded-lg text-[10px] font-black uppercase">
-                            No disponible
-                          </span>
-                        ) : (
-                          <button onClick={() => addToCart(p)} className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-blue-700 hover:text-white transition-all">
-                            Añadir
-                          </button>
-                        )}
+            <div className="p-6 grid grid-cols-1 gap-6 xl:grid-cols-[260px,1fr]">
+              <aside className="rounded-2xl border border-gray-200 bg-gray-50 p-4 h-fit">
+                <h4 className="text-xs font-black uppercase tracking-widest text-gray-500">Filtrar</h4>
+
+                <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                  <p className="text-xs font-black uppercase tracking-wider text-blue-800">Por categoría</p>
+                  <div className="mt-3 space-y-2 max-h-56 overflow-y-auto custom-scroll pr-1">
+                    {categories.map((category) => (
+                      <label key={category} className="flex items-center gap-2 text-sm font-bold text-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(category)}
+                          onChange={() => toggleCategorySelection(category)}
+                        />
+                        {category}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+                  <p className="text-xs font-black uppercase tracking-wider text-blue-800">Precio</p>
+                  <p className="mt-2 text-sm font-black text-gray-800">
+                    ${priceRange.min.toFixed(0)} - ${priceRange.max.toFixed(0)}
+                  </p>
+                  <div className="mt-4 space-y-4">
+                    <input
+                      type="range"
+                      min={priceBounds.min}
+                      max={priceBounds.max || 1}
+                      value={priceRange.min}
+                      onChange={(e) => handlePriceMinChange(e.target.value)}
+                      className="w-full accent-blue-600"
+                    />
+                    <input
+                      type="range"
+                      min={priceBounds.min}
+                      max={priceBounds.max || 1}
+                      value={priceRange.max}
+                      onChange={(e) => handlePriceMaxChange(e.target.value)}
+                      className="w-full accent-blue-600"
+                    />
+                  </div>
+                </div>
+              </aside>
+
+              <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-3">
+                {filteredProducts.map((p) => (
+                  <article key={p.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+                    <div className={`relative h-52 bg-gray-100 ${p.stock <= 0 ? 'grayscale' : ''}`}>
+                      <img
+                        src={p.imageUrl || buildDefaultProductImage(p.name)}
+                        alt={p.name}
+                        className="h-full w-full object-cover"
+                      />
+                      {p.stock <= 0 && (
+                        <div className="absolute inset-0 bg-gray-500/35 flex items-center justify-center">
+                          <span className="rounded-xl bg-gray-900/80 px-4 py-2 text-sm font-black uppercase tracking-[0.2em] text-white">Agotado</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="p-4">
+                      <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">{p.category || 'Sin categoría'}</p>
+                      <h3 className={`mt-1 text-xl font-black text-blue-900 leading-tight ${p.stock <= 0 ? 'line-through text-gray-400' : ''}`}>{p.name}</h3>
+                      {p.code && <p className="mt-1 text-xs font-bold text-gray-500">Código: {p.code}</p>}
+                      <p className={`mt-3 text-3xl font-black ${p.stock <= 0 ? 'text-gray-400' : 'text-red-600'}`}>${Number(p.price || 0).toFixed(2)}</p>
+                      <p className="mt-1 text-xs font-bold text-gray-500">Stock: {p.stock} unidades</p>
+
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        <button
+                          onClick={() => addToCart(p)}
+                          disabled={p.stock <= 0}
+                          className="rounded-xl bg-green-500 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Añadir al carrito
+                        </button>
+
                         {isAdmin && (
                           <>
                             <button
+                              onClick={() => handleToggleProductVisibility(p, 'visibleToUsers')}
+                              className={`rounded-xl px-3 py-2 text-[10px] font-black uppercase ${p.visibleToUsers !== false ? 'bg-cyan-100 text-cyan-700 hover:bg-cyan-700 hover:text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-700 hover:text-white'}`}
+                            >
+                              {p.visibleToUsers !== false ? 'Visible usuario' : 'Oculto usuario'}
+                            </button>
+                            <button
+                              onClick={() => handleToggleProductVisibility(p, 'visibleInSuggestions')}
+                              className={`rounded-xl px-3 py-2 text-[10px] font-black uppercase ${p.visibleInSuggestions !== false ? 'bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-700 hover:text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-700 hover:text-white'}`}
+                            >
+                              {p.visibleInSuggestions !== false ? 'Visible sug.' : 'Oculto sug.'}
+                            </button>
+                            <button
                               onClick={() => openEditProductModal(p)}
-                              className="bg-amber-100 text-amber-700 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-amber-700 hover:text-white transition-all"
+                              className="rounded-xl bg-amber-100 px-3 py-2 text-[10px] font-black uppercase text-amber-700 hover:bg-amber-700 hover:text-white"
                             >
                               Editar
                             </button>
                             <button
                               onClick={() => handleRestockProduct(p.id, p.name)}
-                              className="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-emerald-700 hover:text-white transition-all"
+                              className="rounded-xl bg-emerald-100 px-3 py-2 text-[10px] font-black uppercase text-emerald-700 hover:bg-emerald-700 hover:text-white"
                             >
                               Reabastecer
                             </button>
-                            <button onClick={() => handleDeleteProduct(p.id)} className="bg-red-100 text-red-700 px-4 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-red-700 hover:text-white transition-all">
+                            <button
+                              onClick={() => handleDeleteProduct(p.id)}
+                              className="rounded-xl bg-red-100 px-3 py-2 text-[10px] font-black uppercase text-red-700 hover:bg-red-700 hover:text-white"
+                            >
                               Eliminar
                             </button>
                           </>
                         )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+
+                {filteredProducts.length === 0 && (
+                  <div className="col-span-full rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-8 text-center">
+                    <p className="text-lg font-black text-gray-600">No encontramos productos con esos filtros</p>
+                    <p className="mt-2 text-sm font-bold text-gray-500">Prueba con otro rango de precio o categorías diferentes.</p>
+                  </div>
+                )}
+              </div>
             </div>
           </main>
 
@@ -1371,19 +1480,10 @@ function App({ auth, onRequireAuth, onLogout }) {
           <div className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl">
             <div className="border-b bg-slate-50 p-6">
               <h3 className="text-2xl font-black text-slate-900">Recomendaciones personalizadas</h3>
-              <p className="mt-1 text-sm font-bold text-slate-500">Priorizamos los productos que ya seleccionaste y optimizamos el resto con mochila.</p>
+              <p className="mt-1 text-sm font-bold text-slate-500">Priorizamos los productos de tu carrito y sugerimos complementos con un motor bandido.</p>
             </div>
             <div className="p-6">
               <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                <input
-                  type="number"
-                  min="0.01"
-                  step="0.01"
-                  value={recommendBudget}
-                  onChange={(e) => setRecommendBudget(e.target.value)}
-                  className="w-full rounded-xl border-2 border-gray-100 p-3 text-sm font-bold outline-none focus:border-blue-500 md:w-64"
-                  placeholder="Presupuesto total"
-                />
                 <button
                   onClick={handleSuggestCombo}
                   disabled={isRecommendationLoading}
@@ -1405,7 +1505,6 @@ function App({ auth, onRequireAuth, onLogout }) {
                 <div className="mt-6 space-y-4">
                   <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm font-bold text-gray-700">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span>Presupuesto: ${Number(recommendationResult.budget || 0).toFixed(2)}</span>
                       <span>Base carrito: ${Number(recommendationResult.prioritizedCost || 0).toFixed(2)}</span>
                       <span>Recomendado: ${Number(recommendationResult.recommendedCost || 0).toFixed(2)}</span>
                       <span>Total: ${Number(recommendationResult.totalCost || 0).toFixed(2)}</span>
@@ -1438,7 +1537,7 @@ function App({ auth, onRequireAuth, onLogout }) {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm font-bold text-gray-500">No hay sugerencias adicionales para ese presupuesto.</p>
+                      <p className="text-sm font-bold text-gray-500">No hay sugerencias adicionales con la configuración actual.</p>
                     )}
                   </div>
                 </div>
@@ -1501,6 +1600,31 @@ function App({ auth, onRequireAuth, onLogout }) {
                 value={newProduct.description}
                 onChange={(e) => setNewProduct({...newProduct, description: e.target.value})}
               />
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-3">
+                <p className="text-[11px] font-black uppercase tracking-wider text-gray-500">Imagen del producto</p>
+                <div className="mt-2 flex flex-col gap-3 md:flex-row md:items-center">
+                  <img
+                    src={newProduct.imageUrl || buildDefaultProductImage(newProduct.name)}
+                    alt="Vista previa"
+                    className="h-24 w-24 rounded-xl border border-gray-200 object-cover"
+                  />
+                  <div className="flex-1 space-y-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProductImageUpload}
+                      className="w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setNewProduct({ ...newProduct, imageUrl: '' })}
+                      className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-xs font-black uppercase tracking-wider text-gray-700 hover:bg-gray-100"
+                    >
+                      Usar imagen por defecto
+                    </button>
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <input 
                   type="number" 
@@ -1563,6 +1687,22 @@ function App({ auth, onRequireAuth, onLogout }) {
                   onChange={(e) => setNewProduct({...newProduct, requiresPrescription: e.target.checked})}
                 />
                 Producto que requiere receta
+              </label>
+              <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-cyan-800">
+                <input
+                  type="checkbox"
+                  checked={newProduct.visibleToUsers}
+                  onChange={(e) => setNewProduct({...newProduct, visibleToUsers: e.target.checked})}
+                />
+                Visible para usuarios
+              </label>
+              <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-fuchsia-800">
+                <input
+                  type="checkbox"
+                  checked={newProduct.visibleInSuggestions}
+                  onChange={(e) => setNewProduct({...newProduct, visibleInSuggestions: e.target.checked})}
+                />
+                Visible en sugerencias
               </label>
               <div className="flex gap-3 pt-4">
                 <button

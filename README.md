@@ -87,6 +87,10 @@ It can also serve as a visual project journal (screenshots and timeline of the a
 
 ## SOLID Evidence (at least 3 principles)
 
+For a comprehensive backend architecture analysis including **5 SOLID principles**, **7 design patterns**, and specific code evidence, see:
+- 📖 [SOLID & Design Patterns Documentation (English)](docs/SOLID_AND_DESIGN_PATTERNS.md)
+- 📖 [Principios SOLID y Patrones de Diseño (Español)](docs/SOLID_Y_PATRONES_DISEÑO.md)
+
 ### SRP: Single Responsibility Principle
 
 - `App.jsx` delegates customer management to a dedicated panel instead of handling all customer UI logic directly.
