@@ -16,7 +16,7 @@ public class DataInitializer {
     @Value("${app.bootstrap.admin.username:${APP_BOOTSTRAP_ADMIN_USERNAME:admin1}}")
     private String bootstrapAdminUsername;
 
-    @Value("${app.bootstrap.admin.password:${APP_BOOTSTRAP_ADMIN_PASSWORD:1admin}}")
+    @Value("${app.bootstrap.admin.password:${APP_BOOTSTRAP_ADMIN_PASSWORD:change_me_admin_password}}")
     private String bootstrapAdminPassword;
 
     @Value("${app.bootstrap.demo-user.enabled:${APP_BOOTSTRAP_DEMO_USER_ENABLED:true}}")
@@ -25,7 +25,7 @@ public class DataInitializer {
     @Value("${app.bootstrap.demo-user.username:${APP_BOOTSTRAP_DEMO_USER_USERNAME:user1}}")
     private String bootstrapDemoUserUsername;
 
-    @Value("${app.bootstrap.demo-user.password:${APP_BOOTSTRAP_DEMO_USER_PASSWORD:1user}}")
+    @Value("${app.bootstrap.demo-user.password:${APP_BOOTSTRAP_DEMO_USER_PASSWORD:change_me_user_password}}")
     private String bootstrapDemoUserPassword;
 
     @Bean
