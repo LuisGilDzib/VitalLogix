@@ -1,6 +1,6 @@
 # VitalLogix
 
-Pharmacy management platform built with Java, PostgreSQL, and React.
+Pharmacy management platform built by our team with Java, PostgreSQL, and React.
 
 ## Navigation
 
@@ -27,7 +27,8 @@ For Spanish-speaking beginners and non-technical readers, we provide a simplifie
 
 This guide explains the full data flow (React -> Spring Boot -> PostgreSQL) in plain language.
 
-It can also serve as a visual project journal (screenshots and timeline of the app evolution).
+We also use it as a visual project journal (screenshots and timeline of the app evolution),
+and we share our experience as a development team in this learning and growth journey.
 
 ## Repository Map
 
@@ -43,47 +44,47 @@ It can also serve as a visual project journal (screenshots and timeline of the a
 
 ### 1. Inventory Management
 
-- The system must allow adding new products to inventory.
-- The system must allow updating product stock levels.
-- The system must record product expiration dates.
-- The system must allow deleting obsolete or expired products.
+- Our system must allow adding new products to inventory.
+- We must allow updating product stock levels.
+- We must record product expiration dates.
+- We must allow deleting obsolete or expired products.
 
 ### 2. Sales Recording
 
-- The system must allow selling products to customers.
-- The system must automatically calculate the total purchase amount.
-- The system must record customer information for prescription sales, including name, address, and contact number.
-- The system must generate a receipt for each sale.
+- Our system must allow selling products to customers.
+- We must automatically calculate the total purchase amount.
+- We must record customer information for prescription sales, including name, address, and contact number.
+- We must generate a receipt for each sale.
 
 ### 3. Product Search and Query
 
-- The system must allow quick product search by name, code, or category.
-- The system must provide detailed product information, including price, stock, and expiration date.
+- We must allow quick product search by name, code, or category.
+- We must provide detailed product information, including price, stock, and expiration date.
 
 ### 4. Customer Management
 
-- The system must allow creating and maintaining customer records.
-- The system must provide information about a customer's previous purchases.
-- The system must allow discounts or loyalty programs for repeat customers.
-- The customer must have a `clienteamigo` number to access the discount program.
+- We must allow creating and maintaining customer records.
+- We must provide information about a customer's previous purchases.
+- We must allow discounts or loyalty programs for repeat customers.
+- Our customers must have a `clienteamigo` number to access our discount program.
 
 ### 5. Reporting
 
-- The system must generate daily, weekly, monthly, and yearly sales reports.
-- The system must provide updated inventory reports.
+- We must generate daily, weekly, monthly, and yearly sales reports.
+- We must provide updated inventory reports.
 
 ### 6. Category Management
 
-- The system includes a category management module with predefined and custom categories.
-- Custom categories can be submitted and then approved or rejected.
+- Our system includes a category management module with predefined and custom categories.
+- We allow custom categories to be submitted and then approved or rejected.
 - Active categories are available to product forms and filtering views.
 
 ## Non-Functional Requirements
 
 ### 1. Intuitive User Interface
 
-- The interface must be simple, clear, and easy to use.
-- Navigation should help users quickly identify inventory, sales, customer, and reporting actions.
+- Our interface must be simple, clear, and easy to use.
+- Our system should help users quickly identify inventory, sales, customer, and reporting actions.
 
 ## SOLID Evidence (at least 3 principles)
 
@@ -110,9 +111,9 @@ For a comprehensive backend architecture analysis including **5 SOLID principles
 
 ## Role Access Matrix
 
-- Guest: can view products and active categories; cannot create sales or manage data.
-- User: can create and consult sales operations; cannot manage products, reports, or admin modules.
-- Admin: full access to products, reports, customers, history, and categories (including approvals).
+- **Guest**: can view products and active categories; cannot create sales or manage data.
+- **User**: can create and consult sales operations; cannot manage products, reports, or admin modules.
+- **Admin**: full access to products, reports, customers, history, and categories (including approvals).
 
 ## Clone The Repository
 
