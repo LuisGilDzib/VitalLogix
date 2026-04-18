@@ -185,5 +185,13 @@ I prepared a local sharing guide so anyone can run and share this project with c
 - [English docs landing page](docs/en/README.md)
 - [Spanish docs landing page](docs/es/README.md)
 - [Local free demo sharing guide (English)](docs/LOCAL_DEMO_SHARE_GUIDE_EN.txt)
-- [Category management notes](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
-- [Admin category panel notes](docs/ADMIN_CATEGORY_PANEL.md)
+	## 📊 Astah Diagrams
+	
+	- [VitalLogix Use Case Diagram](docs/diagrams/UseCase%20VitalLogix.asta)
+	- [VitalLogix Class Diagram](docs/diagrams/ClassDiagram%20VitalLogix.asta)
+	- [VitalLogix Complete Model Diagram](docs/diagrams/VitalLogixModelComplete.asta)
+	
+	## 📝 System Notes
+	
+	- [Category management notes](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
+	- [Admin category panel notes](docs/ADMIN_CATEGORY_PANEL.md)

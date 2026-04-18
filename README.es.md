@@ -193,9 +193,12 @@ Preparé una guía local para que cualquiera pueda compartir este proyecto con c
 - [Índice de documentación](docs/README.md)
 - [Página principal de docs en inglés](docs/en/README.md)
 - [Página principal de docs en español](docs/es/README.md)
-- Diagrama de casos de uso:
-- [Diagrama de casos de uso VitalLogix (Astah)](docs/diagrams/UseCase%20VitalLogix.asta)
-- Diagrama de clases:
-- [Diagrama de clases de VitalLogix (Astah 1er versión)](docs/diagrams/ClassDiagram%20VitalLogix.asta)
+   ## 📊 Diagramas en Astah
+	
+   - [Diagrama de casos de uso VitalLogix](docs/diagrams/UseCase%20VitalLogix.asta)
+   - [Diagrama de clases VitalLogix](docs/diagrams/ClassDiagram%20VitalLogix.asta)
+   - [Diagrama completo modelo VitalLogix](docs/diagrams/VitalLogixModelComplete.asta)
+	
+   ## 📝 Notas del Sistema
 - [Notas del sistema de categorías](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
 - [Notas del panel de administración de categorías](docs/ADMIN_CATEGORY_PANEL.md)
