@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import WelcomeScreen from './components/WelcomeScreen';
 import AuthModal from './components/AuthModal';
 import App from './App';
 import { login as apiLogin, register as apiRegister } from './services/api';
@@ -12,8 +11,7 @@ function RootApp() {
     const role = localStorage.getItem('role');
     return token ? { logged: true, role, username } : { logged: false, role: null, username: null };
   });
-  const [showWelcome, setShowWelcome] = useState(!auth.logged);
-  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(!auth.logged);
 
   const handleLogin = async (username, password) => {
     try {
@@ -24,7 +22,6 @@ function RootApp() {
       localStorage.setItem('role', roles.includes('ADMIN') ? 'admin' : 'user');
       setAuth({ logged: true, role: roles.includes('ADMIN') ? 'admin' : 'user', username });
       setShowAuthModal(false);
-      setShowWelcome(false);
     } catch (e) {
       if (!e.response) {
         alert('No se pudo conectar al backend. Verifica Docker y que el backend esté en puerto 8080.');
@@ -41,7 +38,7 @@ function RootApp() {
     localStorage.removeItem('username');
     localStorage.removeItem('role');
     setAuth({ logged: false, role: null, username: null });
-    setShowWelcome(true);
+    setShowAuthModal(true);
   };
 
 
@@ -60,20 +57,26 @@ function RootApp() {
     }
   };
 
-  const handleContinue = () => {
-    setAuth({ logged: false, role: 'user', username: null });
-    setShowWelcome(false);
+  const handleContinueAsGuest = () => {
+    localStorage.removeItem('token');
+    localStorage.setItem('role', 'user');
+    localStorage.setItem('username', 'Invitado');
+    setAuth({ logged: false, role: 'user', username: 'Invitado' });
+    setShowAuthModal(false);
   };
 
   return (
     <>
-      {showWelcome && (
-        <WelcomeScreen onLogin={() => setShowAuthModal(true)} onContinue={handleContinue} />
-      )}
       {showAuthModal && (
-        <AuthModal onLogin={handleLogin} onRegister={handleRegister} onClose={() => setShowAuthModal(false)} />
+        <AuthModal
+          onLogin={handleLogin}
+          onRegister={handleRegister}
+          onContinueAsGuest={handleContinueAsGuest}
+          onClose={() => setShowAuthModal(false)}
+          canClose={auth.logged || auth.role === 'user'}
+        />
       )}
-      {!showWelcome && (
+      {!showAuthModal && (
         <App auth={auth} onRequireAuth={() => setShowAuthModal(true)} onLogout={handleLogout} />
       )}
     </>

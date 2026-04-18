@@ -1,14 +1,14 @@
 # Principios SOLID y Patrones de Diseño en VitalLogix Backend
 
-## Resumen Ejecutivo
+## Inicio
 
-El backend de VitalLogix implementa **5 principios SOLID** y **7 patrones de diseño** siguiendo estándares profesionales de arquitectura de software.
+El backend de nuestro proyecto implementa **5 principios SOLID** y **6 patrones de diseño** siguiendo lo aprendido en clases de diseño de software y el libro **Head First Design Patterns**.
 
 ---
 
 ## EVIDENCIA DE PRINCIPIOS SOLID
 
-### 1. ✅ SRP - Principio de Responsabilidad Única
+### 1. SRP - Principio de Responsabilidad Única
 
 **Definición**: Cada clase debe tener una única razón para cambiar.
 
@@ -62,7 +62,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
 ---
 
-### 2. ✅ DIP - Principio de Inversión de Dependencias
+### 2. DIP - Principio de Inversión de Dependencias
 
 **Definición**: Depender de abstracciones, no de implementaciones concretas.
 
@@ -132,53 +132,46 @@ public class SaleService {
 
 ---
 
-### 3. ✅ OCP - Principio de Abierto/Cerrado
+### 3. OCP - Principio de Abierto/Cerrado
 
 **Definición**: Abierto para extensión, cerrado para modificación.
 
-#### Implementación: Reglas de Bonus de Stock
+#### Implementación: Parámetros configurables del motor de sugerencias
 
-**Diseño Actual** - Scoring basado en reglas (extensible sin modificación)
+**Diseño actual** - Configuración externa (extensible sin modificar código de flujo)
 ```java
 // backend/src/main/java/com/vitallogix/backend/service/ComboSuggestionService.java
 @Service
 public class ComboSuggestionService {
-    // Las reglas pueden extenderse sin modificar el algoritmo
-    private static final List<StockBonusRule> STOCK_BONUS_RULES = List.of(
-        new StockBonusRule(3, 5000),      // Si stock ≤ 3: bonus 5000 puntos
-        new StockBonusRule(7, 2000)       // Si stock ≤ 7: bonus 2000 puntos
-    );
-    private static final int DEFAULT_STOCK_BONUS = 500;
-    
-    private int resolveStockBonus(int stock) {
-        return STOCK_BONUS_RULES.stream()
-            .filter(rule -> stock <= rule.maxStock())
-            .findFirst()
-            .map(StockBonusRule::bonus)
-            .orElse(DEFAULT_STOCK_BONUS);
+    @Value("${app.suggestion.exploration-weight:0.65}")
+    private double explorationWeight;
+
+    @Value("${app.suggestion.max-recommendations:6}")
+    private int defaultMaxRecommendations;
+
+    private double banditScore(BanditCandidate candidate, int totalPulls) {
+        double exploration = Math.sqrt(Math.log(totalPulls + 1.0) / (candidate.pulls() + 1.0));
+        return candidate.expectedReward() + (explorationWeight * exploration);
     }
 }
 ```
 
 **Beneficios**:
-- ✅ Agregar nueva regla: Solo agregar a la lista `STOCK_BONUS_RULES`
-- ✅ Cambiar regla existente: Modificar la entrada de la lista
-- ✅ No se necesita cambiar el método `computeScore()`
-- ✅ El algoritmo permanece cerrado para modificación
+- Cambiar exploración/recomendaciones máximas sin modificar clases Java
+- Mismo flujo de ejecución con comportamiento configurable por entorno
+- Menor riesgo de regresiones al ajustar parámetros
+- El algoritmo permanece cerrado para modificación de flujo
 
 **Ejemplo de Extensión Futura**:
 ```java
-// Nuevo requisito: Agregar bonus seasonal para meses de gripe
-private static final List<StockBonusRule> STOCK_BONUS_RULES = List.of(
-    new StockBonusRule(3, 5000),
-    new StockBonusRule(7, 2000),
-    new StockBonusRule(15, 10000) // Nueva regla sin modificar la lógica principal
-);
+// Nuevo ajuste por entorno sin cambiar código
+app.suggestion.exploration-weight=0.75
+app.suggestion.max-recommendations=8
 ```
 
 ---
 
-### 4. ✅ LSP - Principio de Sustitución de Liskov
+### 4. LSP - Principio de Sustitución de Liskov
 
 **Definición**: Las subclases deben ser sustituibles por sus clases base.
 
@@ -191,7 +184,7 @@ public interface SaleRepository extends JpaRepository<Sale, Long> { }
 
 ---
 
-### 5. ✅ ISP - Principio de Segregación de Interfaces
+### 5. ISP - Principio de Segregación de Interfaces
 
 **Definición**: Los clientes no deben depender de interfaces que no usan.
 
@@ -208,7 +201,7 @@ public interface ReportServicePort {
 
 ## EVIDENCIA DE PATRONES DE DISEÑO
 
-### 1. ✅ Patrón Repository
+### 1. Patrón Repository
 
 **Propósito**: Abstraer la capa de acceso a datos de la lógica de negocio.
 
@@ -235,7 +228,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
 ---
 
-### 2. ✅ Patrón DTO (Objeto de Transferencia de Datos)
+### 2. Patrón DTO (Objeto de Transferencia de Datos)
 
 **Propósito**: Separar modelos internos de contratos de API.
 
@@ -277,7 +270,7 @@ public class ProductResponse {
 
 ---
 
-### 3. ✅ Patrón Service + Inyección de Dependencias
+### 3. Patrón Service + Inyección de Dependencias
 
 **Propósito**: Centralizar lógica de negocio; manejar dependencias automáticamente.
 
@@ -308,7 +301,7 @@ public class SaleService {
 
 ---
 
-### 4. ✅ Patrón Singleton
+### 4. Patrón Singleton
 
 **Propósito**: Una sola instancia del servicio en tiempo de vida de la aplicación.
 
@@ -332,39 +325,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
 ---
 
-### 5. ✅ Patrón Strategy
-
-**Propósito**: Múltiples algoritmos para el mismo problema; cambiar en tiempo de ejecución.
-
-```java
-@Service
-public class ComboSuggestionService {
-    
-    // Estrategia 1: Cálculo de reward (explotación)
-    private double estimateReward(Product product, ...) {
-        double affinity = ...;        // 50%
-        double stockSignal = ...;     // 30%
-        double normalizedPrice = ...; // 20%
-        return (0.50 * affinity) + (0.30 * stockSignal) + (0.20 * normalizedPrice);
-    }
-    
-    // Estrategia 2: Puntuación UCB (exploración + explotación)
-    private double banditScore(BanditCandidate candidate, int totalPulls) {
-        double exploration = Math.sqrt(...);
-        return candidate.expectedReward() + (EXPLORATION_WEIGHT * exploration);
-    }
-}
-```
-
-**Beneficios**:
-- Múltiples algoritmos encapsulados
-- Fácil de cambiar estrategias
-- Fácil de agregar nuevas estrategias
-- Testeable en aislamiento
-
----
-
-### 6. ✅ Patrón Observer/Lifecycle (JPA)
+### 5. Patrón Observer/Lifecycle (JPA)
 
 **Propósito**: Reaccionar a eventos de ciclo de vida de entidades automáticamente.
 
@@ -410,40 +371,38 @@ new Category("Vitaminas")
 
 ---
 
-### 7. ✅ Patrón Builder (Implícito en DTOs)
+### 6. Patrón Builder (Implícito en DTOs)
 
 Los DTOs con múltiples campos son construidos mediante setters en los controladores, lo que permite construcción flexible de objetos.
 
 ---
 
-## Tabla Resumen
+## Tabla con resumen.
 
 | Principio SOLID | Implementado | Archivo de Evidencia |
 |---|---|---|
-| SRP | ✅ Sí | CategoryService, CategoryController, CategoryRepository |
-| DIP | ✅ Sí | ReportServicePort, ReportController, ReportService |
-| OCP | ✅ Sí | ComboSuggestionService (StockBonusRule) |
-| LSP | ✅ Sí | Todos los repositorios implementan contrato JpaRepository |
-| ISP | ✅ Sí | ReportServicePort define interfaz minimalista |
+| SRP |  Sí | CategoryService, CategoryController, CategoryRepository |
+| DIP |  Sí | ReportServicePort, ReportController, ReportService |
+| OCP |  Sí | ComboSuggestionService (`app.suggestion.*`) |
+| LSP |  Sí | Todos los repositorios implementan contrato JpaRepository |
+| ISP |  Sí | ReportServicePort define interfaz minimalista |
 
 | Patrón de Diseño | Implementado | Archivos de Evidencia |
 |---|---|---|
-| Repository | ✅ Sí | ProductRepository, CategoryRepository, SaleRepository, CustomerRepository |
-| DTO | ✅ Sí | ProductRequest, ProductResponse, CategoryRequest, SaleRequest |
-| Service | ✅ Sí | CategoryService, SaleService, ReportService |
-| Inyección de Dependencias | ✅ Sí | Todos los servicios usan inyección por constructor |
-| Singleton | ✅ Sí | Spring @Service beans |
-| Strategy | ✅ Sí | ComboSuggestionService (estimateReward, banditScore) |
-| Observer/Lifecycle | ✅ Sí | Category (@PrePersist, @PreUpdate) |
+| Repository | Sí | ProductRepository, CategoryRepository, SaleRepository, CustomerRepository |
+| DTO | Sí | ProductRequest, ProductResponse, CategoryRequest, SaleRequest |
+| Service | Sí | CategoryService, SaleService, ReportService |
+| Inyección de Dependencias | Sí | Todos los servicios usan inyección por constructor |
+| Singleton | Sí | Spring @Service beans |
+| Observer/Lifecycle | Sí | Category (@PrePersist, @PreUpdate) |
 
 ---
 
 ## Métricas de Calidad
 
-- **Arquitectura**: Profesional, grado empresarial
 - **Testabilidad**: Alta (gracias a DI y abstracción de servicios)
 - **Mantenibilidad**: Alta (SRP aplicado en todas las capas)
-- **Extensibilidad**: Alta (OCP visible en reglas de scoring)
+- **Extensibilidad**: Alta (OCP visible en parámetros configurables)
 - **Acoplamiento**: Bajo (DIP reduce dependencias)
 - **Cohesión**: Alta (cada clase tiene propósito claro)
 
@@ -451,6 +410,5 @@ Los DTOs con múltiples campos son construidos mediante setters en los controlad
 
 ## Conclusión
 
-El backend de VitalLogix demuestra una sólida comprensión de los principios SOLID y patrones de diseño. El código está listo para producción desde perspectiva arquitectónica.
+Nuestro backend del proyecto VitalLogix demuestra el uso de los principios SOLID y patrones de diseño.
 
-**Evaluación**: ✅ **SUPERA los requerimientos mínimos** (5 SOLID, 7 patrones)

@@ -24,7 +24,6 @@ public class Product {
     @Column(length = 500)
     private String description;
 
-    @Lob
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
@@ -44,10 +43,10 @@ public class Product {
     @Column(nullable = false)
     private boolean requiresPrescription;
 
-    @Column(nullable = false)
+    @Column(nullable = true, columnDefinition = "boolean default true")
     private boolean visibleToUsers = true;
 
-    @Column(nullable = false)
+    @Column(nullable = true, columnDefinition = "boolean default true")
     private boolean visibleInSuggestions = true;
 
 

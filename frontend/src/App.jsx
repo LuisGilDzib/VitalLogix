@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { jsPDF } from 'jspdf'
 import { getProducts, createProduct, updateProduct, deleteProduct, addStockToProduct, createSale, getSales, getSalesReport, getInventoryReport, getReceipt, suggestCombo, validateClienteAmigoCode, createCustomCategory, updateProductVisibility } from './services/api'
 import CategoryManagementPanel from './components/CategoryManagementPanel'
@@ -7,6 +7,7 @@ import ProductCategoryField from './components/ProductCategoryField'
 import './styles/scrollbar.css'
 
 function App({ auth, onRequireAuth, onLogout }) {
+  const CATEGORY_VISIBLE_LIMIT = 6
   const [products, setProducts] = useState([])
   const [sales, setSales] = useState([])
   const [view, setView] = useState('inventory')
@@ -17,6 +18,7 @@ function App({ auth, onRequireAuth, onLogout }) {
   const [searchTerm, setSearchTerm] = useState('')
   const [searchCode, setSearchCode] = useState('')
   const [selectedCategories, setSelectedCategories] = useState([])
+  const [showAllCategories, setShowAllCategories] = useState(false)
   const [priceBounds, setPriceBounds] = useState({ min: 0, max: 0 })
   const [priceRange, setPriceRange] = useState({ min: 0, max: 0 })
   const [hideExpired, setHideExpired] = useState(false)
@@ -34,16 +36,16 @@ function App({ auth, onRequireAuth, onLogout }) {
     price: '',
     expirationDate: '',
     requiresPrescription: false,
-    visibleToUsers: true,
     visibleInSuggestions: true
   })
   const [customCategory, setCustomCategory] = useState('')
   const [expirationSelection, setExpirationSelection] = useState({ day: '', month: '', year: '' })
   const [saleCompleted, setSaleCompleted] = useState(false)
   const [lastSaleId, setLastSaleId] = useState(null)
-  const [showRecommendationModal, setShowRecommendationModal] = useState(false)
   const [recommendationResult, setRecommendationResult] = useState(null)
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false)
+  const [isRecommendationHovering, setIsRecommendationHovering] = useState(false)
+  const recommendationScrollRef = useRef(null)
   const [isPrescriptionSale, setIsPrescriptionSale] = useState(false)
   const [saleCustomer, setSaleCustomer] = useState({
     name: '',
@@ -141,7 +143,6 @@ function App({ auth, onRequireAuth, onLogout }) {
       price: '',
       expirationDate: '',
       requiresPrescription: false,
-      visibleToUsers: true,
       visibleInSuggestions: true
     })
     setCustomCategory('')
@@ -171,7 +172,6 @@ function App({ auth, onRequireAuth, onLogout }) {
       price: String(product.price ?? ''),
       expirationDate: sourceDate,
       requiresPrescription: Boolean(product.requiresPrescription),
-      visibleToUsers: product.visibleToUsers !== false,
       visibleInSuggestions: product.visibleInSuggestions !== false
     })
     
@@ -213,6 +213,14 @@ function App({ auth, onRequireAuth, onLogout }) {
   }
 
   const categories = [...new Set(products.map((p) => (p.category || '').trim()).filter(Boolean))]
+  const hasHiddenCategories = categories.length > CATEGORY_VISIBLE_LIMIT
+  const displayedCategories = showAllCategories ? categories : categories.slice(0, CATEGORY_VISIBLE_LIMIT)
+
+  useEffect(() => {
+    if (!hasHiddenCategories) {
+      setShowAllCategories(false)
+    }
+  }, [hasHiddenCategories])
 
   useEffect(() => {
     if (!products.length) {
@@ -475,56 +483,79 @@ function App({ auth, onRequireAuth, onLogout }) {
     }
   };
 
-  const handleSuggestCombo = async () => {
-    if (cart.length === 0) {
-      alert('Agrega al menos un producto al carrito para recibir sugerencias personalizadas.');
-      return;
-    }
-    try {
-      setIsRecommendationLoading(true);
-      const prioritizedProductIds = [...new Set(cart.map((item) => item.id))];
-      const res = await suggestCombo(prioritizedProductIds, 6);
-      setRecommendationResult(res.data);
-    } catch (e) {
-      alert('No se pudieron generar recomendaciones personalizadas.');
-    } finally {
-      setIsRecommendationLoading(false);
-    }
-  };
+  useEffect(() => {
+    let isActive = true
 
-  const handleAddSuggestedComboToCart = () => {
-    if (!recommendationResult?.recommendedItems?.length) return;
-
-    let updatedCart = [...cart];
-
-    recommendationResult.recommendedItems.forEach((suggested) => {
-      const product = products.find((p) => p.id === suggested.id);
-      if (!product || product.stock <= 0) return;
-
-      const existing = updatedCart.find((item) => item.id === product.id);
-      if (existing) {
-        if (existing.quantity < product.stock) {
-          updatedCart = updatedCart.map((item) =>
-            item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-          );
-        }
-      } else {
-        updatedCart.push({ ...product, quantity: 1 });
+    const fetchAutoSuggestions = async () => {
+      if (cart.length === 0) {
+        if (!isActive) return
+        setRecommendationResult(null)
+        setIsRecommendationLoading(false)
+        return
       }
-    });
 
-    setCart(updatedCart);
-    setShowRecommendationModal(false);
-  };
-
-  const openRecommendationModal = () => {
-    if (cart.length === 0) {
-      alert('Primero agrega un producto al carrito para personalizar recomendaciones.');
-      return;
+      try {
+        setIsRecommendationLoading(true)
+        const prioritizedProductIds = [...new Set(cart.map((item) => item.id))]
+        const res = await suggestCombo(prioritizedProductIds, 8)
+        if (!isActive) return
+        setRecommendationResult(res.data)
+      } catch (e) {
+        if (!isActive) return
+        setRecommendationResult({
+          recommendedItems: [],
+          message: 'No pudimos cargar sugerencias en este momento.'
+        })
+      } finally {
+        if (!isActive) return
+        setIsRecommendationLoading(false)
+      }
     }
-    setRecommendationResult(null);
-    setShowRecommendationModal(true);
-  };
+
+    fetchAutoSuggestions()
+
+    return () => {
+      isActive = false
+    }
+  }, [cart])
+
+  const handleAddSuggestedProduct = (suggestedId) => {
+    const product = products.find((p) => p.id === suggestedId)
+    if (!product) return
+    addToCart(product)
+  }
+
+  const scrollRecommendations = (direction) => {
+    const container = recommendationScrollRef.current
+    if (!container) return
+    const amount = Math.round(container.clientWidth * 0.85)
+    container.scrollBy({
+      left: direction === 'next' ? amount : -amount,
+      behavior: 'smooth'
+    })
+  }
+
+  useEffect(() => {
+    const container = recommendationScrollRef.current
+    if (!container) return
+    if (isRecommendationHovering) return
+    if (!recommendationResult?.recommendedItems?.length) return
+
+    const intervalId = setInterval(() => {
+      const maxScrollLeft = container.scrollWidth - container.clientWidth
+      const remaining = maxScrollLeft - container.scrollLeft
+
+      if (remaining <= 8) {
+        container.scrollTo({ left: 0, behavior: 'smooth' })
+        return
+      }
+
+      const amount = Math.round(container.clientWidth * 0.85)
+      container.scrollBy({ left: amount, behavior: 'smooth' })
+    }, 3400)
+
+    return () => clearInterval(intervalId)
+  }, [recommendationResult, isRecommendationHovering])
 
   const handleToggleProductVisibility = async (product, field) => {
     const nextValue = !Boolean(product[field]);
@@ -532,7 +563,45 @@ function App({ auth, onRequireAuth, onLogout }) {
       await updateProductVisibility(product.id, { [field]: nextValue });
       await fetchProducts();
     } catch (e) {
-      alert('No se pudo actualizar la visibilidad del producto.');
+      const status = e?.response?.status;
+      const backendMessage =
+        typeof e?.response?.data === 'string'
+          ? e.response.data
+          : e?.response?.data?.message;
+
+      // Fallback for environments running an older backend without PATCH /visibility.
+      if (status === 404 || status === 405) {
+        try {
+          await updateProduct(product.id, {
+            name: product.name,
+            code: product.code,
+            description: product.description || null,
+            imageUrl: product.imageUrl || buildDefaultProductImage(product.name),
+            category: product.category,
+            stock: parseInt(product.stock, 10),
+            price: parseFloat(product.price),
+            requiresPrescription: Boolean(product.requiresPrescription),
+            visibleInSuggestions: field === 'visibleInSuggestions' ? nextValue : (product.visibleInSuggestions !== false),
+            expirationDate: product.expirationDate ? String(product.expirationDate) : null
+          });
+          await fetchProducts();
+          return;
+        } catch (fallbackError) {
+          const fallbackMessage =
+            typeof fallbackError?.response?.data === 'string'
+              ? fallbackError.response.data
+              : fallbackError?.response?.data?.message;
+          alert(fallbackMessage || 'No se pudo actualizar la visibilidad de sugerencias.');
+          return;
+        }
+      }
+
+      if (status === 403) {
+        alert('Tu sesión no tiene permisos de administrador para cambiar sugerencias.');
+        return;
+      }
+
+      alert(backendMessage || 'No se pudo actualizar la visibilidad de sugerencias.');
     }
   };
 
@@ -733,7 +802,6 @@ function App({ auth, onRequireAuth, onLogout }) {
         stock: parseInt(newProduct.stock),
         price: parseFloat(newProduct.price),
         requiresPrescription: newProduct.requiresPrescription,
-        visibleToUsers: newProduct.visibleToUsers,
         visibleInSuggestions: newProduct.visibleInSuggestions,
         expirationDate: `${newProduct.expirationDate}T00:00:00`
       };
@@ -994,14 +1062,14 @@ function App({ auth, onRequireAuth, onLogout }) {
               )}
             </div>
 
-            <div className="p-6 grid grid-cols-1 gap-6 xl:grid-cols-[260px,1fr]">
-              <aside className="rounded-2xl border border-gray-200 bg-gray-50 p-4 h-fit">
+            <div className="p-6 grid grid-cols-1 gap-6 md:grid-cols-[280px_minmax(0,_1fr)]">
+              <aside className="rounded-2xl border border-gray-200 bg-gray-50 p-4 h-fit md:sticky md:top-6">
                 <h4 className="text-xs font-black uppercase tracking-widest text-gray-500">Filtrar</h4>
 
                 <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
                   <p className="text-xs font-black uppercase tracking-wider text-blue-800">Por categoría</p>
                   <div className="mt-3 space-y-2 max-h-56 overflow-y-auto custom-scroll pr-1">
-                    {categories.map((category) => (
+                    {displayedCategories.map((category) => (
                       <label key={category} className="flex items-center gap-2 text-sm font-bold text-gray-700">
                         <input
                           type="checkbox"
@@ -1012,6 +1080,15 @@ function App({ auth, onRequireAuth, onLogout }) {
                       </label>
                     ))}
                   </div>
+                  {hasHiddenCategories && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAllCategories((prev) => !prev)}
+                      className="mt-3 rounded-xl border border-gray-300 bg-gray-50 px-3 py-1.5 text-xs font-black text-blue-800 hover:bg-blue-50"
+                    >
+                      {showAllCategories ? 'Ver menos' : 'Ver más'}
+                    </button>
+                  )}
                 </div>
 
                 <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
@@ -1040,7 +1117,7 @@ function App({ auth, onRequireAuth, onLogout }) {
                 </div>
               </aside>
 
-              <div className="grid gap-5 sm:grid-cols-2 2xl:grid-cols-3">
+              <div className="min-w-0 grid gap-5 sm:grid-cols-2 2xl:grid-cols-3">
                 {filteredProducts.map((p) => (
                   <article key={p.id} className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
                     <div className={`relative h-52 bg-gray-100 ${p.stock <= 0 ? 'grayscale' : ''}`}>
@@ -1074,12 +1151,6 @@ function App({ auth, onRequireAuth, onLogout }) {
 
                         {isAdmin && (
                           <>
-                            <button
-                              onClick={() => handleToggleProductVisibility(p, 'visibleToUsers')}
-                              className={`rounded-xl px-3 py-2 text-[10px] font-black uppercase ${p.visibleToUsers !== false ? 'bg-cyan-100 text-cyan-700 hover:bg-cyan-700 hover:text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-700 hover:text-white'}`}
-                            >
-                              {p.visibleToUsers !== false ? 'Visible usuario' : 'Oculto usuario'}
-                            </button>
                             <button
                               onClick={() => handleToggleProductVisibility(p, 'visibleInSuggestions')}
                               className={`rounded-xl px-3 py-2 text-[10px] font-black uppercase ${p.visibleInSuggestions !== false ? 'bg-fuchsia-100 text-fuchsia-700 hover:bg-fuchsia-700 hover:text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-700 hover:text-white'}`}
@@ -1125,15 +1196,85 @@ function App({ auth, onRequireAuth, onLogout }) {
             <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2">
               📦 Resumen de Venta
             </h3>
-            <div className="mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-center">
-              <p className="text-lg font-black text-gray-900">Ver recomendaciones personalizadas</p>
-              <p className="mt-1 text-xs font-bold text-gray-500">Basadas en los productos de tu carrito</p>
-              <button
-                onClick={openRecommendationModal}
-                className="mt-4 rounded-full bg-yellow-400 px-6 py-2 text-sm font-black text-gray-900 hover:bg-yellow-500"
-              >
-                Ver sugerencias
-              </button>
+            <div className="mb-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-black text-gray-900">Inspirado en tu carrito</p>
+                  <p className="mt-0.5 text-[11px] font-bold text-gray-500">Sugerencias automáticas de productos relacionados</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => scrollRecommendations('prev')}
+                    className="h-8 w-8 rounded-full border border-gray-300 bg-white text-base font-black text-blue-700 hover:bg-blue-50"
+                    aria-label="Anterior"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollRecommendations('next')}
+                    className="h-8 w-8 rounded-full border border-gray-300 bg-white text-base font-black text-blue-700 hover:bg-blue-50"
+                    aria-label="Siguiente"
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+
+              {isRecommendationLoading ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {[0, 1].map((item) => (
+                    <div key={item} className="animate-pulse rounded-xl border border-gray-200 bg-white p-2">
+                      <div className="h-20 rounded-lg bg-gray-200" />
+                      <div className="mt-2 h-3 rounded bg-gray-200" />
+                      <div className="mt-2 h-3 w-3/4 rounded bg-gray-200" />
+                    </div>
+                  ))}
+                </div>
+              ) : recommendationResult?.recommendedItems?.length ? (
+                <div
+                  ref={recommendationScrollRef}
+                  onMouseEnter={() => setIsRecommendationHovering(true)}
+                  onMouseLeave={() => setIsRecommendationHovering(false)}
+                  className="flex gap-3 overflow-x-auto pb-2 snap-x snap-mandatory custom-scroll"
+                >
+                  {recommendationResult.recommendedItems.map((item) => {
+                    const product = products.find((p) => p.id === item.id)
+                    return (
+                      <article key={item.id} className="min-w-[170px] max-w-[170px] snap-start rounded-xl border border-gray-200 bg-white p-2 shadow-sm">
+                        <img
+                          src={(product?.imageUrl) || buildDefaultProductImage(item.name)}
+                          alt={item.name}
+                          className="h-20 w-full rounded-lg object-cover"
+                        />
+                        <p className="mt-2 line-clamp-2 text-[11px] font-black leading-tight text-slate-700">{item.name}</p>
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className="text-sm font-black text-red-600">${Number(item.price || 0).toFixed(2)}</span>
+                          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-700">
+                            Popular
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleAddSuggestedProduct(item.id)}
+                          className="mt-2 w-full rounded-lg bg-blue-600 px-2 py-1.5 text-[10px] font-black uppercase tracking-wider text-white hover:bg-blue-700"
+                        >
+                          Añadir
+                        </button>
+                      </article>
+                    )
+                  })}
+                </div>
+              ) : (
+                <p className="text-[11px] font-bold text-gray-500">
+                  Agrega productos al carrito y te mostraremos sugerencias similares automáticamente.
+                </p>
+              )}
+
+              {recommendationResult?.message && !recommendationResult?.recommendedItems?.length && (
+                <p className="mt-2 text-[11px] font-bold text-gray-500">{recommendationResult.message}</p>
+              )}
             </div>
             <div className="mb-6 rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4">
               <label className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-indigo-800">
@@ -1475,86 +1616,6 @@ function App({ auth, onRequireAuth, onLogout }) {
           </div>
         </div>
       )}
-      {showRecommendationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl">
-            <div className="border-b bg-slate-50 p-6">
-              <h3 className="text-2xl font-black text-slate-900">Recomendaciones personalizadas</h3>
-              <p className="mt-1 text-sm font-bold text-slate-500">Priorizamos los productos de tu carrito y sugerimos complementos con un motor bandido.</p>
-            </div>
-            <div className="p-6">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center">
-                <button
-                  onClick={handleSuggestCombo}
-                  disabled={isRecommendationLoading}
-                  className="rounded-xl bg-blue-700 px-5 py-3 text-xs font-black uppercase tracking-widest text-white hover:bg-blue-800 disabled:opacity-60"
-                >
-                  {isRecommendationLoading ? 'Calculando...' : 'Generar sugerencias'}
-                </button>
-                {recommendationResult?.recommendedItems?.length > 0 && (
-                  <button
-                    onClick={handleAddSuggestedComboToCart}
-                    className="rounded-xl border border-blue-200 bg-white px-5 py-3 text-xs font-black uppercase tracking-widest text-blue-700 hover:bg-blue-50"
-                  >
-                    Agregar recomendaciones
-                  </button>
-                )}
-              </div>
-
-              {recommendationResult && (
-                <div className="mt-6 space-y-4">
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm font-bold text-gray-700">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span>Base carrito: ${Number(recommendationResult.prioritizedCost || 0).toFixed(2)}</span>
-                      <span>Recomendado: ${Number(recommendationResult.recommendedCost || 0).toFixed(2)}</span>
-                      <span>Total: ${Number(recommendationResult.totalCost || 0).toFixed(2)}</span>
-                    </div>
-                    {recommendationResult.message && (
-                      <p className="mt-2 text-xs text-gray-600">{recommendationResult.message}</p>
-                    )}
-                  </div>
-
-                  <div>
-                    <p className="mb-2 text-xs font-black uppercase tracking-widest text-gray-500">Tus productos priorizados</p>
-                    <div className="flex flex-wrap gap-2">
-                      {recommendationResult.prioritizedItems?.map((item) => (
-                        <span key={item.id} className="rounded-lg bg-blue-100 px-3 py-2 text-[11px] font-black uppercase text-blue-800">
-                          {item.name} - ${Number(item.price || 0).toFixed(2)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="mb-2 text-xs font-black uppercase tracking-widest text-gray-500">Sugerencias complementarias</p>
-                    {recommendationResult.recommendedItems?.length ? (
-                      <div className="grid gap-2 md:grid-cols-2">
-                        {recommendationResult.recommendedItems.map((item) => (
-                          <div key={item.id} className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-                            <p className="text-sm font-black uppercase text-amber-900">{item.name}</p>
-                            <p className="mt-1 text-xs font-bold text-amber-700">${Number(item.price || 0).toFixed(2)}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm font-bold text-gray-500">No hay sugerencias adicionales con la configuración actual.</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="flex justify-end border-t p-6">
-              <button
-                type="button"
-                onClick={() => setShowRecommendationModal(false)}
-                className="rounded-xl border border-gray-200 bg-white px-5 py-2 text-xs font-black uppercase tracking-widest text-gray-700 hover:bg-gray-50"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {isModalOpen && isAdmin && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-300">
@@ -1687,14 +1748,6 @@ function App({ auth, onRequireAuth, onLogout }) {
                   onChange={(e) => setNewProduct({...newProduct, requiresPrescription: e.target.checked})}
                 />
                 Producto que requiere receta
-              </label>
-              <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-cyan-800">
-                <input
-                  type="checkbox"
-                  checked={newProduct.visibleToUsers}
-                  onChange={(e) => setNewProduct({...newProduct, visibleToUsers: e.target.checked})}
-                />
-                Visible para usuarios
               </label>
               <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-fuchsia-800">
                 <input

@@ -90,7 +90,6 @@ and we share our experience as a development team in this learning and growth jo
 
 For a comprehensive backend architecture analysis including **5 SOLID principles**, **7 design patterns**, and specific code evidence, see:
 - 📖 [SOLID & Design Patterns Documentation (English)](docs/SOLID_AND_DESIGN_PATTERNS.md)
-- 📖 [Principios SOLID y Patrones de Diseño (Español)](docs/SOLID_Y_PATRONES_DISEÑO.md)
 
 ### SRP: Single Responsibility Principle
 
@@ -106,7 +105,7 @@ For a comprehensive backend architecture analysis including **5 SOLID principles
 
 ### OCP: Open/Closed Principle
 
-- Recommendation stock bonus behavior is represented through `StockBonusRule` rules to allow extension without changing core scoring flow.
+- The suggestion engine uses configuration parameters (`app.suggestion.*`) to extend behavior without changing the core bandit algorithm flow.
 - Evidence: [backend/src/main/java/com/vitallogix/backend/service/ComboSuggestionService.java](backend/src/main/java/com/vitallogix/backend/service/ComboSuggestionService.java)
 
 ## Role Access Matrix

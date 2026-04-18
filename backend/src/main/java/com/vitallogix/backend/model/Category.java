@@ -27,7 +27,7 @@ public class Category {
     @Column(nullable = false)
     private TypeEnum type;
 
-    @Column(nullable = false)
+    @Column(nullable = true, columnDefinition = "boolean default true")
     // Controls visibility in product recommendations. Admin can toggle per category.
     // When false, products in this category won't appear in suggestion engine.
     private boolean visibleInSuggestions = true;

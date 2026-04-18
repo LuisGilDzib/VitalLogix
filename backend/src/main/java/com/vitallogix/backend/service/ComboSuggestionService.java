@@ -40,11 +40,13 @@ public class ComboSuggestionService {
         this.categoryRepository = categoryRepository;
     }
 
-    // Generates personalized product recommendations using a stateless UCB (multi-armed bandit) algorithm.\n    // Respects product visibility flags (visibleToUsers, visibleInSuggestions) and category approval.\n    // Filters out prescription-only products and out-of-stock items.\n    // Returns up to maxRecommendations items ranked by bandit score (exploitation + exploration).
+    // Generates personalized product recommendations using a stateless UCB (multi-armed bandit) algorithm.
+    // Respects suggestion visibility and category approval policies.
+    // Filters out prescription-only products and out-of-stock items.
+    // Returns up to maxRecommendations items ranked by bandit score (exploitation + exploration).
 
     public ComboSuggestionResponse suggest(ComboSuggestionRequest request) {
         List<Product> products = productRepository.findByStockGreaterThan(0).stream()
-                .filter(Product::isVisibleToUsers)
                 .filter(Product::isVisibleInSuggestions)
                 .filter(p -> !p.isRequiresPrescription())
                 .toList();
@@ -145,6 +147,11 @@ public class ComboSuggestionService {
     // Check if product's category is allowed by admin policy.
     // Categories not in visibleCategoryNames set are filtered out.
     private boolean isCategoryAllowed(String category, Set<String> visibleCategoryNames) {
+        // Fallback for fresh databases: if there are no category rules yet,
+        // do not block all recommendations.
+        if (visibleCategoryNames == null || visibleCategoryNames.isEmpty()) {
+            return true;
+        }
         if (category == null || category.isBlank()) {
             return true;
         }

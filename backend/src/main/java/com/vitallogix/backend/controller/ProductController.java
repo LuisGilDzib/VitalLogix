@@ -5,9 +5,7 @@ import com.vitallogix.backend.dto.ProductResponse;
 import com.vitallogix.backend.dto.ProductVisibilityRequest;
 import com.vitallogix.backend.dto.StockUpdateRequest;
 import com.vitallogix.backend.exception.ResourceNotFoundException;
-import com.vitallogix.backend.model.Category;
 import com.vitallogix.backend.model.Product;
-import com.vitallogix.backend.repository.CategoryRepository;
 import com.vitallogix.backend.repository.ProductRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,19 +14,14 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/products")
@@ -36,11 +29,9 @@ import java.util.stream.Collectors;
 public class ProductController {
 
     private final ProductRepository repository;
-    private final CategoryRepository categoryRepository;
 
-    public ProductController(ProductRepository repository, CategoryRepository categoryRepository) {
+    public ProductController(ProductRepository repository) {
         this.repository = repository;
-        this.categoryRepository = categoryRepository;
     }
 
     @Operation(summary = "product.list.summary", description = "product.list.description")
@@ -48,31 +39,8 @@ public class ProductController {
             @ApiResponse(responseCode = "200", description = "product.list.ok")
     })
     @GetMapping
-        public Page<ProductResponse> findAll(Pageable pageable, Authentication authentication) {
-        if (isAdmin(authentication)) {
-            return repository.findAll(pageable).map(this::toResponse);
-        }
-
-        Set<String> visibleCategoryNames = categoryRepository
-            .findByStatusAndVisibleInSuggestionsTrueOrderByNameAsc(Category.StatusEnum.ACTIVE)
-            .stream()
-            .map(Category::getName)
-            .filter(name -> name != null && !name.isBlank())
-            .map(name -> name.trim().toLowerCase(Locale.ROOT))
-            .collect(Collectors.toSet());
-
-        List<ProductResponse> visibleProducts = repository.findByVisibleToUsersTrue().stream()
-            .filter(product -> isCategoryVisibleForUsers(product.getCategory(), visibleCategoryNames))
-            .map(this::toResponse)
-            .toList();
-
-        int start = Math.toIntExact(pageable.getOffset());
-        int end = Math.min(start + pageable.getPageSize(), visibleProducts.size());
-        List<ProductResponse> content = start >= visibleProducts.size()
-            ? List.of()
-            : visibleProducts.subList(start, end);
-
-        return new PageImpl<>(content, pageable, visibleProducts.size());
+    public Page<ProductResponse> findAll(Pageable pageable) {
+        return repository.findAll(pageable).map(this::toResponse);
     }
 
     @Operation(summary = "product.get.summary", description = "product.get.description")
@@ -113,7 +81,6 @@ public class ProductController {
         product.setPrice(request.getPrice());
         product.setStock(request.getStock());
         product.setRequiresPrescription(request.isRequiresPrescription());
-        product.setVisibleToUsers(request.isVisibleToUsers());
         product.setVisibleInSuggestions(request.isVisibleInSuggestions());
         product.setExpirationDate(request.getExpirationDate());
         return toResponse(repository.save(product));
@@ -147,7 +114,6 @@ public class ProductController {
         product.setPrice(request.getPrice());
         product.setStock(request.getStock());
         product.setRequiresPrescription(request.isRequiresPrescription());
-        product.setVisibleToUsers(request.isVisibleToUsers());
         product.setVisibleInSuggestions(request.isVisibleInSuggestions());
         product.setExpirationDate(request.getExpirationDate());
         return toResponse(repository.save(product));
@@ -157,19 +123,14 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/visibility")
     public ProductResponse updateVisibility(@PathVariable Long id, @RequestBody ProductVisibilityRequest request) {
-        if (request.getVisibleToUsers() == null && request.getVisibleInSuggestions() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe indicar al menos un campo de visibilidad");
+        if (request.getVisibleInSuggestions() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe indicar visibilidad de sugerencias");
         }
 
         Product product = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        if (request.getVisibleToUsers() != null) {
-            product.setVisibleToUsers(request.getVisibleToUsers());
-        }
-        if (request.getVisibleInSuggestions() != null) {
-            product.setVisibleInSuggestions(request.getVisibleInSuggestions());
-        }
+        product.setVisibleInSuggestions(request.getVisibleInSuggestions());
 
         return toResponse(repository.save(product));
     }
@@ -221,26 +182,10 @@ public class ProductController {
             p.getPrice(),
             p.getStock(),
             p.isRequiresPrescription(),
-            p.isVisibleToUsers(),
             p.isVisibleInSuggestions(),
             p.getCreatedAt(),
             p.getExpirationDate()
         );
-    }
-
-    private boolean isAdmin(Authentication authentication) {
-        if (authentication == null) {
-            return false;
-        }
-        return authentication.getAuthorities().stream()
-                .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
-    }
-
-    private boolean isCategoryVisibleForUsers(String category, Set<String> visibleCategoryNames) {
-        if (category == null || category.isBlank()) {
-            return true;
-        }
-        return visibleCategoryNames.contains(category.trim().toLowerCase(Locale.ROOT));
     }
 
     // Searches products in priority order: id, code, name, then category.

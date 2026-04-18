@@ -2,13 +2,13 @@
 
 ## Executive Summary
 
-VitalLogix backend implements **3+ SOLID principles** and **5+ design patterns** following professional software architecture standards.
+VitalLogix backend implements **5 SOLID principles** and **6 design patterns** following professional software architecture standards.
 
 ---
 
 ## SOLID PRINCIPLES EVIDENCE
 
-### 1. ✅ SRP - Single Responsibility Principle
+### 1. SRP - Single Responsibility Principle
 
 **Definition**: Each class should have only one reason to change.
 
@@ -62,7 +62,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
 ---
 
-### 2. ✅ DIP - Dependency Inversion Principle
+### 2. DIP - Dependency Inversion Principle
 
 **Definition**: Depend on abstractions, not on concrete implementations.
 
@@ -132,55 +132,48 @@ public class SaleService {
 
 ---
 
-### 3. ✅ OCP - Open/Closed Principle
+### 3. OCP - Open/Closed Principle
 
 **Definition**: Open for extension, closed for modification.
 
-#### Implementation: Stock Bonus Rules
+#### Implementation: Configurable suggestion engine parameters
 
-**Current Design** - Rule-based scoring (extensible without modification)
+**Current design** - Externalized configuration (extensible without changing control flow)
 ```java
 // backend/src/main/java/com/vitallogix/backend/service/ComboSuggestionService.java
 @Service
 public class ComboSuggestionService {
-    // Rules can be extended without modifying the algorithm
-    private static final List<StockBonusRule> STOCK_BONUS_RULES = List.of(
-        new StockBonusRule(3, 5000),      // If stock ≤ 3: bonus 5000 points
-        new StockBonusRule(7, 2000)       // If stock ≤ 7: bonus 2000 points
-    );
-    private static final int DEFAULT_STOCK_BONUS = 500;
-    
-    private int resolveStockBonus(int stock) {
-        return STOCK_BONUS_RULES.stream()
-            .filter(rule -> stock <= rule.maxStock())
-            .findFirst()
-            .map(StockBonusRule::bonus)
-            .orElse(DEFAULT_STOCK_BONUS);
+    @Value("${app.suggestion.exploration-weight:0.65}")
+    private double explorationWeight;
+
+    @Value("${app.suggestion.max-recommendations:6}")
+    private int defaultMaxRecommendations;
+
+    private double banditScore(BanditCandidate candidate, int totalPulls) {
+        double exploration = Math.sqrt(Math.log(totalPulls + 1.0) / (candidate.pulls() + 1.0));
+        return candidate.expectedReward() + (explorationWeight * exploration);
     }
 }
 ```
 
 **Benefits**:
-- ✅ Add new rule: Just append to `STOCK_BONUS_RULES` list
-- ✅ Change existing rule: Modify the list entry
-- ✅ No changes needed to `computeScore()` method
-- ✅ Algorithm remains closed for modification
+- Tune exploration/max recommendations without changing Java classes
+- Same execution flow with environment-specific behavior
+- Lower regression risk while tuning recommendation behavior
+- Algorithm remains closed for control-flow modification
 
 **Future Extension Example**:
 ```java
-// New requirement: Add seasonal bonus for flu months
-private static final List<StockBonusRule> STOCK_BONUS_RULES = List.of(
-    new StockBonusRule(3, 5000),
-    new StockBonusRule(7, 2000),
-    new StockBonusRule(15, 10000) // New rule added WITHOUT modifying core logic
-);
+// Environment tuning without code changes
+app.suggestion.exploration-weight=0.75
+app.suggestion.max-recommendations=8
 ```
 
 ---
 
 ## DESIGN PATTERNS EVIDENCE
 
-### 1. ✅ Repository Pattern
+### 1. Repository Pattern
 
 **Purpose**: Abstract data access layer from business logic.
 
@@ -218,7 +211,7 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
 ---
 
-### 2. ✅ DTO (Data Transfer Object) Pattern
+### 2. DTO (Data Transfer Object) Pattern
 
 **Purpose**: Separate internal models from API contracts.
 
@@ -309,7 +302,7 @@ public class ProductController {
 
 ---
 
-### 3. ✅ Service Pattern + Dependency Injection
+### 3. Service Pattern + Dependency Injection
 
 **Purpose**: Centralize business logic; manage dependencies automatically.
 
@@ -377,7 +370,7 @@ public class SaleController {
 
 ---
 
-### 4. ✅ Singleton Pattern
+### 4. Singleton Pattern
 
 **Purpose**: Single instance of service throughout application lifetime.
 
@@ -426,60 +419,7 @@ public class BeanScopeDemo {
 
 ---
 
-### 5. ✅ Strategy Pattern
-
-**Purpose**: Multiple algorithms for same problem; switch at runtime.
-
-**Implementation: Product Scoring Algorithms**
-
-```java
-@Service
-public class ComboSuggestionService {
-    
-    // Strategy 1: Reward calculation (exploitation)
-    private double estimateReward(Product product, Map<String, Integer> categoryAffinity, BigDecimal maxPrice) {
-        String categoryKey = product.getCategory() == null ? "" : product.getCategory().toLowerCase();
-        int affinityCount = categoryAffinity.getOrDefault(categoryKey, 0);
-        
-        // Weighted components
-        double affinity = Math.min(1.0, affinityCount / 3.0);           // 50% weight
-        double stockSignal = Math.min(1.0, product.getStock() / 20.0); // 30% weight
-        double normalizedPrice = product.getPrice()
-            .divide(maxPrice, 4, RoundingMode.HALF_UP)
-            .doubleValue();                                             // 20% weight
-        
-        return (0.50 * affinity) + (0.30 * stockSignal) + (0.20 * normalizedPrice);
-    }
-    
-    // Strategy 2: UCB score (exploration + exploitation)
-    private double banditScore(BanditCandidate candidate, int totalPulls) {
-        double exploration = Math.sqrt(Math.log(totalPulls + 1.0) / (candidate.pulls() + 1.0));
-        return candidate.expectedReward() + (EXPLORATION_WEIGHT * exploration);
-    }
-}
-```
-
-**Usage**:
-```java
-// Choose strategy based on context
-for (BanditCandidate candidate : candidates) {
-    // Use bandit strategy (UCB)
-    double score = banditScore(candidate, totalPulls);
-    
-    // Or use reward strategy
-    // double score = estimateReward(...);
-}
-```
-
-**Benefits**:
-- Multiple algorithms encapsulated
-- Easy to switch strategies
-- Easy to add new strategies
-- Testable in isolation
-
----
-
-### 6. ✅ Observer/Lifecycle Pattern (JPA)
+### 5. Observer/Lifecycle Pattern (JPA)
 
 **Purpose**: React to entity lifecycle events automatically.
 
@@ -540,21 +480,20 @@ categoryRepository.update()
 
 | SOLID Principle | Implemented | Evidence File |
 |-----------------|------------|---------------|
-| SRP | ✅ Yes | CategoryService, CategoryController, CategoryRepository |
-| DIP | ✅ Yes | ReportServicePort, ReportController, ReportService |
-| OCP | ✅ Yes | ComboSuggestionService (StockBonusRule) |
-| LSP | ✅ Yes | All repositories implement JpaRepository contract |
-| ISP | ✅ Yes | ReportServicePort defines minimal interface |
+| SRP | Yes | CategoryService, CategoryController, CategoryRepository |
+| DIP | Yes | ReportServicePort, ReportController, ReportService |
+| OCP | Yes | ComboSuggestionService (`app.suggestion.*`) |
+| LSP | Yes | All repositories implement JpaRepository contract |
+| ISP | Yes | ReportServicePort defines minimal interface |
 
 | Design Pattern | Implemented | Evidence Files |
 |---|---|---|
-| Repository | ✅ Yes | ProductRepository, CategoryRepository, SaleRepository |
-| DTO | ✅ Yes | ProductRequest, ProductResponse, CategoryRequest, SaleRequest |
-| Service | ✅ Yes | CategoryService, SaleService, ReportService |
-| Dependency Injection | ✅ Yes | All services use constructor injection |
-| Singleton | ✅ Yes | Spring @Service beans |
-| Strategy | ✅ Yes | ComboSuggestionService (estimateReward, banditScore) |
-| Observer/Lifecycle | ✅ Yes | Category (@PrePersist, @PreUpdate) |
+| Repository | Yes | ProductRepository, CategoryRepository, SaleRepository |
+| DTO | Yes | ProductRequest, ProductResponse, CategoryRequest, SaleRequest |
+| Service | Yes | CategoryService, SaleService, ReportService |
+| Dependency Injection | Yes | All services use constructor injection |
+| Singleton | Yes | Spring @Service beans |
+| Observer/Lifecycle | Yes | Category (@PrePersist, @PreUpdate) |
 
 ---
 
@@ -563,7 +502,7 @@ categoryRepository.update()
 - **Architecture**: Professional, enterprise-grade
 - **Testability**: High (due to DI and service abstraction)
 - **Maintainability**: High (SRP enforced across layers)
-- **Extensibility**: High (OCP visible in scoring rules)
+- **Extensibility**: High (OCP visible in configurable parameters)
 - **Coupling**: Low (DIP reduces dependencies)
 - **Cohesion**: High (each class has clear purpose)
 
@@ -573,4 +512,4 @@ categoryRepository.update()
 
 VitalLogix backend demonstrates a solid understanding of SOLID principles and design patterns. The codebase is production-ready from an architectural perspective.
 
-**Assessment**: ✅ **EXCEEDS minimum requirements** (3+ SOLID, 3+ patterns)
+**Assessment**: **EXCEEDS minimum requirements** (3+ SOLID, 3+ patterns)

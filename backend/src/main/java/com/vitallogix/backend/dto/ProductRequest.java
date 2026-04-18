@@ -25,8 +25,6 @@ public class ProductRequest {
 
     private boolean requiresPrescription;
 
-    private boolean visibleToUsers = true;
-
     private boolean visibleInSuggestions = true;
 
     private java.time.LocalDateTime expirationDate;
@@ -56,9 +54,6 @@ public class ProductRequest {
 
     public boolean isRequiresPrescription() { return requiresPrescription; }
     public void setRequiresPrescription(boolean requiresPrescription) { this.requiresPrescription = requiresPrescription; }
-
-    public boolean isVisibleToUsers() { return visibleToUsers; }
-    public void setVisibleToUsers(boolean visibleToUsers) { this.visibleToUsers = visibleToUsers; }
 
     public boolean isVisibleInSuggestions() { return visibleInSuggestions; }
     public void setVisibleInSuggestions(boolean visibleInSuggestions) { this.visibleInSuggestions = visibleInSuggestions; }

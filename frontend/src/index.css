@@ -8,3 +8,41 @@
 .category-select option {
 	font-weight: 600;
 }
+
+.auth-logo-float {
+	animation: auth-logo-float 4.2s ease-in-out infinite;
+}
+
+.auth-logo-vibrant {
+	filter: saturate(1.35) contrast(1.14) brightness(1.08) drop-shadow(0 14px 20px rgba(3, 34, 61, 0.35));
+}
+
+.auth-logo-glow {
+	animation: auth-logo-glow 3.2s ease-in-out infinite;
+}
+
+@keyframes auth-logo-float {
+	0%,
+	100% {
+		transform: translateY(0px) scale(1);
+	}
+	50% {
+		transform: translateY(-6px) scale(1.015);
+	}
+}
+
+@keyframes auth-logo-glow {
+	0%,
+	100% {
+		opacity: 0.55;
+	}
+	50% {
+		opacity: 0.95;
+	}
+}
+
+@media (prefers-color-scheme: dark) {
+	.auth-logo-vibrant {
+		filter: saturate(1.55) contrast(1.2) brightness(1.16) drop-shadow(0 16px 24px rgba(8, 69, 118, 0.48));
+	}
+}
