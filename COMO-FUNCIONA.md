@@ -137,11 +137,11 @@ Rutas reales para ubicarte rápido:
 
 Si sigues ese camino, el proyecto deja de verse grande y empieza a verse lógico.
 
-## 8) Mi experiencia en este primer proyecto
+## 8) Experiencia de un desarrollador del equipo
 
-¡Hola! Soy Luis Dzib, el autor de este repositorio.
+¡Hola! Soy Luis Dzib, uno de los desarrolladores que conforman el equipo detrás de VitalLogix.
 
-Este proyecto nació como una asignación escolar, pero rápidamente se convirtió en un desafío personal. Al ser mi primer proyecto integral, me enfrenté a muchísimos errores. Sin embargo, aprender de ellos y refinar cada detalle es lo que me ha permitido llegar a la versión que ves hoy.
+Este proyecto nació como una asignación escolar, pero rápidamente se convirtió en un desafío grupal. Al ser mi primer proyecto integral como parte de un equipo de desarrollo, me enfrenté a muchísimos errores compartidos. Sin embargo, aprender de ellos en conjunto y refinar cada detalle como equipo es lo que nos ha permitido llegar a la versión que ves hoy.
 
 ### El inicio y el "salto" de fe
 
@@ -155,7 +155,7 @@ Es verdad lo que dicen: "La práctica hace al maestro". Al migrar mi código de 
 ![Primeros ajustes de backend y Docker](./img/backendPrimVer.png)
 ![Error en registro/inicio de sesión](./img/errorRegistroUser.png)
 
-Hubo un momento en el que quise rendirme y esperar a que me lo enseñaran en la escuela, pero no tenía la conciencia tranquila. Sabía que si no lo aprendía yo mismo, no podría aportar lo necesario a mi equipo.
+Hubo un momento en el que quise rendirme y esperar a que me lo enseñaran en la escuela, pero sabía que no podría aportar lo necesario a mi equipo. El aprendizaje compartido y la responsabilidad con mis compañeros me motivó a seguir investigando y superando cada obstáculo.
 
 ### La IA como mi "maestro" 24/7
 
@@ -189,15 +189,16 @@ Después vinieron varias iteraciones para mejorar no solo el código, sino tambi
 
 Con cada iteración mejoré estructura, estilos y mantenibilidad. También entendí por qué aplicar principios de diseño como SOLID no es solo teoría: realmente facilita extender, depurar y mantener el proyecto.
 
-### Mi consejo para ti
+### Mi consejo para ti (y para tu equipo)
 
 - Nadie nace sabiendo; la diferencia real es la práctica acumulada.
 - No intentes aprender todo de golpe.
 - Enfócate en una cosa a la vez.
-- Practica, equivócate, corrige y vuelve a intentar.
+- **Comparte tu aprendizaje con tu equipo**: la mejor forma de consolidar conocimiento es explicarlo a otros.
+- Practica, equivócate (juntos), corrige y vuelve a intentar.
 
-Mi próximo objetivo es crear videos para ayudar a otros "mortales" como yo: personas que necesitan ver el proceso paso a paso para perder el miedo a la tecnología.
+Mi próximo objetivo, junto con el equipo, es crear videos para ayudar a otros desarrolladores como nosotros: personas que necesitan ver el proceso paso a paso para perder el miedo a la tecnología y entender que el trabajo en equipo potencia el aprendizaje.
 
 Este proyecto fue desarrollado en macOS (Unix), por lo que funciona muy bien en Linux. Si usas Windows, una buena opción es trabajar con Ubuntu/WSL para aprovechar mejor comandos de entorno Unix.
 
-Gracias por leer mi historia y acompañarme en esta primera gran experiencia de desarrollo. ¡Hasta pronto!
+Gracias por leer nuestra historia y acompañarnos en esta primera gran experiencia de desarrollo colaborativo. ¡Hasta pronto!
