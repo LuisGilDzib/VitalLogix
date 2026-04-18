@@ -124,6 +124,30 @@ For a comprehensive backend architecture analysis including **5 SOLID principles
 
 ## Getting Started
 
+Before running with Docker, create your local environment file:
+
+1. Copy `.env.example` to `.env`
+2. Replace all `change_me_*` values with your own secrets
+
+This step allows each developer to set custom test credentials.
+In your `.env`, you can define:
+
+- Initial admin username: `APP_BOOTSTRAP_ADMIN_USERNAME`
+- Initial admin password: `APP_BOOTSTRAP_ADMIN_PASSWORD`
+- Demo user username: `APP_BOOTSTRAP_DEMO_USER_USERNAME`
+- Demo user password: `APP_BOOTSTRAP_DEMO_USER_PASSWORD`
+
+Quick example:
+
+```env
+APP_BOOTSTRAP_ADMIN_USERNAME=admin_lab
+APP_BOOTSTRAP_ADMIN_PASSWORD=MySecureAdminPassword123
+APP_BOOTSTRAP_DEMO_USER_USERNAME=test_user
+APP_BOOTSTRAP_DEMO_USER_PASSWORD=MySecureUserPassword123
+```
+
+The `.env` file is ignored by git and should never be committed.
+
 1. Open a terminal and go to the project folder:
 	- `cd VitalLogix`
 2. Start the database and backend:
@@ -168,7 +192,20 @@ Prerequisites:
 	- `npm --prefix frontend install`
 	- `npm --prefix frontend run dev`
 
-If your local PostgreSQL settings are different, update `backend/src/main/resources/application.properties` before starting the backend.
+If your local PostgreSQL settings are different, set environment variables instead of editing committed files.
+
+## First Admin Access (for cloned repos)
+
+On first backend startup, the app seeds a bootstrap admin user from environment variables.
+
+- Username: `APP_BOOTSTRAP_ADMIN_USERNAME` (default: `admin1`)
+- Password: `APP_BOOTSTRAP_ADMIN_PASSWORD` (from your `.env`)
+
+Also, if `APP_BOOTSTRAP_DEMO_USER_ENABLED=true`, a demo user is created for functional testing.
+
+After logging in as admin, you can create additional users/admins from the administration panel based on your test needs.
+
+This ensures anyone who clones the repo can test admin features without sharing real production credentials.
 
 ## Important Entry Points
 
@@ -179,19 +216,20 @@ If your local PostgreSQL settings are different, update `backend/src/main/resour
 
 ## Documentation
 
-I prepared a local sharing guide so anyone can run and share this project with classmates or friends using a free local setup:
+Local guide to run and share this project with a free local setup:
 
 - [Documentation Index](docs/README.md)
 - [English docs landing page](docs/en/README.md)
 - [Spanish docs landing page](docs/es/README.md)
 - [Local free demo sharing guide (English)](docs/LOCAL_DEMO_SHARE_GUIDE_EN.txt)
-	## 📊 Astah Diagrams
-	
-	- [VitalLogix Use Case Diagram](docs/diagrams/UseCase%20VitalLogix.asta)
-	- [VitalLogix Class Diagram](docs/diagrams/ClassDiagram%20VitalLogix.asta)
-	- [VitalLogix Complete Model Diagram](docs/diagrams/VitalLogixModelComplete.asta)
-	
-	## 📝 System Notes
-	
-	- [Category management notes](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
-	- [Admin category panel notes](docs/ADMIN_CATEGORY_PANEL.md)
+
+### Astah Diagrams
+
+- [VitalLogix Use Case Diagram](docs/diagrams/UseCase%20VitalLogix.asta)
+- [VitalLogix Class Diagram](docs/diagrams/ClassDiagram%20VitalLogix.asta)
+- [VitalLogix Complete Model Diagram](docs/diagrams/VitalLogixModelComplete.asta)
+
+### System Notes
+
+- [Category management notes](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
+- [Admin category panel notes](docs/ADMIN_CATEGORY_PANEL.md)

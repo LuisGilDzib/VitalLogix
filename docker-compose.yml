@@ -4,9 +4,9 @@ services:
     container_name: vitallogix-db
     restart: always
     environment:
-      POSTGRES_DB: vitallogix
-      POSTGRES_USER: vitallogix
-      POSTGRES_PASSWORD: vitallogix123
+      POSTGRES_DB: ${POSTGRES_DB:-vitallogix}
+      POSTGRES_USER: ${POSTGRES_USER:-vitallogix}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vitallogix123}
     ports:
       - "5432:5432"
     volumes:
@@ -21,10 +21,16 @@ services:
     depends_on:
       - postgres
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/vitallogix
-      - SPRING_DATASOURCE_USERNAME=vitallogix
-      - SPRING_DATASOURCE_PASSWORD=vitallogix123
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-vitallogix}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER:-vitallogix}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD:-vitallogix123}
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=${SPRING_JPA_HIBERNATE_DDL_AUTO:-update}
+      - JWT_SECRET=${JWT_SECRET:-CAMBIAESTESECRETOPORUNOVALORSEGURO12345678901234567890}
+      - APP_BOOTSTRAP_ADMIN_USERNAME=${APP_BOOTSTRAP_ADMIN_USERNAME:-admin1}
+      - APP_BOOTSTRAP_ADMIN_PASSWORD=${APP_BOOTSTRAP_ADMIN_PASSWORD:-1admin}
+      - APP_BOOTSTRAP_DEMO_USER_ENABLED=${APP_BOOTSTRAP_DEMO_USER_ENABLED:-true}
+      - APP_BOOTSTRAP_DEMO_USER_USERNAME=${APP_BOOTSTRAP_DEMO_USER_USERNAME:-user1}
+      - APP_BOOTSTRAP_DEMO_USER_PASSWORD=${APP_BOOTSTRAP_DEMO_USER_PASSWORD:-1user}
 
 volumes:
   vitallogix_data:

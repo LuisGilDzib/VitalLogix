@@ -26,6 +26,17 @@ replay_pid*
 # Credenciales admin (no subir)
 backend/admin-credentials.txt
 
+# Environment and local secret files
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+
+# Local Spring override files
+backend/src/main/resources/application-local.properties
+backend/src/main/resources/application-dev.properties
+
 # macOS metadata
 .DS_Store
 **/.DS_Store

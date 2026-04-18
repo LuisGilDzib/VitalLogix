@@ -125,7 +125,7 @@ Para un análisis completo de la arquitectura del backend incluyendo **5 princip
 - **Usuario**: puede operar ventas; no puede administrar productos, reportes ni módulos administrativos.
 - **Admin**: acceso completo a productos, reportes, clientes, historial y categorías (incluyendo aprobaciones).
 
-## Clonar El Repo
+## Clonar el repositorio
 
 1. Abre una terminal y clona el proyecto completo, escribiendo:
    - `git clone https://github.com/diancie/VitalLogix.git`
@@ -133,6 +133,28 @@ Para un análisis completo de la arquitectura del backend incluyendo **5 princip
    - `cd VitalLogix`
 
 ## Primeros Pasos
+
+Antes de ejecutar con Docker, crea tu archivo de entorno local:
+
+1. Copia `.env.example` a `.env`
+2. Reemplaza todos los valores `change_me_*` por tus propios secretos
+
+Este paso permite personalizar tus credenciales de prueba.
+En tu `.env` puedes definir a tu gusto:
+
+- Usuario admin inicial: `APP_BOOTSTRAP_ADMIN_USERNAME`
+- Contraseña admin inicial: `APP_BOOTSTRAP_ADMIN_PASSWORD`
+- Usuario demo: `APP_BOOTSTRAP_DEMO_USER_USERNAME`
+- Contraseña demo: `APP_BOOTSTRAP_DEMO_USER_PASSWORD`
+
+Ejemplo rápido:
+
+```env
+APP_BOOTSTRAP_ADMIN_USERNAME=admin_laboratorio
+APP_BOOTSTRAP_ADMIN_PASSWORD=MiPasswordAdminSegura123
+APP_BOOTSTRAP_DEMO_USER_USERNAME=usuario_pruebas
+APP_BOOTSTRAP_DEMO_USER_PASSWORD=MiPasswordUserSegura123
+```
 
 1. Desde la carpeta raíz del proyecto (`VitalLogix`), levanta la base de datos y el backend:
 	- `docker compose up -d --build vitallogix-app`
@@ -176,7 +198,20 @@ Requisitos previos:
    - `npm --prefix frontend install`
    - `npm --prefix frontend run dev`
 
-Si tus credenciales locales de PostgreSQL son diferentes, actualiza `backend/src/main/resources/application.properties` antes de iniciar el backend.
+Si tus credenciales locales de PostgreSQL son diferentes, configura variables de entorno en lugar de editar archivos versionados.
+
+## Primer Acceso Admin (para repos clonado)
+
+En el primer arranque del backend, la aplicación crea un admin bootstrap usando variables de entorno.
+
+- Usuario: `APP_BOOTSTRAP_ADMIN_USERNAME` (por defecto: `admin1`)
+- Contraseña: `APP_BOOTSTRAP_ADMIN_PASSWORD` (definida en tu `.env`)
+
+Además, si dejas `APP_BOOTSTRAP_DEMO_USER_ENABLED=true`, también se crea un usuario demo para pruebas funcionales.
+
+Después de iniciar sesión como admin, puedes crear más usuarios/admins desde el panel de administración según tus necesidades de prueba.
+
+Así cualquier persona que clone el repositorio puede probar funciones de admin sin compartir credenciales reales de producción.
 
 ## Puntos de Entrada Importantes
 
@@ -187,18 +222,20 @@ Si tus credenciales locales de PostgreSQL son diferentes, actualiza `backend/src
 
 ## Documentación
 
-Preparé una guía local para que cualquiera pueda compartir este proyecto con compañeros o amigos usando una configuración gratuita y local:
-- [Guía local para compartir demo gratis (Español)](docs/LOCAL_DEMO_SHARE_GUIDE_ES.txt)
+Guía local para compartir este proyecto con una configuración gratuita y local:
 
+- [Guía local para compartir demo gratis (Español)](docs/LOCAL_DEMO_SHARE_GUIDE_ES.txt)
 - [Índice de documentación](docs/README.md)
 - [Página principal de docs en inglés](docs/en/README.md)
 - [Página principal de docs en español](docs/es/README.md)
-   ## 📊 Diagramas en Astah
-	
-   - [Diagrama de casos de uso VitalLogix](docs/diagrams/UseCase%20VitalLogix.asta)
-   - [Diagrama de clases VitalLogix](docs/diagrams/ClassDiagram%20VitalLogix.asta)
-   - [Diagrama completo modelo VitalLogix](docs/diagrams/VitalLogixModelComplete.asta)
-	
-   ## 📝 Notas del Sistema
+
+### Diagramas en Astah
+
+- [Diagrama de casos de uso VitalLogix](docs/diagrams/UseCase%20VitalLogix.asta)
+- [Diagrama de clases VitalLogix](docs/diagrams/ClassDiagram%20VitalLogix.asta)
+- [Diagrama completo modelo VitalLogix](docs/diagrams/VitalLogixModelComplete.asta)
+
+### Notas del sistema
+
 - [Notas del sistema de categorías](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
 - [Notas del panel de administración de categorías](docs/ADMIN_CATEGORY_PANEL.md)
