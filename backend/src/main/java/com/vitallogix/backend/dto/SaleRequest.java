@@ -8,6 +8,7 @@ public class SaleRequest {
     private Long customerId;
     private boolean prescription;
     private CustomerData customer;
+    private String couponCode;
 
     public List<SaleItemRequest> getItems() { return items; }
     public void setItems(List<SaleItemRequest> items) { this.items = items; }
@@ -20,6 +21,9 @@ public class SaleRequest {
 
     public CustomerData getCustomer() { return customer; }
     public void setCustomer(CustomerData customer) { this.customer = customer; }
+
+    public String getCouponCode() { return couponCode; }
+    public void setCouponCode(String couponCode) { this.couponCode = couponCode; }
 
     public static class CustomerData {
         private String name;

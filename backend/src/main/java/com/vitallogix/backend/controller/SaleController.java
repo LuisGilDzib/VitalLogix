@@ -7,6 +7,7 @@ import com.vitallogix.backend.repository.SaleRepository;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
@@ -25,8 +26,9 @@ public class SaleController {
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Sale checkout(@Valid @RequestBody SaleRequest request) {
-        return saleService.createSale(request);
+    public Sale checkout(@Valid @RequestBody SaleRequest request, Authentication authentication) {
+        String username = authentication != null ? authentication.getName() : null;
+        return saleService.createSale(request, username);
     }
 
     @GetMapping

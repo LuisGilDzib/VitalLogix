@@ -10,6 +10,7 @@ import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
+    boolean existsByClienteAmigoNumberIgnoreCase(String clienteAmigoNumber);
 
     @Modifying
     @Query(value = "DELETE FROM user_roles WHERE user_id = :userId", nativeQuery = true)

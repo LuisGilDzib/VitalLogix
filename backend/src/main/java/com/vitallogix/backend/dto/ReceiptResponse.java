@@ -14,6 +14,7 @@ public class ReceiptResponse {
     private BigDecimal totalAmount;
     private BigDecimal discount;
     private BigDecimal finalAmount;
+    private String loyaltyAwardedCode;
 
     public static class Item {
         private String productName;
@@ -50,4 +51,6 @@ public class ReceiptResponse {
     public void setDiscount(BigDecimal discount) { this.discount = discount; }
     public BigDecimal getFinalAmount() { return finalAmount; }
     public void setFinalAmount(BigDecimal finalAmount) { this.finalAmount = finalAmount; }
+    public String getLoyaltyAwardedCode() { return loyaltyAwardedCode; }
+    public void setLoyaltyAwardedCode(String loyaltyAwardedCode) { this.loyaltyAwardedCode = loyaltyAwardedCode; }
 }

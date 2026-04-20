@@ -42,6 +42,15 @@ export const suggestCombo = (prioritizedProductIds = [], maxRecommendations = 6)
     maxRecommendations,
   });
 
+// Campaigns
+export const getCampaigns = () => api.get('/campaigns');
+export const getActiveCampaigns = () => api.get('/campaigns/active');
+export const getCampaignById = (id) => api.get(`/campaigns/${id}`);
+export const createCampaign = (campaignData) => api.post('/campaigns', campaignData);
+export const updateCampaign = (id, campaignData) => api.put(`/campaigns/${id}`, campaignData);
+export const toggleCampaignStatus = (id) => api.patch(`/campaigns/${id}/toggle`);
+export const deleteCampaign = (id) => api.delete(`/campaigns/${id}`);
+
 // Customers
 export const getCustomers = () => api.get('/customers');
 export const createCustomer = (customerData) => api.post('/customers', customerData);
@@ -49,6 +58,8 @@ export const updateCustomer = (customerId, customerData) => api.put(`/customers/
 export const deleteCustomer = (customerId) => api.delete(`/customers/${customerId}`);
 export const getCustomerPurchaseHistory = (customerId) => api.get(`/customers/${customerId}/purchases`);
 export const validateClienteAmigoCode = (code) => api.get(`/customers/validate-clienteamigo?code=${encodeURIComponent(code)}`);
+export const validateAccountCouponCode = (code) => api.get(`/fidelity/coupon/validate?code=${encodeURIComponent(code)}`);
+export const getLoyaltyCouponStatus = () => api.get('/fidelity/coupon/status');
 
 // Get sales
 export const getSales = () => api.get('/sales');

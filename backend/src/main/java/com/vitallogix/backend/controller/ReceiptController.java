@@ -35,6 +35,7 @@ public class ReceiptController {
         receipt.setTotalAmount(originalAmount); // Original total before discount
         receipt.setDiscount(discountAmount);     // Applied discount
         receipt.setFinalAmount(sale.getTotalAmount()); // Final total after discount
+        receipt.setLoyaltyAwardedCode(sale.getLoyaltyAwardedCode());
         
         List<ReceiptResponse.Item> items = sale.getItems().stream().map(item -> {
             ReceiptResponse.Item i = new ReceiptResponse.Item();

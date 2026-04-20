@@ -27,6 +27,11 @@ public class ProductRequest {
 
     private boolean visibleInSuggestions = true;
 
+    private String promotionType;
+    private Integer promoBuyQuantity;
+    private Integer promoPayQuantity;
+    private BigDecimal promoPercentDiscount;
+
     private java.time.LocalDateTime expirationDate;
 
     // Getters and setters
@@ -57,6 +62,18 @@ public class ProductRequest {
 
     public boolean isVisibleInSuggestions() { return visibleInSuggestions; }
     public void setVisibleInSuggestions(boolean visibleInSuggestions) { this.visibleInSuggestions = visibleInSuggestions; }
+
+    public String getPromotionType() { return promotionType; }
+    public void setPromotionType(String promotionType) { this.promotionType = promotionType; }
+
+    public Integer getPromoBuyQuantity() { return promoBuyQuantity; }
+    public void setPromoBuyQuantity(Integer promoBuyQuantity) { this.promoBuyQuantity = promoBuyQuantity; }
+
+    public Integer getPromoPayQuantity() { return promoPayQuantity; }
+    public void setPromoPayQuantity(Integer promoPayQuantity) { this.promoPayQuantity = promoPayQuantity; }
+
+    public BigDecimal getPromoPercentDiscount() { return promoPercentDiscount; }
+    public void setPromoPercentDiscount(BigDecimal promoPercentDiscount) { this.promoPercentDiscount = promoPercentDiscount; }
 
     public java.time.LocalDateTime getExpirationDate() { return expirationDate; }
     public void setExpirationDate(java.time.LocalDateTime expirationDate) { this.expirationDate = expirationDate; }

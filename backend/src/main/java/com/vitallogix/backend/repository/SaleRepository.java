@@ -8,6 +8,7 @@ import java.util.List;
 @Repository
 public interface SaleRepository extends JpaRepository<Sale, Long> {
     long countByCustomer_Id(Long customerId);
+    long countByAccountUsernameIgnoreCase(String accountUsername);
     
     List<Sale> findByCustomer_IdOrderBySaleDateDesc(Long customerId);
 }

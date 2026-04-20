@@ -37,6 +37,9 @@ public class AuthController {
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setRoles(java.util.Set.of(Role.USER));
+        user.setFriend(false);
+        user.setPurchasesSinceCoupon(0);
+        user.setCouponUsed(true);
         userRepository.save(user);
         return ResponseEntity.ok("User registered");
     }

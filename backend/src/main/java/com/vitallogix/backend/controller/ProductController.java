@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Locale;
 import java.util.UUID;
+import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/products")
@@ -82,6 +83,7 @@ public class ProductController {
         product.setStock(request.getStock());
         product.setRequiresPrescription(request.isRequiresPrescription());
         product.setVisibleInSuggestions(request.isVisibleInSuggestions());
+        applyPromotionFields(product, request);
         product.setExpirationDate(request.getExpirationDate());
         return toResponse(repository.save(product));
     }
@@ -115,6 +117,7 @@ public class ProductController {
         product.setStock(request.getStock());
         product.setRequiresPrescription(request.isRequiresPrescription());
         product.setVisibleInSuggestions(request.isVisibleInSuggestions());
+        applyPromotionFields(product, request);
         product.setExpirationDate(request.getExpirationDate());
         return toResponse(repository.save(product));
     }
@@ -183,9 +186,50 @@ public class ProductController {
             p.getStock(),
             p.isRequiresPrescription(),
             p.isVisibleInSuggestions(),
+            p.getPromotionType(),
+            p.getPromoBuyQuantity(),
+            p.getPromoPayQuantity(),
+            p.getPromoPercentDiscount(),
             p.getCreatedAt(),
             p.getExpirationDate()
         );
+    }
+
+    private void applyPromotionFields(Product product, ProductRequest request) {
+        String promotionType = request.getPromotionType() == null ? "NONE" : request.getPromotionType().trim().toUpperCase(Locale.ROOT);
+        if (promotionType.isEmpty()) {
+            promotionType = "NONE";
+        }
+
+        product.setPromotionType(promotionType);
+
+        if ("BUY_X_PAY_Y".equals(promotionType)) {
+            Integer buyQuantity = request.getPromoBuyQuantity();
+            Integer payQuantity = request.getPromoPayQuantity();
+            if (buyQuantity == null || payQuantity == null || buyQuantity < 2 || payQuantity < 1 || payQuantity >= buyQuantity) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Oferta BUY_X_PAY_Y invalida. Usa buy>=2 y 1<=pay<buy.");
+            }
+            product.setPromoBuyQuantity(buyQuantity);
+            product.setPromoPayQuantity(payQuantity);
+            product.setPromoPercentDiscount(null);
+            return;
+        }
+
+        if ("PERCENTAGE".equals(promotionType)) {
+            BigDecimal percent = request.getPromoPercentDiscount();
+            if (percent == null || percent.compareTo(BigDecimal.ZERO) <= 0 || percent.compareTo(BigDecimal.valueOf(100)) >= 0) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Descuento porcentual invalido. Debe ser mayor a 0 y menor a 100.");
+            }
+            product.setPromoPercentDiscount(percent);
+            product.setPromoBuyQuantity(null);
+            product.setPromoPayQuantity(null);
+            return;
+        }
+
+        product.setPromotionType("NONE");
+        product.setPromoBuyQuantity(null);
+        product.setPromoPayQuantity(null);
+        product.setPromoPercentDiscount(null);
     }
 
     // Searches products in priority order: id, code, name, then category.

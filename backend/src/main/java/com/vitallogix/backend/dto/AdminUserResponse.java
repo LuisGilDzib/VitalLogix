@@ -8,6 +8,10 @@ public class AdminUserResponse {
     private Long id;
     private String username;
     private Set<Role> roles;
+    private String clienteAmigoNumber;
+    private boolean couponAvailable;
+    private int purchasesSinceCoupon;
+    private long totalPurchaseCount;
 
     public Long getId() {
         return id;
@@ -31,5 +35,37 @@ public class AdminUserResponse {
 
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
+    }
+
+    public String getClienteAmigoNumber() {
+        return clienteAmigoNumber;
+    }
+
+    public void setClienteAmigoNumber(String clienteAmigoNumber) {
+        this.clienteAmigoNumber = clienteAmigoNumber;
+    }
+
+    public boolean isCouponAvailable() {
+        return couponAvailable;
+    }
+
+    public void setCouponAvailable(boolean couponAvailable) {
+        this.couponAvailable = couponAvailable;
+    }
+
+    public int getPurchasesSinceCoupon() {
+        return purchasesSinceCoupon;
+    }
+
+    public void setPurchasesSinceCoupon(int purchasesSinceCoupon) {
+        this.purchasesSinceCoupon = purchasesSinceCoupon;
+    }
+
+    public long getTotalPurchaseCount() {
+        return totalPurchaseCount;
+    }
+
+    public void setTotalPurchaseCount(long totalPurchaseCount) {
+        this.totalPurchaseCount = totalPurchaseCount;
     }
 }

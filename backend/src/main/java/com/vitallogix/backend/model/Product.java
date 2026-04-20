@@ -49,6 +49,18 @@ public class Product {
     @Column(nullable = true, columnDefinition = "boolean default true")
     private boolean visibleInSuggestions = true;
 
+    @Column(length = 30)
+    private String promotionType;
+
+    @Column
+    private Integer promoBuyQuantity;
+
+    @Column
+    private Integer promoPayQuantity;
+
+    @Column(precision = 5, scale = 2)
+    private BigDecimal promoPercentDiscount;
+
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -95,6 +107,18 @@ public class Product {
 
     public boolean isVisibleInSuggestions() { return visibleInSuggestions; }
     public void setVisibleInSuggestions(boolean visibleInSuggestions) { this.visibleInSuggestions = visibleInSuggestions; }
+
+    public String getPromotionType() { return promotionType; }
+    public void setPromotionType(String promotionType) { this.promotionType = promotionType; }
+
+    public Integer getPromoBuyQuantity() { return promoBuyQuantity; }
+    public void setPromoBuyQuantity(Integer promoBuyQuantity) { this.promoBuyQuantity = promoBuyQuantity; }
+
+    public Integer getPromoPayQuantity() { return promoPayQuantity; }
+    public void setPromoPayQuantity(Integer promoPayQuantity) { this.promoPayQuantity = promoPayQuantity; }
+
+    public BigDecimal getPromoPercentDiscount() { return promoPercentDiscount; }
+    public void setPromoPercentDiscount(BigDecimal promoPercentDiscount) { this.promoPercentDiscount = promoPercentDiscount; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

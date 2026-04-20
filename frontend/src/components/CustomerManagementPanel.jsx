@@ -12,9 +12,7 @@ function CustomerManagementPanel({ isAdmin }) {
   const [customerForm, setCustomerForm] = useState({
     name: '',
     address: '',
-    phone: '',
-    clienteAmigoNumber: '',
-    friend: false
+    phone: ''
   })
   const [editingCustomerId, setEditingCustomerId] = useState(null)
   const [customerSaving, setCustomerSaving] = useState(false)
@@ -101,9 +99,7 @@ function CustomerManagementPanel({ isAdmin }) {
     setCustomerForm({
       name: '',
       address: '',
-      phone: '',
-      clienteAmigoNumber: '',
-      friend: false
+      phone: ''
     })
     setEditingCustomerId(null)
   }
@@ -124,9 +120,7 @@ function CustomerManagementPanel({ isAdmin }) {
       ...customerForm,
       name: customerForm.name.trim(),
       address: customerForm.address.trim(),
-      phone: customerForm.phone.trim(),
-      clienteAmigoNumber: customerForm.clienteAmigoNumber.trim().toUpperCase(),
-      friend: Boolean(customerForm.friend)
+      phone: customerForm.phone.trim()
     }
 
     try {
@@ -153,9 +147,7 @@ function CustomerManagementPanel({ isAdmin }) {
     setCustomerForm({
       name: customer.name || '',
       address: customer.address || '',
-      phone: customer.phone || '',
-      clienteAmigoNumber: customer.clienteAmigoNumber || '',
-      friend: Boolean(customer.friend)
+      phone: customer.phone || ''
     })
   }
 
@@ -245,7 +237,7 @@ function CustomerManagementPanel({ isAdmin }) {
         <div className="p-6 border-b bg-blue-50/50">
           <h2 className="text-sm font-black text-blue-700 uppercase tracking-widest">Gestión de Clientes</h2>
           <p className="mt-2 text-xs font-bold text-blue-900/70">
-            Puedes crear, editar o eliminar registros de clientes.
+            Puedes crear, editar o eliminar registros de clientes para datos de contacto y receta.
           </p>
         </div>
         <div className="p-6 border-b bg-white">
@@ -272,21 +264,6 @@ function CustomerManagementPanel({ isAdmin }) {
               value={customerForm.address}
               onChange={(e) => setCustomerForm((prev) => ({ ...prev, address: e.target.value }))}
             />
-            <input
-              type="text"
-              placeholder="Código ClienteAmigo (opcional)"
-              className="w-full border-2 border-gray-100 rounded-xl p-3 outline-none focus:border-blue-500 font-bold text-sm md:col-span-2"
-              value={customerForm.clienteAmigoNumber}
-              onChange={(e) => setCustomerForm((prev) => ({ ...prev, clienteAmigoNumber: e.target.value.toUpperCase() }))}
-            />
-            <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-blue-800">
-              <input
-                type="checkbox"
-                checked={customerForm.friend}
-                onChange={(e) => setCustomerForm((prev) => ({ ...prev, friend: e.target.checked }))}
-              />
-              ClienteAmigo activo
-            </label>
             <div className="flex gap-2 md:col-span-3">
               <button
                 type="submit"
@@ -314,14 +291,12 @@ function CustomerManagementPanel({ isAdmin }) {
           ) : error ? (
             <div className="p-8 text-sm font-bold text-red-700">{error}</div>
           ) : (
-            <table className="min-w-[1300px] w-full text-left">
+            <table className="min-w-[900px] w-full text-left">
               <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
                 <tr>
                   <th className="px-6 py-4 whitespace-nowrap">Nombre</th>
                   <th className="px-6 py-4 whitespace-nowrap">Teléfono</th>
                   <th className="px-6 py-4 text-center whitespace-nowrap">Compras Acumuladas</th>
-                  <th className="px-6 py-4 whitespace-nowrap">Estatus ClienteAmigo</th>
-                  <th className="px-6 py-4 whitespace-nowrap">Código ClienteAmigo</th>
                   <th className="px-6 py-4 text-right whitespace-nowrap">Acciones</th>
                 </tr>
               </thead>
@@ -334,24 +309,6 @@ function CustomerManagementPanel({ isAdmin }) {
                       <span className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-lg text-[10px] font-black">
                         {customer.purchaseCount || 0}
                       </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      {customer.friend ? (
-                        <span className="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase">
-                          ✓ ClienteAmigo
-                        </span>
-                      ) : customer.purchaseCount >= 5 ? (
-                        <span className="inline-block bg-yellow-100 text-yellow-700 px-3 py-1 rounded-lg text-[10px] font-black uppercase">
-                          ⚠ Elegible (5+ compras)
-                        </span>
-                      ) : (
-                        <span className="inline-block bg-gray-100 text-gray-500 px-3 py-1 rounded-lg text-[10px] font-black uppercase">
-                          — No elegible ({customer.purchaseCount || 0}/5)
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 font-mono text-xs font-black text-gray-700">
-                      {customer.clienteAmigoNumber || 'Pendiente'}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex flex-wrap justify-end gap-2">
@@ -387,7 +344,7 @@ function CustomerManagementPanel({ isAdmin }) {
         <div className="p-6 border-b bg-blue-50/50">
           <h2 className="text-sm font-black text-blue-700 uppercase tracking-widest">Gestión de Accesos Admin</h2>
           <p className="mt-2 text-xs font-bold text-blue-900/70">
-            Desde aquí puedes promover usuarios existentes o crear cuentas nuevas con rol admin.
+            Desde aquí puedes promover usuarios existentes, crear cuentas admin y consultar el estado ClienteAmigo por cuenta.
           </p>
         </div>
 
@@ -425,11 +382,14 @@ function CustomerManagementPanel({ isAdmin }) {
           {usersLoading ? (
             <div className="p-8 text-sm font-bold text-gray-500">Cargando usuarios...</div>
           ) : (
-            <table className="w-full min-w-[700px] text-left">
+            <table className="w-full min-w-[980px] text-left">
               <thead className="bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
                 <tr>
                   <th className="px-6 py-4 whitespace-nowrap">Usuario</th>
                   <th className="px-6 py-4 whitespace-nowrap">Roles</th>
+                  <th className="px-6 py-4 text-center whitespace-nowrap">Compras Cuenta</th>
+                  <th className="px-6 py-4 text-center whitespace-nowrap">Progreso (0-5)</th>
+                  <th className="px-6 py-4 whitespace-nowrap">Codigo ClienteAmigo</th>
                   <th className="px-6 py-4 text-right whitespace-nowrap">Acción</th>
                 </tr>
               </thead>
@@ -444,6 +404,28 @@ function CustomerManagementPanel({ isAdmin }) {
                             {role}
                           </span>
                         ))}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-block rounded-lg bg-blue-100 px-3 py-1 text-[10px] font-black text-blue-700">
+                        {Number(user.totalPurchaseCount || 0)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-block rounded-lg bg-gray-100 px-3 py-1 text-[10px] font-black text-gray-700">
+                        {Number(user.purchasesSinceCoupon || 0)}/5
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-black text-gray-700">
+                          {user.clienteAmigoNumber || 'Sin codigo activo'}
+                        </span>
+                        {user.couponAvailable && (
+                          <span className="inline-block rounded-lg bg-green-100 px-2 py-1 text-[9px] font-black uppercase text-green-700">
+                            Disponible
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">

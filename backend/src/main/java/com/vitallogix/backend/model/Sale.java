@@ -23,6 +23,12 @@ public class Sale {
     // Original total amount before applying any discounts. Useful for audit trail and reporting.
     private BigDecimal originalAmount;
 
+    @Column(name = "account_username", length = 100)
+    private String accountUsername;
+
+    @Column(name = "loyalty_awarded_code", length = 30)
+    private String loyaltyAwardedCode;
+
 
     // Bidirectional relationship with SaleItem. Cascade ensures items are deleted when sale is deleted.
     // MappedBy indicates the reverse side of the relationship (SaleItem owns the foreign key).
@@ -93,6 +99,22 @@ public class Sale {
 
     public void setOriginalAmount(BigDecimal originalAmount) {
         this.originalAmount = originalAmount;
+    }
+
+    public String getAccountUsername() {
+        return accountUsername;
+    }
+
+    public void setAccountUsername(String accountUsername) {
+        this.accountUsername = accountUsername;
+    }
+
+    public String getLoyaltyAwardedCode() {
+        return loyaltyAwardedCode;
+    }
+
+    public void setLoyaltyAwardedCode(String loyaltyAwardedCode) {
+        this.loyaltyAwardedCode = loyaltyAwardedCode;
     }
 
     public List<SaleItem> getItems() {

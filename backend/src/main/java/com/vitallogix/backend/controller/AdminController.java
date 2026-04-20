@@ -4,6 +4,7 @@ import com.vitallogix.backend.dto.AdminUserResponse;
 import com.vitallogix.backend.dto.CreateAdminUserRequest;
 import com.vitallogix.backend.model.Role;
 import com.vitallogix.backend.model.User;
+import com.vitallogix.backend.repository.SaleRepository;
 import com.vitallogix.backend.repository.UserRepository;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -28,10 +29,12 @@ import java.util.Set;
 @RequestMapping("/api/admin")
 public class AdminController {
     private final UserRepository userRepository;
+    private final SaleRepository saleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AdminController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public AdminController(UserRepository userRepository, SaleRepository saleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.saleRepository = saleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -128,6 +131,10 @@ public class AdminController {
         response.setId(user.getId());
         response.setUsername(user.getUsername());
         response.setRoles(user.getRoles());
+        response.setClienteAmigoNumber(user.getClienteAmigoNumber());
+        response.setCouponAvailable(user.getClienteAmigoNumber() != null && !user.isCouponUsed());
+        response.setPurchasesSinceCoupon(user.getPurchasesSinceCoupon() == null ? 0 : user.getPurchasesSinceCoupon());
+        response.setTotalPurchaseCount(saleRepository.countByAccountUsernameIgnoreCase(user.getUsername()));
         return response;
     }
 }

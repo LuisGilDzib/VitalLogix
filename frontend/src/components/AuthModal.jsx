@@ -28,9 +28,6 @@ const AuthModal = ({ onLogin, onRegister, onContinueAsGuest, onClose, canClose =
 
   const switchLabel = isRegister ? 'Iniciar sesion' : 'Crear cuenta';
   const switchHelper = isRegister ? 'Ya tienes cuenta?' : 'No tienes cuenta?';
-  const signInTone = 'bg-[#234d78]';
-  const signUpTone = 'bg-gradient-to-br from-[#2f6694] to-[#4b86b6]';
-
   const renderForm = (mode) => {
     const registerMode = mode === 'register';
     const heading = registerMode ? 'CREAR CUENTA' : 'INICIAR SESION';
@@ -126,19 +123,25 @@ const AuthModal = ({ onLogin, onRegister, onContinueAsGuest, onClose, canClose =
           </div>
         </div>
 
-        <div className="hidden lg:block relative min-h-[88vh] overflow-hidden bg-gradient-to-r from-[#234d78] to-[#4b86b6]">
+        <div className="hidden lg:block relative min-h-[88vh] overflow-hidden bg-gradient-to-r from-[#3f79a9] to-[#5d94bf]">
+          <div
+            className={`pointer-events-none absolute inset-y-0 z-0 w-1/2 bg-[#234d78] shadow-[0_0_80px_rgba(19,46,76,0.45)] transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] ${isRegister ? 'left-1/2' : 'left-0'}`}
+          />
+          <div
+            className={`pointer-events-none absolute inset-y-0 z-0 w-6 bg-gradient-to-r from-cyan-300/10 via-cyan-200/80 to-cyan-300/10 blur-md transition-all duration-700 ease-[cubic-bezier(.22,1,.36,1)] ${isRegister ? 'left-[calc(100%-12px)]' : 'left-[calc(50%-12px)]'}`}
+          />
           <div className="absolute inset-0">
-            <section className={`absolute inset-y-0 left-0 w-[calc(50%+1px)] px-12 xl:px-16 py-12 flex items-center transition-all duration-700 ease-in-out ${signInTone} ${isRegister ? '-translate-x-8 opacity-0 pointer-events-none' : 'translate-x-0 opacity-100'}`}>
+            <section className={`absolute inset-y-0 left-0 z-10 w-[calc(50%+1px)] px-12 xl:px-16 py-12 flex items-center transition-all duration-700 ease-in-out ${isRegister ? '-translate-x-8 opacity-0 pointer-events-none' : 'translate-x-0 opacity-100'}`}>
               <div className="w-full">{renderForm('login')}</div>
             </section>
 
-            <section className={`absolute inset-y-0 right-0 w-[calc(50%+1px)] px-12 xl:px-16 py-12 flex items-center transition-all duration-700 ease-in-out ${signUpTone} ${isRegister ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0 pointer-events-none'}`}>
+            <section className={`absolute inset-y-0 right-0 z-10 w-[calc(50%+1px)] px-12 xl:px-16 py-12 flex items-center transition-all duration-700 ease-in-out ${isRegister ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0 pointer-events-none'}`}>
               <div className="w-full">{renderForm('register')}</div>
             </section>
           </div>
 
           <aside
-            className={`absolute inset-y-0 w-[calc(50%+1px)] text-white flex items-center justify-center p-10 xl:p-12 transition-all duration-700 ease-in-out ${isRegister ? 'left-0 bg-[#234d78]' : 'left-[calc(50%-1px)] bg-gradient-to-br from-[#2f6694] to-[#4b86b6]'}`}
+            className={`absolute inset-y-0 z-20 w-[calc(50%+1px)] text-white flex items-center justify-center p-10 xl:p-12 transition-all duration-700 ease-in-out ${isRegister ? 'left-0' : 'left-[calc(50%-1px)]'}`}
           >
             <div className="text-center max-w-md">
               <div className="relative mx-auto w-full max-w-sm">
