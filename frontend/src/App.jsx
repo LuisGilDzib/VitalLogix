@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { jsPDF } from 'jspdf'
-import { getProducts, createProduct, updateProduct, deleteProduct, addStockToProduct, createSale, getSales, getSalesReport, getInventoryReport, getReceipt, suggestCombo, validateAccountCouponCode, getLoyaltyCouponStatus, createCustomCategory, updateProductVisibility } from './services/api'
+import { getProducts, createProduct, updateProduct, deleteProduct, addStockToProduct, createSale, getSales, getSalesReport, getInventoryReport, getReceipt, suggestCombo, validateAccountCouponCode, getLoyaltyCouponStatus, createCustomCategory, updateProductVisibility, getActiveCampaigns } from './services/api'
 import CategoryManagementPanel from './components/CategoryManagementPanel'
 import CustomerManagementPanel from './components/CustomerManagementPanel'
 import CampaignManagementPanel from './components/CampaignManagementPanel'
@@ -18,10 +18,12 @@ function App({ auth, onRequireAuth, onLogout }) {
   const [reportRange, setReportRange] = useState({from: '', to: ''})
   const [searchTerm, setSearchTerm] = useState('')
   const [searchCode, setSearchCode] = useState('')
-  const [selectedCategories, setSelectedCategories] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState('')
   const [showAllCategories, setShowAllCategories] = useState(false)
   const [priceBounds, setPriceBounds] = useState({ min: 0, max: 0 })
   const [priceRange, setPriceRange] = useState({ min: 0, max: 0 })
+  const [priceMinInput, setPriceMinInput] = useState('')
+  const [priceMaxInput, setPriceMaxInput] = useState('')
   const [hideExpired, setHideExpired] = useState(false)
   const [showExpiringSoon, setShowExpiringSoon] = useState(false)
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -56,6 +58,7 @@ function App({ auth, onRequireAuth, onLogout }) {
   const [lastSaleId, setLastSaleId] = useState(null)
   const [recommendationResult, setRecommendationResult] = useState(null)
   const [isRecommendationLoading, setIsRecommendationLoading] = useState(false)
+  const [activeCampaigns, setActiveCampaigns] = useState([])
   const [isRecommendationHovering, setIsRecommendationHovering] = useState(false)
   const recommendationScrollRef = useRef(null)
   const cartIconRef = useRef(null)
@@ -137,22 +140,27 @@ function App({ auth, onRequireAuth, onLogout }) {
     if (!loyaltyPromotionBanner) return
     const timer = setTimeout(() => {
       setLoyaltyPromotionBanner(null)
-    }, 3000)
+    }, 7000)
     return () => clearTimeout(timer)
   }, [loyaltyPromotionBanner])
 
+  const getActiveCampaignForProduct = (productId) => {
+    return activeCampaigns.find(c => c.productIds?.includes(productId))
+  }
+
   const getPromotionLabel = (product) => {
-    const promotionType = (product?.promotionType || 'NONE').toUpperCase()
+    const campaign = getActiveCampaignForProduct(product.id)
+    const promotionType = (campaign ? campaign.promotionType : (product?.promotionType || 'NONE')).toUpperCase()
     if (promotionType === 'BUY_X_PAY_Y') {
-      const buy = Number(product?.promoBuyQuantity || 0)
-      const pay = Number(product?.promoPayQuantity || 0)
+      const buy = Number(campaign ? campaign.promoBuyQuantity : (product?.promoBuyQuantity || 0))
+      const pay = Number(campaign ? campaign.promoPayQuantity : (product?.promoPayQuantity || 0))
       if (buy >= 2 && pay >= 1 && pay < buy) {
         return `${buy}x${pay}`
       }
       return null
     }
     if (promotionType === 'PERCENTAGE') {
-      const percent = Number(product?.promoPercentDiscount || 0)
+      const percent = Number(campaign ? campaign.promoPercentDiscount : (product?.promoPercentDiscount || 0))
       if (percent > 0 && percent < 100) {
         return `${percent}% OFF`
       }
@@ -169,10 +177,11 @@ function App({ auth, onRequireAuth, onLogout }) {
       return { gross, net: gross, discount: 0 }
     }
 
-    const promotionType = (product?.promotionType || 'NONE').toUpperCase()
+    const campaign = getActiveCampaignForProduct(product.id)
+    const promotionType = (campaign ? campaign.promotionType : (product?.promotionType || 'NONE')).toUpperCase()
     if (promotionType === 'BUY_X_PAY_Y') {
-      const buy = Number(product?.promoBuyQuantity || 0)
-      const pay = Number(product?.promoPayQuantity || 0)
+      const buy = Number(campaign ? campaign.promoBuyQuantity : (product?.promoBuyQuantity || 0))
+      const pay = Number(campaign ? campaign.promoPayQuantity : (product?.promoPayQuantity || 0))
       if (buy >= 2 && pay >= 1 && pay < buy && qty >= buy) {
         const groups = Math.floor(qty / buy)
         const remainder = qty % buy
@@ -188,7 +197,7 @@ function App({ auth, onRequireAuth, onLogout }) {
     }
 
     if (promotionType === 'PERCENTAGE') {
-      const percent = Number(product?.promoPercentDiscount || 0)
+      const percent = Number(campaign ? campaign.promoPercentDiscount : (product?.promoPercentDiscount || 0))
       if (percent > 0 && percent < 100) {
         const discount = gross * (percent / 100)
         const net = gross - discount
@@ -328,7 +337,8 @@ function App({ auth, onRequireAuth, onLogout }) {
     cartDrawerAutoCloseRef.current = window.setTimeout(() => {
       setIsCartDrawerOpen(false)
       cartDrawerAutoCloseRef.current = null
-    }, 1000)
+    // Auto-close duration for the side cart
+    }, 6000)
   }
 
   // --- PRODUCT LOGIC ---
@@ -472,9 +482,17 @@ function App({ auth, onRequireAuth, onLogout }) {
     setIsModalOpen(true)
   }
 
+  const fetchActiveCampaignsData = async () => {
+    try {
+      const response = await getActiveCampaigns()
+      setActiveCampaigns(response.data || [])
+    } catch (error) { console.error("Error campaigns:", error) }
+  }
+
   // --- EFFECTS AND FETCHING ---
   useEffect(() => {
     fetchProducts()
+    fetchActiveCampaignsData()
     if (auth?.logged) {
       fetchSales()
       fetchLoyaltyStatus()
@@ -569,6 +587,8 @@ function App({ auth, onRequireAuth, onLogout }) {
     if (!products.length) {
       setPriceBounds({ min: 0, max: 0 })
       setPriceRange({ min: 0, max: 0 })
+      setPriceMinInput('')
+      setPriceMaxInput('')
       return
     }
 
@@ -606,22 +626,47 @@ function App({ auth, onRequireAuth, onLogout }) {
   }
 
   const toggleCategorySelection = (category) => {
-    setSelectedCategories((prev) => {
-      if (prev.includes(category)) {
-        return prev.filter((item) => item !== category)
-      }
-      return [...prev, category]
-    })
+    setSelectedCategory((prev) => (prev === category ? '' : category))
+  }
+
+  const clearFilters = () => {
+    setSearchTerm('')
+    setSearchCode('')
+    setSelectedCategory('')
+    setShowAllCategories(false)
+    setHideExpired(false)
+    setShowExpiringSoon(false)
+    setPriceMinInput('')
+    setPriceMaxInput('')
+    setPriceRange({ min: priceBounds.min, max: priceBounds.max })
   }
 
   const handlePriceMinChange = (value) => {
+    setPriceMinInput(value)
+    if (value === '') {
+      setPriceRange((prev) => ({ min: priceBounds.min, max: prev.max }))
+      return
+    }
     const numeric = Number(value)
-    setPriceRange((prev) => ({ min: Math.min(numeric, prev.max), max: prev.max }))
+    if (!Number.isFinite(numeric)) return
+    setPriceRange((prev) => ({
+      min: Math.max(priceBounds.min, Math.min(numeric, prev.max)),
+      max: prev.max
+    }))
   }
 
   const handlePriceMaxChange = (value) => {
+    setPriceMaxInput(value)
+    if (value === '') {
+      setPriceRange((prev) => ({ min: prev.min, max: priceBounds.max }))
+      return
+    }
     const numeric = Number(value)
-    setPriceRange((prev) => ({ min: prev.min, max: Math.max(numeric, prev.min) }))
+    if (!Number.isFinite(numeric)) return
+    setPriceRange((prev) => ({
+      min: prev.min,
+      max: Math.min(priceBounds.max, Math.max(numeric, prev.min))
+    }))
   }
   const expirationMonths = [
     { value: '01', label: 'Enero' },
@@ -696,7 +741,7 @@ function App({ auth, onRequireAuth, onLogout }) {
   const filteredProducts = products.filter((p) => {
     const matchesName = p.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCode = !searchCode || (p.code || '').toLowerCase().includes(searchCode.trim().toLowerCase())
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes((p.category || '').trim())
+    const matchesCategory = !selectedCategory || selectedCategory === (p.category || '').trim()
     const numericPrice = Number(p.price || 0)
     const matchesPrice = (priceBounds.max === 0 && priceBounds.min === 0)
       ? true
@@ -705,6 +750,16 @@ function App({ auth, onRequireAuth, onLogout }) {
     const matchesSoonFilter = !showExpiringSoon || isProductExpiringSoon(p)
     return matchesName && matchesCode && matchesCategory && matchesPrice && matchesExpiredFilter && matchesSoonFilter
   })
+
+  const hasPriceFilter = priceRange.min !== priceBounds.min || priceRange.max !== priceBounds.max
+  const hasActiveFilters = Boolean(
+    searchTerm.trim() ||
+    searchCode.trim() ||
+    selectedCategory ||
+    hideExpired ||
+    showExpiringSoon ||
+    hasPriceFilter
+  )
 
   const validateCheckoutBeforePayment = () => {
     if (cart.length === 0) return false
@@ -1041,6 +1096,23 @@ function App({ auth, onRequireAuth, onLogout }) {
       const wrapped = doc.splitTextToSize(line, 175);
       doc.text(wrapped, margin, y);
       y += wrapped.length * 5;
+      
+      if (item.campaignName) {
+        doc.setFont('helvetica', 'italic');
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        
+        const discountText = item.discountAmount && item.discountAmount > 0 
+          ? `  Descuento por: ${item.campaignName} (-$${Number(item.discountAmount).toFixed(2)})`
+          : `  Descuento por: ${item.campaignName}`;
+          
+        doc.text(discountText, margin, y);
+        y += 5;
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(11);
+        doc.setTextColor(0, 0, 0);
+      }
+
       if (y > 265) {
         doc.addPage();
         y = 20;
@@ -1062,6 +1134,27 @@ function App({ auth, onRequireAuth, onLogout }) {
       y += 6;
       doc.setFont('helvetica', 'normal');
       doc.text('Guardalo para canjear tu descuento en una sola compra.', margin, y);
+      y += 8;
+    }
+
+    if (receipt.purchasesToNextCoupon != null && receipt.purchasesToNextCoupon > 0 && !receipt.loyaltyAwardedCode) {
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont('helvetica', 'italic');
+      doc.text(`Programa ClienteAmigo: te faltan ${receipt.purchasesToNextCoupon} compra(s) para recibir tu cupon de 10%.`, margin, y);
+      y += 5;
+      doc.text(`Compras acumuladas: ${receipt.purchasesSinceCoupon || 0} de 5.`, margin, y);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
+    } else if (receipt.purchasesToNextCoupon === 0 && !receipt.loyaltyAwardedCode) {
+      doc.setFontSize(9);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont('helvetica', 'italic');
+      doc.text('Ya tienes un cupon ClienteAmigo disponible. Usalo en tu proxima compra.', margin, y);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(11);
+      doc.setFont('helvetica', 'normal');
     }
 
     doc.save(`ticket-VL-${receipt.saleId}.pdf`);
@@ -1139,6 +1232,16 @@ function App({ auth, onRequireAuth, onLogout }) {
       const wrapped = doc.splitTextToSize(line, 180);
       doc.text(wrapped, margin, y);
       y += wrapped.length * 4.5;
+
+      if (item.campaignName) {
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100, 100, 100);
+        doc.text(`  (Campaña: ${item.campaignName})`, margin, y);
+        y += 4.5;
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(0, 0, 0);
+      }
+
       if (y > 260) {
         doc.addPage();
         y = 18;
@@ -1181,22 +1284,7 @@ function App({ auth, onRequireAuth, onLogout }) {
       return;
     }
 
-    if (newProduct.promotionType === 'BUY_X_PAY_Y') {
-      const buy = Number(newProduct.promoBuyQuantity)
-      const pay = Number(newProduct.promoPayQuantity)
-      if (!Number.isInteger(buy) || !Number.isInteger(pay) || buy < 2 || pay < 1 || pay >= buy) {
-        alert('Configura la oferta tipo compra X paga Y con valores válidos (buy>=2 y 1<=pay<buy).')
-        return
-      }
-    }
 
-    if (newProduct.promotionType === 'PERCENTAGE') {
-      const percent = Number(newProduct.promoPercentDiscount)
-      if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
-        alert('Configura un porcentaje de descuento válido (mayor a 0 y menor a 100).')
-        return
-      }
-    }
 
     try {
       const finalCategory = newProduct.category === 'OTHER' ? customCategory.trim() : newProduct.category.trim();
@@ -1211,10 +1299,10 @@ function App({ auth, onRequireAuth, onLogout }) {
         price: parseFloat(newProduct.price),
         requiresPrescription: newProduct.requiresPrescription,
         visibleInSuggestions: newProduct.visibleInSuggestions,
-        promotionType: newProduct.promotionType,
-        promoBuyQuantity: newProduct.promotionType === 'BUY_X_PAY_Y' ? Number(newProduct.promoBuyQuantity) : null,
-        promoPayQuantity: newProduct.promotionType === 'BUY_X_PAY_Y' ? Number(newProduct.promoPayQuantity) : null,
-        promoPercentDiscount: newProduct.promotionType === 'PERCENTAGE' ? Number(newProduct.promoPercentDiscount) : null,
+        promotionType: 'NONE',
+        promoBuyQuantity: null,
+        promoPayQuantity: null,
+        promoPercentDiscount: null,
         expirationDate: `${newProduct.expirationDate}T00:00:00`
       };
 
@@ -1322,7 +1410,7 @@ function App({ auth, onRequireAuth, onLogout }) {
             onClick={() => setView('inventory')}
             className={`px-6 py-2 rounded-xl font-black text-xs uppercase transition-all ${view === 'inventory' ? 'bg-white text-blue-700 shadow-sm' : 'text-gray-500'}`}
           >
-            🛒 Ventas
+            Ventas
           </button>
           {isAdmin && (
             <button 
@@ -1480,26 +1568,24 @@ function App({ auth, onRequireAuth, onLogout }) {
                 })}
               </div>
 
-              <button
-                ref={cartIconRef}
-                type="button"
-                onClick={() => {
-                  if (cartDrawerAutoCloseRef.current) {
-                    window.clearTimeout(cartDrawerAutoCloseRef.current)
-                    cartDrawerAutoCloseRef.current = null
-                  }
-                  if (commercePage === '/products') {
+              {commercePage === '/products' && (
+                <button
+                  ref={cartIconRef}
+                  type="button"
+                  onClick={() => {
+                    if (cartDrawerAutoCloseRef.current) {
+                      window.clearTimeout(cartDrawerAutoCloseRef.current)
+                      cartDrawerAutoCloseRef.current = null
+                    }
                     setIsCartDrawerOpen((prev) => !prev)
-                    return
-                  }
-                  navigateCommerce('/cart')
-                }}
-                className={`relative flex items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-blue-800 transition-transform ${isCartIconBumping ? 'scale-110' : 'scale-100'}`}
-              >
-                <span className="text-lg">🛒</span>
-                <span className="text-xs font-black uppercase tracking-wider">Carrito</span>
-                <span className="ml-1 rounded-full bg-blue-700 px-2 py-0.5 text-[11px] font-black text-white">{cartItemsCount}</span>
-              </button>
+                  }}
+                  className={`relative flex items-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2 text-blue-800 transition-transform ${isCartIconBumping ? 'scale-110' : 'scale-100'}`}
+                >
+                  <span className="text-lg">🛒</span>
+                  <span className="text-xs font-black uppercase tracking-wider">Carrito</span>
+                  <span className="ml-1 rounded-full bg-blue-700 px-2 py-0.5 text-[11px] font-black text-white">{cartItemsCount}</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -1511,19 +1597,51 @@ function App({ auth, onRequireAuth, onLogout }) {
                     <input
                       type="text"
                       placeholder="Buscar medicamento..."
-                      className="w-full bg-gray-100 border-none rounded-xl p-3 pl-10 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm"
+                      className="w-full bg-gray-100 border-none rounded-xl p-3 pl-10 pr-10 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     <span className="absolute left-3 top-3 opacity-30">🔍</span>
+                    {searchTerm.trim() && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchTerm('')}
+                        aria-label="Limpiar busqueda"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-red-500 text-white text-sm font-black leading-none hover:bg-red-600"
+                      >
+                        x
+                      </button>
+                    )}
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Codigo (SKU / barras)"
-                    className="w-full bg-gray-100 border-none rounded-xl p-3 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm md:col-span-5"
-                    value={searchCode}
-                    onChange={(e) => setSearchCode(e.target.value)}
-                  />
+                  <div className="flex w-full gap-2 md:col-span-5">
+                    <div className="relative min-w-0 flex-1">
+                      <input
+                        type="text"
+                        placeholder="Codigo (SKU / barras)"
+                        className="w-full bg-gray-100 border-none rounded-xl p-3 pr-10 focus:ring-2 focus:ring-blue-500 outline-none font-bold text-sm"
+                        value={searchCode}
+                        onChange={(e) => setSearchCode(e.target.value)}
+                      />
+                      {searchCode.trim() && (
+                        <button
+                          type="button"
+                          onClick={() => setSearchCode('')}
+                          aria-label="Limpiar codigo"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-red-500 text-white text-sm font-black leading-none hover:bg-red-600"
+                        >
+                          x
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      disabled={!hasActiveFilters}
+                      className="shrink-0 rounded-xl border border-gray-300 bg-white px-3 py-2 text-[11px] font-black uppercase tracking-wider text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      Borrar
+                    </button>
+                  </div>
                 </div>
                 {isAdmin && (
                   <div className="flex w-full flex-wrap items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2">
@@ -1546,7 +1664,18 @@ function App({ auth, onRequireAuth, onLogout }) {
 
               <div className="p-6 grid grid-cols-1 gap-6 md:grid-cols-[280px_minmax(0,_1fr)]">
                 <aside className="rounded-2xl border border-gray-200 bg-gray-50 p-4 h-fit md:sticky md:top-6">
-                  <h4 className="text-xs font-black uppercase tracking-widest text-gray-500">Filtrar</h4>
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="text-xs font-black uppercase tracking-widest text-gray-500">Filtrar</h4>
+                    <button
+                      type="button"
+                      onClick={clearFilters}
+                      disabled={!hasActiveFilters}
+                      className="inline-flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-1.5 py-1 text-[10px] font-black uppercase tracking-wider text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-45"
+                    >
+                      <span className="inline-flex h-4 w-4 items-center justify-center rounded-sm bg-gray-100 text-gray-500">x</span>
+                      <span className="pr-1">Borrar filtros</span>
+                    </button>
+                  </div>
                   <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
                     <p className="text-xs font-black uppercase tracking-wider text-blue-800">Por categoría</p>
                     <div className="mt-3 space-y-2 max-h-56 overflow-y-auto custom-scroll pr-1">
@@ -1554,7 +1683,7 @@ function App({ auth, onRequireAuth, onLogout }) {
                         <label key={category} className="flex items-center gap-2 text-sm font-bold text-gray-700">
                           <input
                             type="checkbox"
-                            checked={selectedCategories.includes(category)}
+                            checked={selectedCategory === category}
                             onChange={() => toggleCategorySelection(category)}
                           />
                           {category}
@@ -1577,23 +1706,50 @@ function App({ auth, onRequireAuth, onLogout }) {
                     <p className="mt-2 text-sm font-black text-gray-800">
                       ${priceRange.min.toFixed(0)} - ${priceRange.max.toFixed(0)}
                     </p>
-                    <div className="mt-4 space-y-4">
-                      <input
-                        type="range"
-                        min={priceBounds.min}
-                        max={priceBounds.max || 1}
-                        value={priceRange.min}
-                        onChange={(e) => handlePriceMinChange(e.target.value)}
-                        className="w-full accent-blue-600"
-                      />
-                      <input
-                        type="range"
-                        min={priceBounds.min}
-                        max={priceBounds.max || 1}
-                        value={priceRange.max}
-                        onChange={(e) => handlePriceMaxChange(e.target.value)}
-                        className="w-full accent-blue-600"
-                      />
+                    <div className="mt-4 flex items-center gap-2">
+                      <div className="relative w-full">
+                        <input
+                          type="number"
+                          min={priceBounds.min}
+                          max={priceBounds.max}
+                          value={priceMinInput}
+                          onChange={(e) => handlePriceMinChange(e.target.value)}
+                          placeholder="Mínimo"
+                          className="no-spinner w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 pr-8 text-sm font-semibold text-gray-700 outline-none focus:border-blue-500"
+                        />
+                        {priceMinInput !== '' && (
+                          <button
+                            type="button"
+                            onClick={() => handlePriceMinChange('')}
+                            aria-label="Limpiar precio mínimo"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[12px] font-black leading-none text-red-500 hover:text-red-600"
+                          >
+                            x
+                          </button>
+                        )}
+                      </div>
+                      <span className="text-gray-400 font-bold">-</span>
+                      <div className="relative w-full">
+                        <input
+                          type="number"
+                          min={priceBounds.min}
+                          max={priceBounds.max}
+                          value={priceMaxInput}
+                          onChange={(e) => handlePriceMaxChange(e.target.value)}
+                          placeholder="Máximo"
+                          className="no-spinner w-full rounded-lg border border-gray-300 bg-gray-50 px-3 py-1.5 pr-8 text-sm font-semibold text-gray-700 outline-none focus:border-blue-500"
+                        />
+                        {priceMaxInput !== '' && (
+                          <button
+                            type="button"
+                            onClick={() => handlePriceMaxChange('')}
+                            aria-label="Limpiar precio máximo"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-[12px] font-black leading-none text-red-500 hover:text-red-600"
+                          >
+                            x
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </aside>
@@ -1610,18 +1766,78 @@ function App({ auth, onRequireAuth, onLogout }) {
                             alt={p.name}
                             className="h-full w-full object-cover"
                           />
+
+                          {/* Pennant / Estandarte de Receta */}
+                          {p.requiresPrescription && (
+                            <div className="absolute left-3 -top-0 z-10 flex flex-col items-center" style={{filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))'}}>
+                              <div style={{
+                                width: '52px',
+                                background: 'linear-gradient(180deg, #7e22ce, #581c87)',
+                                borderLeft: '2px solid #a855f7',
+                                borderRight: '2px solid #a855f7',
+                                padding: '8px 4px 18px 4px',
+                                clipPath: 'polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}>
+                                <span style={{fontSize: '10px', fontWeight: 900, color: 'white', letterSpacing: '0.08em', lineHeight: 1.2, textAlign: 'center', textTransform: 'uppercase'}}>
+                                  RE<br/>CE<br/>TA
+                                </span>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Promo Label - Bold outlined text style */}
                           {p.stock > 0 && promoLabel && (
-                            <span className="absolute right-3 top-3 rounded-md bg-amber-400 px-2 py-1 text-[10px] font-black uppercase tracking-wider text-blue-900 shadow">
-                              {promoLabel}
-                            </span>
+                            <div className="absolute right-2 top-2 z-10">
+                              <span style={{
+                                fontSize: '28px',
+                                fontWeight: 900,
+                                fontStyle: 'italic',
+                                color: '#fbbf24',
+                                WebkitTextStroke: '1.5px #b91c1c',
+                                textShadow: '2px 2px 0 #7f1d1d, -1px -1px 0 #7f1d1d, 1px -1px 0 #7f1d1d, -1px 1px 0 #7f1d1d, 0 3px 6px rgba(0,0,0,0.4)',
+                                lineHeight: 1,
+                                letterSpacing: '-0.02em',
+                              }}>
+                                {promoLabel}
+                              </span>
+                            </div>
                           )}
+
                           {quantityInCart > 0 && (
-                            <span className="absolute left-3 top-3 rounded-full bg-blue-700 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white">
-                              Seleccionado x{quantityInCart}
+                            <span className="absolute right-2 bottom-2 rounded-full bg-blue-700 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-white z-10">
+                              x{quantityInCart}
                             </span>
                           )}
+
+                          {/* Campaign banner at bottom - Clash Royale style */}
+                          {p.stock > 0 && promoLabel && (() => {
+                            const campaign = getActiveCampaignForProduct(p.id)
+                            if (!campaign) return null
+                            return (
+                              <div className="absolute bottom-0 left-0 right-0 z-10" style={{
+                                background: 'linear-gradient(180deg, #dc2626, #991b1b)',
+                                borderTop: '3px solid #fbbf24',
+                                padding: '4px 8px',
+                                textAlign: 'center',
+                              }}>
+                                <span style={{
+                                  fontSize: '11px',
+                                  fontWeight: 900,
+                                  color: 'white',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.1em',
+                                  textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+                                }}>{campaign.name}</span>
+                              </div>
+                            )
+                          })()}
+
                           {p.stock <= 0 && (
-                            <div className="absolute inset-0 bg-gray-500/35 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-gray-500/35 flex items-center justify-center z-20">
                               <span className="rounded-xl bg-gray-900/80 px-4 py-2 text-sm font-black uppercase tracking-[0.2em] text-white">Agotado</span>
                             </div>
                           )}
@@ -1631,7 +1847,19 @@ function App({ auth, onRequireAuth, onLogout }) {
                           <p className="text-[11px] font-black uppercase tracking-widest text-gray-500">{p.category || 'Sin categoría'}</p>
                           <h3 className={`mt-1 text-xl font-black text-blue-900 leading-tight ${p.stock <= 0 ? 'line-through text-gray-400' : ''}`}>{p.name}</h3>
                           {p.code && <p className="mt-1 text-xs font-bold text-gray-500">Código: {p.code}</p>}
-                          <p className={`mt-3 text-3xl font-black ${p.stock <= 0 ? 'text-gray-400' : 'text-red-600'}`}>${Number(p.price || 0).toFixed(2)}</p>
+                          {(() => {
+                            const campaign = getActiveCampaignForProduct(p.id)
+                            if (campaign && campaign.promotionType === 'PERCENTAGE' && campaign.promoPercentDiscount > 0) {
+                              const discountedPrice = Number(p.price) * (1 - Number(campaign.promoPercentDiscount) / 100)
+                              return (
+                                <div className="mt-3">
+                                  <span className="text-lg font-bold text-gray-400 line-through">${Number(p.price || 0).toFixed(2)}</span>
+                                  <span className={`ml-2 text-3xl font-black ${p.stock <= 0 ? 'text-gray-400' : 'text-red-600'}`}>${discountedPrice.toFixed(2)}</span>
+                                </div>
+                              )
+                            }
+                            return <p className={`mt-3 text-3xl font-black ${p.stock <= 0 ? 'text-gray-400' : 'text-red-600'}`}>${Number(p.price || 0).toFixed(2)}</p>
+                          })()}
                           <p className="mt-1 text-xs font-bold text-gray-500">Stock: {p.stock} unidades</p>
 
                           <div className="mt-4 flex flex-wrap gap-2">
@@ -1954,6 +2182,24 @@ function App({ auth, onRequireAuth, onLogout }) {
                     </div>
 
                     <div className="mt-5 space-y-4 text-sm text-slate-700">
+                      <div className="space-y-2 border-b border-gray-100 pb-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Artículos</p>
+                        {cart.map(item => {
+                          const qty = getCartQuantity(item.id)
+                          const pricing = getLinePricing(item, qty)
+                          return (
+                            <div key={item.id} className="flex items-start justify-between gap-2 text-xs">
+                              <span className="font-bold text-slate-600 line-clamp-2">
+                                {item.name} <span className="text-blue-600">x{qty}</span>
+                              </span>
+                              <span className="shrink-0 font-black text-slate-900">
+                                ${pricing.net.toFixed(2)}
+                              </span>
+                            </div>
+                          )
+                        })}
+                      </div>
+
                       {cartPromotionDiscount > 0 && (
                         <div className="flex items-center justify-between">
                           <span>Promociones</span>
@@ -2043,12 +2289,14 @@ function App({ auth, onRequireAuth, onLogout }) {
                     onMouseLeave={() => setIsRecommendationHovering(false)}
                   >
                     {recommendationResult.recommendedItems.map((item) => {
+                      const catalogProduct = products.find((product) => product.id === item.id)
+                      const recommendationImage = item.imageUrl || item.image || catalogProduct?.imageUrl
                       const isOutOfStock = Number(item.stock || 0) <= 0
                       return (
                         <article key={item.id} className="min-w-[220px] max-w-[220px] rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
                           <div className="flex items-start gap-3">
                             <img
-                              src={item.imageUrl || buildDefaultProductImage(item.name)}
+                              src={recommendationImage || buildDefaultProductImage(item.name)}
                               alt={item.name}
                               className="h-14 w-14 rounded-lg border border-gray-200 bg-white object-contain"
                             />
@@ -2071,7 +2319,9 @@ function App({ auth, onRequireAuth, onLogout }) {
                   </div>
                 ) : (
                   <p className="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-5 text-[11px] font-bold text-gray-500">
-                    Agrega productos al carrito y te mostraremos sugerencias similares automáticamente.
+                    {cart.length > 0 && recommendationResult?.message
+                      ? recommendationResult.message
+                      : 'Agrega productos al carrito y te mostraremos sugerencias similares automáticamente.'}
                   </p>
                 )}
               </section>
@@ -2494,65 +2744,7 @@ function App({ auth, onRequireAuth, onLogout }) {
                 <p className="mt-2 text-[11px] font-bold text-gray-400">Selecciona dia, mes y año para registrar el vencimiento.</p>
               </div>
 
-              <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-3">
-                <p className="text-[11px] font-black uppercase tracking-wider text-amber-800">Oferta del producto</p>
-                <select
-                  className="mt-2 w-full rounded-xl border-2 border-amber-100 bg-white p-3 text-sm font-bold text-slate-700 outline-none focus:border-amber-400"
-                  value={newProduct.promotionType}
-                  onChange={(e) => {
-                    const nextType = e.target.value
-                    if (nextType === 'BUY_X_PAY_Y') {
-                      setNewProduct({ ...newProduct, promotionType: nextType, promoBuyQuantity: '3', promoPayQuantity: '2', promoPercentDiscount: '' })
-                      return
-                    }
-                    if (nextType === 'PERCENTAGE') {
-                      setNewProduct({ ...newProduct, promotionType: nextType, promoBuyQuantity: '', promoPayQuantity: '', promoPercentDiscount: '50' })
-                      return
-                    }
-                    setNewProduct({ ...newProduct, promotionType: 'NONE', promoBuyQuantity: '', promoPayQuantity: '', promoPercentDiscount: '' })
-                  }}
-                >
-                  <option value="NONE">Sin oferta</option>
-                  <option value="BUY_X_PAY_Y">Compra X, paga Y (ej: 3x2 / 2x1)</option>
-                  <option value="PERCENTAGE">Porcentaje de descuento (ej: 50%)</option>
-                </select>
 
-                {newProduct.promotionType === 'BUY_X_PAY_Y' && (
-                  <div className="mt-3 grid grid-cols-2 gap-3">
-                    <input
-                      type="number"
-                      min="2"
-                      placeholder="Compra X"
-                      className="w-full rounded-xl border border-amber-200 bg-white p-3 text-sm font-bold outline-none focus:border-amber-400"
-                      value={newProduct.promoBuyQuantity}
-                      onChange={(e) => setNewProduct({ ...newProduct, promoBuyQuantity: e.target.value })}
-                    />
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="Paga Y"
-                      className="w-full rounded-xl border border-amber-200 bg-white p-3 text-sm font-bold outline-none focus:border-amber-400"
-                      value={newProduct.promoPayQuantity}
-                      onChange={(e) => setNewProduct({ ...newProduct, promoPayQuantity: e.target.value })}
-                    />
-                  </div>
-                )}
-
-                {newProduct.promotionType === 'PERCENTAGE' && (
-                  <input
-                    type="number"
-                    min="1"
-                    max="99"
-                    step="0.01"
-                    placeholder="Porcentaje de descuento"
-                    className="mt-3 w-full rounded-xl border border-amber-200 bg-white p-3 text-sm font-bold outline-none focus:border-amber-400"
-                    value={newProduct.promoPercentDiscount}
-                    onChange={(e) => setNewProduct({ ...newProduct, promoPercentDiscount: e.target.value })}
-                  />
-                )}
-
-                <p className="mt-2 text-[11px] font-bold text-amber-900/70">Ejemplos reales: 2x1 = Compra 2 / Paga 1, 3x2 = Compra 3 / Paga 2, 50% = Porcentaje 50.</p>
-              </div>
 
               <label className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-blue-800">
                 <input

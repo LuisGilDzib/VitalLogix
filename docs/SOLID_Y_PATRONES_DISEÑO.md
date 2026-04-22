@@ -52,13 +52,19 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 }
 ```
 
-**Otros ejemplos SRP**:
-- `ReportService`: Solo genera reportes
-- `SaleService`: Solo gestiona transacciones de ventas
-- `ComboSuggestionService`: Solo calcula recomendaciones
-- `JwtService`: Solo maneja tokens JWT
+**SaleService** - Refactorizado para delegar cálculos de precios y efectos secundarios.
+```java
+// backend/src/main/java/com/vitallogix/backend/service/SaleService.java
+@Service
+public class SaleService {
+    // Orquestación de la creación de ventas
+    // Delega precios a PromotionStrategy (Patrón Strategy)
+    // Delega acciones post-venta a SaleObserver (Patrón Observer)
+    // SRP logrado: El servicio solo gestiona el flujo de la transacción.
+}
+```
 
-**Impacto**: Los cambios en la lógica de categorías no afectan controladores ni repositorios.
+**Impacto**: Los cambios en la lógica de promociones no afectan a `SaleService`.
 
 ---
 
@@ -136,38 +142,26 @@ public class SaleService {
 
 **Definición**: Abierto para extensión, cerrado para modificación.
 
-#### Implementación: Parámetros configurables del motor de sugerencias
+#### Implementación: Estrategias de Promoción
+El sistema utiliza el **Patrón Strategy** para manejar diferentes tipos de promociones (PERCENTAGE, BUY_X_PAY_Y).
 
-**Diseño actual** - Configuración externa (extensible sin modificar código de flujo)
+**Cerrado para Modificación**: La lógica de `SaleService` para procesar una venta nunca cambia cuando se añade un nuevo tipo de promoción.
+**Abierto para Extensión**: Se pueden añadir nuevos tipos de promoción implementando la interfaz `PromotionStrategy` y registrándolos en la `PromotionStrategyFactory`.
+
 ```java
-// backend/src/main/java/com/vitallogix/backend/service/ComboSuggestionService.java
-@Service
-public class ComboSuggestionService {
-    @Value("${app.suggestion.exploration-weight:0.65}")
-    private double explorationWeight;
-
-    @Value("${app.suggestion.max-recommendations:6}")
-    private int defaultMaxRecommendations;
-
-    private double banditScore(BanditCandidate candidate, int totalPulls) {
-        double exploration = Math.sqrt(Math.log(totalPulls + 1.0) / (candidate.pulls() + 1.0));
-        return candidate.expectedReward() + (explorationWeight * exploration);
-    }
+// backend/src/main/java/com/vitallogix/backend/strategy/PromotionStrategy.java
+public interface PromotionStrategy {
+    BigDecimal calculateNet(...);
 }
+
+// backend/src/main/java/com/vitallogix/backend/strategy/BuyXPayYPromotionStrategy.java
+public class BuyXPayYPromotionStrategy implements PromotionStrategy { ... }
 ```
 
 **Beneficios**:
-- Cambiar exploración/recomendaciones máximas sin modificar clases Java
-- Mismo flujo de ejecución con comportamiento configurable por entorno
-- Menor riesgo de regresiones al ajustar parámetros
-- El algoritmo permanece cerrado para modificación de flujo
-
-**Ejemplo de Extensión Futura**:
-```java
-// Nuevo ajuste por entorno sin cambiar código
-app.suggestion.exploration-weight=0.75
-app.suggestion.max-recommendations=8
-```
+- La lógica específica del algoritmo está encapsulada.
+- No hay declaraciones masivas de `if/else` o `switch` en el servicio principal.
+- Fácil de testear unitariamente cada estrategia por separado.
 
 ---
 
@@ -303,25 +297,46 @@ public class SaleService {
 
 ### 4. Patrón Singleton
 
-**Propósito**: Una sola instancia del servicio en tiempo de vida de la aplicación.
+**Propósito**: Garantizar que una clase tenga una única instancia en toda la aplicación y proporcionar un punto de acceso global a ella.
 
+**Uso en el proyecto**:
+
+**1. Implementación Clásica**:
+En la clase `PromotionStrategyFactory` utilizamos el patrón Singleton puro (Eager Initialization), tal como se documenta en el libro Head First:
+```java
+public class PromotionStrategyFactory {
+    // Instancia única inicializada tempranamente
+    private static final PromotionStrategyFactory INSTANCE = new PromotionStrategyFactory();
+    
+    private final Map<String, PromotionStrategy> strategies = new HashMap<>();
+
+    // Constructor privado
+    private PromotionStrategyFactory() {
+        strategies.put("PERCENTAGE", new PercentagePromotionStrategy());
+        // ...
+    }
+
+    // Punto de acceso global
+    public static PromotionStrategyFactory getInstance() {
+        return INSTANCE;
+    }
+    // ...
+}
+```
+
+**2. Singleton en Spring**:
+Por defecto, Spring Boot ya gestiona los servicios (`@Service`) y repositorios (`@Repository`) como Singletons:
 ```java
 @Service
 public class ComboSuggestionService {
-    // Spring crea UNA sola instancia para toda la aplicación
-    // TODOS los endpoints comparten la misma instancia
-}
-
-@Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
     // Spring crea UNA sola instancia para toda la aplicación
 }
 ```
 
 **Beneficios**:
-- Eficiente en memoria (una instancia)
-- Thread-safe (Spring maneja sincronización)
-- Bueno para servicios sin estado
+- Control estricto sobre cómo y cuándo se accede a la instancia.
+- Eficiente en memoria (una instancia).
+- Buen rendimiento (en Eager initialization o mediante Spring).
 
 ---
 
@@ -371,9 +386,42 @@ new Category("Vitaminas")
 
 ---
 
-### 6. Patrón Builder (Implícito en DTOs)
+### 6. Patrón Strategy (Favorito de Head First)
 
-Los DTOs con múltiples campos son construidos mediante setters en los controladores, lo que permite construcción flexible de objetos.
+**Propósito**: Define una familia de algoritmos, encapsula cada uno y los hace intercambiables.
+
+**Implementación**:
+- `PromotionStrategy` (Interfaz)
+- `PercentagePromotionStrategy`
+- `BuyXPayYPromotionStrategy`
+- `NoPromotionStrategy`
+
+Utilizado en `SaleService` a través de `PromotionStrategyFactory.getInstance().getStrategy(tipo)`.
+
+---
+
+### 7. Patrón Observer (Favorito de Head First)
+
+**Propósito**: Define una dependencia de uno a muchos entre objetos para que cuando un objeto cambie de estado, todos sus dependientes sean notificados y actualizados automáticamente.
+
+**Implementación**:
+- `SaleObserver` (Interfaz)
+- `LoyaltyObserver` (Implementación)
+- `SaleEventNotifier` (Sujeto)
+
+**Flujo**:
+1. `SaleService` completa una venta.
+2. `SaleService` llama a `saleEventNotifier.notifyObservers(sale)`.
+3. `LoyaltyObserver` recibe la notificación y actualiza los puntos de fidelidad y cupones del usuario.
+
+---
+
+### 8. Patrón Factory
+
+**Propósito**: Define una interfaz para crear un objeto, pero deja que las subclases decidan qué clase instanciar.
+
+**Implementación**:
+- `PromotionStrategyFactory`: Devuelve la `PromotionStrategy` adecuada basada en el tipo de promoción.
 
 ---
 
@@ -393,8 +441,10 @@ Los DTOs con múltiples campos son construidos mediante setters en los controlad
 | DTO | Sí | ProductRequest, ProductResponse, CategoryRequest, SaleRequest |
 | Service | Sí | CategoryService, SaleService, ReportService |
 | Inyección de Dependencias | Sí | Todos los servicios usan inyección por constructor |
-| Singleton | Sí | Spring @Service beans |
-| Observer/Lifecycle | Sí | Category (@PrePersist, @PreUpdate) |
+| Singleton | Sí | Spring @Service beans, PromotionStrategyFactory |
+| Observer | Sí | SaleObserver, LoyaltyObserver, SaleEventNotifier |
+| Strategy | Sí | PromotionStrategy, PercentagePromotionStrategy, BuyXPayYPromotionStrategy |
+| Factory | Sí | PromotionStrategyFactory |
 
 ---
 

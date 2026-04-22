@@ -52,13 +52,19 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 }
 ```
 
-**Other SRP Examples**:
-- `ReportService`: Only generates reports
-- `SaleService`: Only manages sales transactions
-- `ComboSuggestionService`: Only computes recommendations
-- `JwtService`: Only handles JWT token operations
+**SaleService** - Refactored to delegate pricing and side-effects.
+```java
+// backend/src/main/java/com/vitallogix/backend/service/SaleService.java
+@Service
+public class SaleService {
+    // Orchestrates sale creation
+    // Delegates pricing to PromotionStrategy (Strategy Pattern)
+    // Delegates post-sale actions to SaleObserver (Observer Pattern)
+    // SRP achieved: Service only manages the transaction flow.
+}
+```
 
-**Impact**: Changes to category logic don't affect controllers or repositories.
+**Impact**: Changes to promotion logic don't affect `SaleService`.
 
 ---
 
@@ -136,38 +142,26 @@ public class SaleService {
 
 **Definition**: Open for extension, closed for modification.
 
-#### Implementation: Configurable suggestion engine parameters
+#### Implementation: Promotion Strategies
+The system uses the **Strategy Pattern** to handle different promotion types (PERCENTAGE, BUY_X_PAY_Y).
 
-**Current design** - Externalized configuration (extensible without changing control flow)
+**Closed for Modification**: `SaleService` logic for processing a sale never changes when a new promotion type is added.
+**Open for Extension**: New promotion types can be added by implementing the `PromotionStrategy` interface and adding them to the `PromotionStrategyFactory`.
+
 ```java
-// backend/src/main/java/com/vitallogix/backend/service/ComboSuggestionService.java
-@Service
-public class ComboSuggestionService {
-    @Value("${app.suggestion.exploration-weight:0.65}")
-    private double explorationWeight;
-
-    @Value("${app.suggestion.max-recommendations:6}")
-    private int defaultMaxRecommendations;
-
-    private double banditScore(BanditCandidate candidate, int totalPulls) {
-        double exploration = Math.sqrt(Math.log(totalPulls + 1.0) / (candidate.pulls() + 1.0));
-        return candidate.expectedReward() + (explorationWeight * exploration);
-    }
+// backend/src/main/java/com/vitallogix/backend/strategy/PromotionStrategy.java
+public interface PromotionStrategy {
+    BigDecimal calculateNet(...);
 }
+
+// backend/src/main/java/com/vitallogix/backend/strategy/BuyXPayYPromotionStrategy.java
+public class BuyXPayYPromotionStrategy implements PromotionStrategy { ... }
 ```
 
 **Benefits**:
-- Tune exploration/max recommendations without changing Java classes
-- Same execution flow with environment-specific behavior
-- Lower regression risk while tuning recommendation behavior
-- Algorithm remains closed for control-flow modification
-
-**Future Extension Example**:
-```java
-// Environment tuning without code changes
-app.suggestion.exploration-weight=0.75
-app.suggestion.max-recommendations=8
-```
+- Algorithm-specific logic is encapsulated.
+- No massive `if/else` or `switch` statements in the core service.
+- Easy to unit test individual strategies.
 
 ---
 
@@ -472,7 +466,42 @@ categoryRepository.update()
 - No manual timestamp management
 - Consistent audit trail
 - Declarative (not imperative)
-- Automatic in all save operations
+### 6. Strategy Pattern (Head First Favorite)
+
+**Purpose**: Define a family of algorithms, encapsulate each one, and make them interchangeable.
+
+**Implementation**:
+- `PromotionStrategy` (Interface)
+- `PercentagePromotionStrategy`
+- `BuyXPayYPromotionStrategy`
+- `NoPromotionStrategy`
+
+Used in `SaleService` via `PromotionStrategyFactory`.
+
+---
+
+### 7. Observer Pattern (Head First Favorite)
+
+**Purpose**: Define a one-to-many dependency between objects so that when one object changes state, all its dependents are notified and updated automatically.
+
+**Implementation**:
+- `SaleObserver` (Interface)
+- `LoyaltyObserver` (Implementation)
+- `SaleEventNotifier` (Subject)
+
+**Flow**:
+1. `SaleService` completes a sale.
+2. `SaleService` calls `saleEventNotifier.notifyObservers(sale)`.
+3. `LoyaltyObserver` receives the notification and updates the user's loyalty points and coupons.
+
+---
+
+### 8. Factory Pattern
+
+**Purpose**: Define an interface for creating an object, but let subclasses decide which class to instantiate.
+
+**Implementation**:
+- `PromotionStrategyFactory`: Returns the appropriate `PromotionStrategy` based on the promotion type string.
 
 ---
 
@@ -492,8 +521,10 @@ categoryRepository.update()
 | DTO | Yes | ProductRequest, ProductResponse, CategoryRequest, SaleRequest |
 | Service | Yes | CategoryService, SaleService, ReportService |
 | Dependency Injection | Yes | All services use constructor injection |
-| Singleton | Yes | Spring @Service beans |
-| Observer/Lifecycle | Yes | Category (@PrePersist, @PreUpdate) |
+| Singleton | Yes | Spring @Service beans, PromotionStrategyFactory |
+| Observer | Yes | SaleObserver, LoyaltyObserver, SaleEventNotifier |
+| Strategy | Yes | PromotionStrategy, PercentagePromotionStrategy, BuyXPayYPromotionStrategy |
+| Factory | Yes | PromotionStrategyFactory |
 
 ---
 

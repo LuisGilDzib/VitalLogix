@@ -7,6 +7,7 @@ import com.vitallogix.backend.model.Sale;
 import com.vitallogix.backend.repository.CustomerRepository;
 import com.vitallogix.backend.repository.SaleRepository;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -99,9 +100,14 @@ public class CustomerController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        repository.deleteById(id);
+    public ResponseEntity<?> delete(@PathVariable Long id) {
+        try {
+            repository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(java.util.Map.of("message", "No se puede eliminar el cliente porque tiene ventas con receta en el historial."));
+        }
     }
 
     private CustomerResponse toResponse(Customer customer) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { getAllCategories, approveCategory, rejectCategory, updateCategory, deactivateCategory, getPendingCategories, getProducts, updateCategorySuggestionVisibility } from '../services/api'
+import { getAllCategories, approveCategory, rejectCategory, updateCategory, deactivateCategory, activateCategory, deleteCategory, getPendingCategories, getProducts, updateCategorySuggestionVisibility } from '../services/api'
 
 const CategoryManagementPanel = () => {
   const [categories, setCategories] = useState([])
@@ -106,6 +106,32 @@ const CategoryManagementPanel = () => {
     }
   }
 
+  const handleActivate = async (id) => {
+    try {
+      await activateCategory(id)
+      alert('Categoría activada')
+      fetchCategories()
+    } catch (err) {
+      alert('Error al activar')
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (window.confirm('¿Borrar definitivamente esta categoría? Esta acción no se puede deshacer.')) {
+      try {
+        await deleteCategory(id)
+        alert('Categoría eliminada')
+        fetchCategories()
+      } catch (err) {
+        if (err?.response?.status === 409) {
+          alert('No se puede eliminar la categoría porque hay productos asignados a ella.')
+        } else {
+          alert('Error al eliminar')
+        }
+      }
+    }
+  }
+
   const handleSaveEdit = async (id) => {
     try {
       await updateCategory(id, editName, editDescription)
@@ -190,7 +216,7 @@ const CategoryManagementPanel = () => {
 
       {/* All Categories Tab */}
       {activeTab === 'all' && (
-        <div className="space-y-3 max-h-96 overflow-y-auto custom-scroll">
+        <div className="space-y-3 max-h-96 overflow-y-auto">
           {categories.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No hay categorías cargadas</p>
           ) : (
@@ -257,7 +283,7 @@ const CategoryManagementPanel = () => {
                     </div>
 
                     <div className="flex gap-2">
-                      {category.status !== 'INACTIVE' && (
+                      {category.status !== 'INACTIVE' ? (
                         <>
                           <button
                             onClick={() => handleToggleCategorySuggestionVisibility(category)}
@@ -278,6 +304,21 @@ const CategoryManagementPanel = () => {
                             🚫 Desactivar
                           </button>
                         </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleActivate(category.id)}
+                            className="flex-1 bg-green-100 text-green-700 font-bold py-2 rounded-lg hover:bg-green-700 hover:text-white transition-all text-xs uppercase"
+                          >
+                            ✅ Activar
+                          </button>
+                          <button
+                            onClick={() => handleDelete(category.id)}
+                            className="flex-1 bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 transition-all text-xs uppercase"
+                          >
+                            🗑️ Borrar
+                          </button>
+                        </>
                       )}
                     </div>
                   </>
@@ -290,7 +331,7 @@ const CategoryManagementPanel = () => {
 
       {/* Pending Categories Tab */}
       {activeTab === 'pending' && (
-        <div className="space-y-3 max-h-96 overflow-y-auto custom-scroll">
+        <div className="space-y-3 max-h-96 overflow-y-auto">
           {pendingCategories.length === 0 ? (
             <p className="text-gray-500 text-center py-8">No hay categorías pendientes de aprobación</p>
           ) : (

@@ -1,12 +1,12 @@
 # Panel de Administración de Categorías
 
-## ✅ Estado: IMPLEMENTADO Y VALIDADO EN ENTORNO LOCAL
+## Estado de la Funcionalidad
 
 Resumen funcional:
-- ✅ Solo admins pueden crear categorías personalizadas
-- ✅ Solo admins pueden aprobar/rechazar categorías nuevas
-- ✅ Solo admins pueden editar o desactivar categorías
-- ✅ Sistema de auditoría completo (quién creó, quién aprobó, cuándo)
+- Solo admins pueden crear categorías personalizadas
+- Solo admins pueden aprobar/rechazar categorías nuevas
+- Solo admins pueden editar o desactivar categorías
+- Sistema de auditoría completo (quién creó, quién aprobó, cuándo)
 
 ---
 
@@ -90,7 +90,7 @@ Resumen funcional:
    ↓
 8. Revisa tab "Pendientes", ve "Electrolitos"
    ↓
-9. Elige: ✅ Aprobar o ❌ Rechazar
+9. Elige: Aprobar o Rechazar
    ↓
 10. Si Aprobar:
     - Status cambia a ACTIVE
@@ -162,12 +162,12 @@ docs/ADMIN_CATEGORY_PANEL.md
 1. Click en tab "📂 Categorías"
 2. Click en tab "Pendientes"
 3. Ver "Electrolitos" con status "PENDING_APPROVAL"
-4. Botones: "✅ Aprobar" y "❌ Rechazar"
+4. Botones: "Aprobar" y "Rechazar"
 ```
 
 ### 3. Aprobar Categoría
 ```
-1. Click "✅ Aprobar"
+1. Click "Aprobar"
 2. Mensaje: "Categoría aprobada correctamente"
 3. Volver a "Todas"
 4. Ver "Electrolitos" con status "ACTIVE"

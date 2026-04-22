@@ -78,8 +78,9 @@ function CampaignManagementPanel({ onNavigateBack }) {
   const loadAllProducts = async () => {
     try {
       const response = await getProducts()
-      const data = response.data || []
-      setAllProducts(data)
+      const data = response.data;
+      const productsArray = Array.isArray(data) ? data : (data?.content || [])
+      setAllProducts(productsArray)
     } catch (err) {
       setError(err?.response?.data?.message || err.message)
     }

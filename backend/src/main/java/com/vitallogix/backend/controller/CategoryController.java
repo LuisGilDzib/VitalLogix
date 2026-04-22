@@ -152,6 +152,31 @@ public class CategoryController {
         }
     }
 
+    // Activate category (change status to ACTIVE).
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<?> activateCategory(@PathVariable Long id) {
+        try {
+            Category category = categoryService.activateCategory(id);
+            return ResponseEntity.ok(mapToResponse(category));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // Delete category entirely
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
+        try {
+            categoryService.deleteCategory(id);
+            return ResponseEntity.noContent().build();
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse("No se puede eliminar la categoría porque hay productos asignados a ella."));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     // Toggle category visibility in product recommendations.
     // visibleInSuggestions field is required in request body.
     @PatchMapping("/{id}/suggestion-visibility")

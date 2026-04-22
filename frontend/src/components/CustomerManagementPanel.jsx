@@ -481,6 +481,11 @@ function CustomerManagementPanel({ isAdmin }) {
                         <div>
                           <p className="text-sm font-black text-gray-900">Folio #VL-{sale.id}</p>
                           <p className="text-xs font-bold text-gray-500">{formatDate(sale.saleDate)}</p>
+                          {sale.accountUsername && (
+                            <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-purple-700">
+                              Cuenta: {sale.accountUsername}
+                            </p>
+                          )}
                         </div>
                         <div className="text-right">
                           <p className="text-xs font-black uppercase tracking-widest text-gray-400">Total</p>

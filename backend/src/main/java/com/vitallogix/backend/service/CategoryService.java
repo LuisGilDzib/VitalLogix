@@ -128,15 +128,30 @@ public class CategoryService {
         return categoryRepository.save(category);
     }
 
-    // Deactivate category (change status to INACTIVE). Keeps record in database for audit trail.
-    // Inactive categories won't appear in user-facing views but remain queryable for admin reports.
-    // Throws RuntimeException if category not found.
     public Category deactivateCategory(Long id) {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
 
         category.setStatus(Category.StatusEnum.INACTIVE);
         return categoryRepository.save(category);
+    }
+
+    // Activate category (change status to ACTIVE).
+    public Category activateCategory(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+        category.setStatus(Category.StatusEnum.ACTIVE);
+        return categoryRepository.save(category);
+    }
+
+    // Delete category entirely.
+    // Throws RuntimeException if category not found or if there's a constraint violation.
+    public void deleteCategory(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
+
+        categoryRepository.delete(category);
     }
 
     // Get category by ID. Returns Optional (empty if not found).

@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/campaigns")
-@CrossOrigin(origins = "*")
 public class CampaignController {
 
     @Autowired

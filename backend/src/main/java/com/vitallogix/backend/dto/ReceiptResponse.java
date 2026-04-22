@@ -15,21 +15,30 @@ public class ReceiptResponse {
     private BigDecimal discount;
     private BigDecimal finalAmount;
     private String loyaltyAwardedCode;
+    private Integer purchasesSinceCoupon;
+    private Integer purchasesToNextCoupon;
 
     public static class Item {
         private String productName;
         private Integer quantity;
         private BigDecimal unitPrice;
         private BigDecimal subtotal;
+        private String campaignName;
+        private BigDecimal discountAmount;
+        
         // Getters and setters
         public String getProductName() { return productName; }
         public void setProductName(String productName) { this.productName = productName; }
+        public String getCampaignName() { return campaignName; }
+        public void setCampaignName(String campaignName) { this.campaignName = campaignName; }
         public Integer getQuantity() { return quantity; }
         public void setQuantity(Integer quantity) { this.quantity = quantity; }
         public BigDecimal getUnitPrice() { return unitPrice; }
         public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
         public BigDecimal getSubtotal() { return subtotal; }
         public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
+        public BigDecimal getDiscountAmount() { return discountAmount; }
+        public void setDiscountAmount(BigDecimal discountAmount) { this.discountAmount = discountAmount; }
     }
 
     // Getters and setters
@@ -53,4 +62,8 @@ public class ReceiptResponse {
     public void setFinalAmount(BigDecimal finalAmount) { this.finalAmount = finalAmount; }
     public String getLoyaltyAwardedCode() { return loyaltyAwardedCode; }
     public void setLoyaltyAwardedCode(String loyaltyAwardedCode) { this.loyaltyAwardedCode = loyaltyAwardedCode; }
+    public Integer getPurchasesSinceCoupon() { return purchasesSinceCoupon; }
+    public void setPurchasesSinceCoupon(Integer purchasesSinceCoupon) { this.purchasesSinceCoupon = purchasesSinceCoupon; }
+    public Integer getPurchasesToNextCoupon() { return purchasesToNextCoupon; }
+    public void setPurchasesToNextCoupon(Integer purchasesToNextCoupon) { this.purchasesToNextCoupon = purchasesToNextCoupon; }
 }

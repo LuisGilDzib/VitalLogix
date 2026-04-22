@@ -82,6 +82,8 @@ export const updateCategorySuggestionVisibility = (id, visibleInSuggestions) =>
 export const approveCategory = (id) => api.put(`/categories/${id}/approve`);
 export const rejectCategory = (id) => api.delete(`/categories/${id}/reject`);
 export const deactivateCategory = (id) => api.put(`/categories/${id}/deactivate`);
+export const activateCategory = (id) => api.put(`/categories/${id}/activate`);
+export const deleteCategory = (id) => api.delete(`/categories/${id}`);
 export const updateProductVisibility = (id, visibilityPatch) =>
   api.patch(`/products/${id}/visibility`, visibilityPatch);
 

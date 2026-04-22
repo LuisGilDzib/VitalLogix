@@ -22,6 +22,7 @@ public class SaleItem {
 
     private Integer quantity;
     private BigDecimal unitPrice;
+    private String campaignName;
 
     // Getters and setters
     public Long getId() { return id; }
@@ -37,4 +38,7 @@ public class SaleItem {
 
     public BigDecimal getUnitPrice() { return unitPrice; }
     public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
+
+    public String getCampaignName() { return campaignName; }
+    public void setCampaignName(String campaignName) { this.campaignName = campaignName; }
 }

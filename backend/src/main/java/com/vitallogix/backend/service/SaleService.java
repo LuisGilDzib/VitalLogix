@@ -8,11 +8,14 @@ import com.vitallogix.backend.model.Product;
 import com.vitallogix.backend.model.Sale;
 import com.vitallogix.backend.model.SaleItem;
 import com.vitallogix.backend.model.User;
+import com.vitallogix.backend.observer.SaleEventNotifier;
 import com.vitallogix.backend.repository.CampaignRepository;
 import com.vitallogix.backend.repository.CustomerRepository;
 import com.vitallogix.backend.repository.ProductRepository;
 import com.vitallogix.backend.repository.SaleRepository;
 import com.vitallogix.backend.repository.UserRepository;
+import com.vitallogix.backend.strategy.PromotionStrategy;
+import com.vitallogix.backend.strategy.PromotionStrategyFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,8 +24,15 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.UUID;
 
+/**
+ * SaleService demonstrates several SOLID principles and Design Patterns:
+ * 1. SRP: Delegating pricing to Strategy, side effects to Observer, and data access to Repositories.
+ * 2. OCP: Promotion logic is open for extension (via new strategies) but closed for modification.
+ * 3. DIP: Depends on PromotionStrategy and SaleObserver abstractions.
+ * 4. Strategy Pattern: Promotion calculations encapsulated in strategies.
+ * 5. Observer Pattern: Notifying interested parties (like Loyalty) after sale completion.
+ */
 @Service
 public class SaleService {
 
@@ -31,22 +41,24 @@ public class SaleService {
     private final CustomerRepository customerRepository;
     private final CampaignRepository campaignRepository;
     private final UserRepository userRepository;
+    private final SaleEventNotifier saleEventNotifier;
 
     public SaleService(
             SaleRepository saleRepository,
             ProductRepository productRepository,
             CustomerRepository customerRepository,
             CampaignRepository campaignRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            SaleEventNotifier saleEventNotifier
     ) {
         this.saleRepository = saleRepository;
         this.productRepository = productRepository;
         this.customerRepository = customerRepository;
         this.campaignRepository = campaignRepository;
         this.userRepository = userRepository;
+        this.saleEventNotifier = saleEventNotifier;
     }
 
-    // Creates a sale, decreases inventory and applies account-based loyalty discount.
     @Transactional
     public Sale createSale(SaleRequest request, String username) {
         Sale sale = new Sale();
@@ -55,22 +67,16 @@ public class SaleService {
         User accountUser = resolveAccountUser(username);
 
         List<SaleItem> saleItems = new ArrayList<>();
-        BigDecimal grossAmount = BigDecimal.ZERO;
-        BigDecimal promoAdjustedAmount = BigDecimal.ZERO;
+        BigDecimal grossTotal = BigDecimal.ZERO;
+        BigDecimal netTotal = BigDecimal.ZERO;
 
         for (SaleRequest.SaleItemRequest itemRequest : request.getItems()) {
             Product product = productRepository.findById(itemRequest.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con ID: " + itemRequest.getProductId()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado: " + itemRequest.getProductId()));
 
-            if (product.isRequiresPrescription() && !request.isPrescription()) {
-                throw new RuntimeException("El producto '" + product.getName() + "' requiere receta medica");
-            }
+            validateSaleItem(product, itemRequest, request.isPrescription());
 
-            if (product.getStock() < itemRequest.getQuantity()) {
-                throw new RuntimeException("Stock insuficiente para: " + product.getName() +
-                        " (Disponible: " + product.getStock() + ")");
-            }
-
+            // Update inventory
             product.setStock(product.getStock() - itemRequest.getQuantity());
             productRepository.save(product);
 
@@ -79,38 +85,95 @@ public class SaleService {
             item.setQuantity(itemRequest.getQuantity());
             item.setUnitPrice(product.getPrice());
             item.setSale(sale);
-            saleItems.add(item);
-
+            
             PricingBreakdown pricing = calculateLinePricing(product, itemRequest.getQuantity());
-            grossAmount = grossAmount.add(pricing.gross());
-            promoAdjustedAmount = promoAdjustedAmount.add(pricing.net());
+            item.setCampaignName(pricing.campaignName());
+            
+            if (pricing.campaignName() != null && itemRequest.getQuantity() > 0) {
+                BigDecimal effectiveUnitPrice = pricing.net().divide(
+                    BigDecimal.valueOf(itemRequest.getQuantity()), 2, RoundingMode.HALF_UP);
+                item.setUnitPrice(effectiveUnitPrice);
+            }
+            
+            saleItems.add(item);
+            grossTotal = grossTotal.add(pricing.gross());
+            netTotal = netTotal.add(pricing.net());
         }
 
         sale.setItems(saleItems);
-        sale.setOriginalAmount(grossAmount);
+        sale.setOriginalAmount(grossTotal);
 
-        BigDecimal totalAmount = promoAdjustedAmount;
-        BigDecimal totalDiscount = grossAmount.subtract(promoAdjustedAmount).max(BigDecimal.ZERO);
+        BigDecimal finalAmount = netTotal;
+        BigDecimal totalDiscount = grossTotal.subtract(netTotal).max(BigDecimal.ZERO);
 
         String requestedCoupon = request.getCouponCode() == null ? "" : request.getCouponCode().trim().toUpperCase(Locale.ROOT);
         if (!requestedCoupon.isBlank()) {
             validateCouponOwnershipAndAvailability(accountUser, requestedCoupon);
-            BigDecimal discount = totalAmount.multiply(BigDecimal.valueOf(0.10));
-            totalDiscount = totalDiscount.add(discount);
-            totalAmount = totalAmount.subtract(discount);
+            BigDecimal loyaltyDiscount = finalAmount.multiply(BigDecimal.valueOf(0.10));
+            totalDiscount = totalDiscount.add(loyaltyDiscount);
+            finalAmount = finalAmount.subtract(loyaltyDiscount);
             accountUser.setCouponUsed(true);
+            userRepository.save(accountUser);
         }
 
-        sale.setTotalAmount(totalAmount);
-
+        sale.setTotalAmount(finalAmount);
         sale.setDiscountAmount(totalDiscount);
 
         Sale savedSale = saleRepository.save(sale);
-        String awardedCode = registerPurchaseAndMaybeIssueCoupon(accountUser, username);
-        if (!isBlank(awardedCode)) {
-            savedSale.setLoyaltyAwardedCode(awardedCode);
-        }
+        
+        // Notify observers (Observer Pattern)
+        saleEventNotifier.notifyObservers(savedSale);
+        
         return savedSale;
+    }
+
+    private void validateSaleItem(Product product, SaleRequest.SaleItemRequest itemRequest, boolean isPrescription) {
+        if (product.isRequiresPrescription() && !isPrescription) {
+            throw new RuntimeException("El producto '" + product.getName() + "' requiere receta medica");
+        }
+        if (product.getStock() < itemRequest.getQuantity()) {
+            throw new RuntimeException("Stock insuficiente para: " + product.getName());
+        }
+    }
+
+    private PricingBreakdown calculateLinePricing(Product product, int quantity) {
+        BigDecimal unitPrice = product.getPrice() == null ? BigDecimal.ZERO : product.getPrice();
+        BigDecimal gross = unitPrice.multiply(BigDecimal.valueOf(quantity));
+
+        Campaign campaign = findActiveCampaign(product);
+        
+        String promotionType = "NONE";
+        Integer buy = null;
+        Integer pay = null;
+        BigDecimal percent = null;
+        String campaignName = null;
+
+        if (campaign != null) {
+            promotionType = campaign.getPromotionType();
+            buy = campaign.getPromoBuyQuantity();
+            pay = campaign.getPromoPayQuantity();
+            percent = campaign.getPromoPercentDiscount();
+            campaignName = campaign.getName();
+        } else if (product.getPromotionType() != null) {
+            promotionType = product.getPromotionType();
+            buy = product.getPromoBuyQuantity();
+            pay = product.getPromoPayQuantity();
+            percent = product.getPromoPercentDiscount();
+        }
+
+        // Strategy Pattern in action:
+        PromotionStrategy strategy = PromotionStrategyFactory.getInstance().getStrategy(promotionType);
+        BigDecimal net = strategy.calculateNet(unitPrice, quantity, buy, pay, percent);
+
+        return new PricingBreakdown(gross, net, campaignName);
+    }
+
+    private Campaign findActiveCampaign(Product product) {
+        return campaignRepository.findActiveCampaignsAtTime(java.time.LocalDateTime.now())
+                .stream()
+                .filter(c -> c.getProducts().contains(product))
+                .findFirst()
+                .orElse(null);
     }
 
     private User resolveAccountUser(String username) {
@@ -118,166 +181,41 @@ public class SaleService {
         return userRepository.findByUsername(username.trim()).orElse(null);
     }
 
-    // Calculates per-line pricing after product-level promotions.
-    private PricingBreakdown calculateLinePricing(Product product, int quantity) {
-        BigDecimal unitPrice = product.getPrice() == null ? BigDecimal.ZERO : product.getPrice();
-        BigDecimal gross = unitPrice.multiply(BigDecimal.valueOf(quantity));
-        BigDecimal net = gross;
-
-        // Check for active campaigns first (with date range validation)
-        java.time.LocalDateTime now = java.time.LocalDateTime.now();
-        List<Campaign> activeCampaigns = campaignRepository.findActiveCampaignsAtTime(now);
-        Campaign activeCampaign = activeCampaigns.stream()
-                .filter(c -> c.getProducts().contains(product))
-                .findFirst()
-                .orElse(null);
-
-        // Use campaign promotion if exists and is active, otherwise use product promotion
-        String promotionType;
-        Integer promoBuyQuantity;
-        Integer promoPayQuantity;
-        BigDecimal promoPercentDiscount;
-
-        if (activeCampaign != null) {
-            // Campaign takes priority over product promotion
-            promotionType = activeCampaign.getPromotionType() == null
-                    ? "NONE"
-                    : activeCampaign.getPromotionType().trim().toUpperCase(Locale.ROOT);
-            promoBuyQuantity = activeCampaign.getPromoBuyQuantity();
-            promoPayQuantity = activeCampaign.getPromoPayQuantity();
-            promoPercentDiscount = activeCampaign.getPromoPercentDiscount();
-        } else {
-            // Fall back to product-level promotion
-            promotionType = product.getPromotionType() == null
-                    ? "NONE"
-                    : product.getPromotionType().trim().toUpperCase(Locale.ROOT);
-            promoBuyQuantity = product.getPromoBuyQuantity();
-            promoPayQuantity = product.getPromoPayQuantity();
-            promoPercentDiscount = product.getPromoPercentDiscount();
-        }
-
-        if ("BUY_X_PAY_Y".equals(promotionType)) {
-            Integer buy = promoBuyQuantity;
-            Integer pay = promoPayQuantity;
-            if (buy != null && pay != null && buy >= 2 && pay >= 1 && pay < buy && quantity >= buy) {
-                int groups = quantity / buy;
-                int remainder = quantity % buy;
-                int payableUnits = (groups * pay) + remainder;
-                net = unitPrice.multiply(BigDecimal.valueOf(payableUnits));
-            }
-        }
-
-        if ("PERCENTAGE".equals(promotionType)) {
-            BigDecimal percent = promoPercentDiscount;
-            if (percent != null && percent.compareTo(BigDecimal.ZERO) > 0 && percent.compareTo(BigDecimal.valueOf(100)) < 0) {
-                BigDecimal multiplier = BigDecimal.ONE.subtract(percent.divide(BigDecimal.valueOf(100), 6, RoundingMode.HALF_UP));
-                net = gross.multiply(multiplier).setScale(2, RoundingMode.HALF_UP);
-            }
-        }
-
-        return new PricingBreakdown(gross, net);
-    }
-
-    private record PricingBreakdown(BigDecimal gross, BigDecimal net) {}
-
-    // Resolves the sale customer as patient/contact data for receipts and prescription traceability.
     private Customer resolveCustomer(SaleRequest request) {
+        boolean hasPrescription = request.getItems() != null && request.getItems().stream()
+                .map(i -> productRepository.findById(i.getProductId()).orElse(null))
+                .anyMatch(p -> p != null && p.isRequiresPrescription());
+
+        if (!hasPrescription) return null;
+
         if (request.getCustomerId() != null) {
             return customerRepository.findById(request.getCustomerId()).orElse(null);
         }
 
-        SaleRequest.CustomerData customerData = request.getCustomer();
-        if (customerData == null) {
-            if (request.isPrescription()) {
-                throw new RuntimeException("La venta con receta requiere datos del cliente");
-            }
-            return null;
+        SaleRequest.CustomerData data = request.getCustomer();
+        if (data == null || isBlank(data.getName())) {
+            throw new RuntimeException("Venta con receta requiere datos del cliente");
         }
 
-        if (request.isPrescription()) {
-            if (isBlank(customerData.getName()) || isBlank(customerData.getAddress()) || isBlank(customerData.getPhone())) {
-                throw new RuntimeException("La venta con receta requiere nombre, direccion y telefono del cliente");
-            }
-        }
+        Customer customer = customerRepository.findFirstByPhoneOrderByIdAsc(data.getPhone())
+                .orElseGet(() -> customerRepository.findFirstByNameOrderByIdAsc(data.getName())
+                .orElse(new Customer()));
 
-        Customer customer = null;
-        if (!isBlank(customerData.getPhone())) {
-            customer = customerRepository.findFirstByPhoneOrderByIdAsc(customerData.getPhone().trim()).orElse(null);
-        }
-        if (customer == null && !isBlank(customerData.getName())) {
-            customer = customerRepository.findFirstByNameOrderByIdAsc(customerData.getName().trim()).orElse(null);
-        }
-
-        if (customer == null) {
-            customer = new Customer();
-        }
-
-        if (!isBlank(customerData.getName())) {
-            customer.setName(customerData.getName());
-        }
-        if (!isBlank(customerData.getAddress())) {
-            customer.setAddress(customerData.getAddress());
-        }
-        if (!isBlank(customerData.getPhone())) {
-            customer.setPhone(customerData.getPhone());
-        }
-
+        customer.setName(data.getName());
+        customer.setAddress(data.getAddress());
+        customer.setPhone(data.getPhone());
         return customerRepository.save(customer);
     }
 
     private void validateCouponOwnershipAndAvailability(User accountUser, String requestedCoupon) {
-        if (accountUser == null) {
-            throw new RuntimeException("Debes iniciar sesion para aplicar cupones.");
-        }
-
-        if (isBlank(accountUser.getClienteAmigoNumber())) {
-            throw new RuntimeException("Tu cuenta no tiene cupones disponibles.");
-        }
-
-        if (accountUser.isCouponUsed()) {
-            throw new RuntimeException("Tu cupon ya fue utilizado. Acumula 5 compras para recibir otro.");
-        }
-
-        if (!accountUser.getClienteAmigoNumber().trim().equalsIgnoreCase(requestedCoupon)) {
-            throw new RuntimeException("Ese cupon no pertenece a tu cuenta.");
-        }
+        if (accountUser == null) throw new RuntimeException("Inicia sesion para usar cupones");
+        if (isBlank(accountUser.getClienteAmigoNumber())) throw new RuntimeException("No tienes cupones");
+        if (accountUser.isCouponUsed()) throw new RuntimeException("Cupon ya usado");
+        if (!accountUser.getClienteAmigoNumber().equalsIgnoreCase(requestedCoupon)) throw new RuntimeException("Cupon invalido");
     }
 
-    // Registers the purchase to the account counter and emits/replaces coupon every 5 purchases.
-    private String registerPurchaseAndMaybeIssueCoupon(User accountUser, String username) {
-        if (accountUser == null || isBlank(username)) {
-            return null;
-        }
+    private record PricingBreakdown(BigDecimal gross, BigDecimal net, String campaignName) {}
 
-        int nextCounter = (accountUser.getPurchasesSinceCoupon() == null ? 0 : accountUser.getPurchasesSinceCoupon()) + 1;
-
-        if (nextCounter >= 5) {
-            accountUser.setFriend(true);
-            accountUser.setPurchasesSinceCoupon(0);
-            accountUser.setClienteAmigoNumber(generateClienteAmigoCodeForAccount());
-            accountUser.setCouponUsed(false);
-            userRepository.save(accountUser);
-            return accountUser.getClienteAmigoNumber();
-        }
-
-        accountUser.setPurchasesSinceCoupon(nextCounter);
-        userRepository.save(accountUser);
-        return null;
-    }
-
-    // Generates a unique code in CAM-XXXXXX format for account-based loyalty.
-    private String generateClienteAmigoCodeForAccount() {
-        for (int i = 0; i < 20; i++) {
-            String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 6).toUpperCase(Locale.ROOT);
-            String code = "CAM-" + suffix;
-            if (!userRepository.existsByClienteAmigoNumberIgnoreCase(code)) {
-                return code;
-            }
-        }
-        throw new RuntimeException("No se pudo generar codigo clienteamigo unico para la cuenta");
-    }
-
-    private boolean isBlank(String value) {
-        return value == null || value.trim().isEmpty();
-    }
+    private boolean isBlank(String v) { return v == null || v.trim().isEmpty(); }
 }
+

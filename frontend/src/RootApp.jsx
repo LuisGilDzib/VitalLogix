@@ -24,11 +24,11 @@ function RootApp() {
       setShowAuthModal(false);
     } catch (e) {
       if (!e.response) {
-        alert('No se pudo conectar al backend. Verifica Docker y que el backend esté en puerto 8080.');
+        throw new Error('No se pudo conectar al backend. Verifica Docker y que el backend esté en puerto 8080.');
       } else if (e.response.status === 401) {
-        alert('Usuario o contraseña incorrectos.');
+        throw new Error('Correo electrónico o contraseña inválidos. Las contraseñas distinguen entre mayúsculas y minúsculas. Inténtalo nuevamente.');
       } else {
-        alert('Error al iniciar sesión.');
+        throw new Error('Error al iniciar sesión.');
       }
     }
   };
@@ -48,11 +48,11 @@ function RootApp() {
       await handleLogin(username, password);
     } catch (e) {
       if (!e.response) {
-        alert('No se pudo conectar al backend. Verifica Docker y que el backend esté en puerto 8080.');
+        throw new Error('No se pudo conectar al backend. Verifica Docker y que el backend esté en puerto 8080.');
       } else if (e.response.status === 409) {
-        alert('El usuario ya existe.');
+        throw new Error('El usuario ya existe.');
       } else {
-        alert('Error al registrar usuario.');
+        throw new Error('Error al registrar usuario.');
       }
     }
   };
