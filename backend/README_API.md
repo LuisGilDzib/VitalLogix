@@ -1,100 +1,39 @@
-# VitalLogix Backend API
+# Guía de la API de VitalLogix
 
-## Endpoints principales
+Esta es una guía rápida para entender cómo interactuar con los diferentes módulos de la API del backend de VitalLogix. Todos los endpoints reciben y devuelven información en formato JSON.
 
-### Inventario de Productos
-- `GET /api/products` — Listar productos (paginado)
-- `GET /api/products/{id}` — Detalle de producto
-- `POST /api/products` — Crear producto
-- `PUT /api/products/{id}` — Editar producto
-- `DELETE /api/products/{id}` — Eliminar producto
-- `PATCH /api/products/{id}/stock` — Agregar stock a un producto
-- `GET /api/products/search?name=&id=&code=&category=` — Buscar por nombre, ID, código o categoría
+## Inventario y Productos
 
-### Clientes
-- `GET /api/customers` — Listar clientes
-- `GET /api/customers/{id}` — Detalle de cliente
-- `POST /api/customers` — Crear cliente
-- `PUT /api/customers/{id}` — Editar cliente
-- `DELETE /api/customers/{id}` — Eliminar cliente
-- `GET /api/customers/{id}/purchases` — Historial de compras del cliente
-- `GET /api/customers/validate-clienteamigo?code=` — Validar código clienteamigo
+La gestión de productos está diseñada para permitir desde la simple lectura hasta el control detallado del stock.
+- Puedes obtener la lista completa de productos o los detalles de uno en específico haciendo peticiones a `/api/products`.
+- Para buscar productos por nombre, código o categoría, puedes usar la búsqueda avanzada en `/api/products/search`.
+- Los administradores pueden crear, editar o eliminar productos en la misma ruta. Además, existe una ruta específica (`/api/products/{id}/stock`) para ajustar rápidamente la cantidad disponible de un producto sin tener que modificar todo su perfil.
 
-### Ventas
-- `POST /api/sales` — Registrar venta (requiere lista de productos y opcionalmente customerId)
-- `GET /api/sales` — Listar ventas
+## Categorías
 
-### Recibos
-- `GET /api/receipts/{saleId}` — Obtener recibo de venta (incluye detalle, cliente y descuento)
+Para organizar el inventario, la API ofrece un sistema de gestión de categorías.
+- Cualquiera puede listar las categorías que están activas consultando `/api/categories/active`, lo cual es útil para llenar listas o menús en la interfaz de usuario.
+- Los administradores pueden consultar todas las categorías, incluyendo las que están esperando revisión en `/api/categories/pending`.
+- Además, los administradores tienen la capacidad de crear nuevas categorías, editarlas, desactivarlas o aprobar y rechazar aquellas que hayan sido creadas desde el formulario de productos.
 
-### Fidelización
-- `POST /api/fidelity/assign/{id}` — Asignar cliente amigo
-- `POST /api/fidelity/remove/{id}` — Quitar cliente amigo
+## Clientes y Fidelización
 
-### Reportes
-- `GET /api/reports/sales?from=YYYY-MM-DD&to=YYYY-MM-DD` — Reporte de ventas por rango
-- `GET /api/reports/inventory` — Reporte de inventario actualizado
+El sistema maneja un directorio de clientes y un programa de lealtad conocido como Cliente Amigo.
+- Puedes consultar la lista de clientes o crear perfiles nuevos a través de `/api/customers`. Para ver qué ha comprado un cliente específico, el sistema provee una ruta dedicada para obtener su historial de compras completo.
+- En cuanto al programa de lealtad, puedes validar códigos en `/api/customers/validate-clienteamigo`, y utilizar las rutas en `/api/fidelity` para otorgarle o quitarle a un cliente sus beneficios de lealtad.
 
-## Estructura de datos (DTOs)
+## Ventas y Recibos
 
-### ProductRequest
-```json
-{
-  "name": "string",
-  "description": "string",
-  "category": "string",
-  "price": 0,
-  "stock": 0,
-  "expirationDate": "2026-12-31T00:00:00"
-}
-```
+El flujo principal de ventas permite registrar compras anónimas o asociarlas a un cliente existente.
+- Al registrar una venta nueva en `/api/sales`, solo necesitas enviar la lista de los productos y la cantidad. Si incluyes el identificador de un cliente y este resulta tener beneficios de Cliente Amigo, el sistema se encargará de calcular y aplicar los descuentos automáticamente.
+- Puedes listar todas las ventas realizadas, o bien, pedir el recibo detallado de una venta particular en `/api/receipts/{saleId}`, el cual incluirá el desglose de los artículos, información del cliente y el monto final ya con descuentos aplicados.
 
-### ProductResponse
-```json
-{
-  "id": 1,
-  "name": "string",
-  "description": "string",
-  "category": "string",
-  "price": 0,
-  "stock": 0,
-  "createdAt": "2026-03-31T00:00:00",
-  "expirationDate": "2026-12-31T00:00:00"
-}
-```
+## Reportes
 
-### CustomerRequest
-```json
-{
-  "name": "string",
-  "address": "string",
-  "phone": "string",
-  "friend": false
-}
-```
-
-### SaleRequest
-```json
-{
-  "items": [
-    { "productId": 1, "quantity": 2 }
-  ],
-  "customerId": 1
-}
-```
-
-### ReceiptResponse
-Incluye: saleId, saleDate, customer info, items, totalAmount, discount, finalAmount.
-
-### ReportResponse
-Incluye: lista de ventas agrupadas por fecha y reporte de inventario.
+Para ayudar en la toma de decisiones, el backend puede generar reportes sobre el estado actual del negocio.
+- Se pueden obtener todas las ventas generadas dentro de un rango de fechas utilizando `/api/reports/sales`.
+- También se puede consultar el estatus general del inventario en `/api/reports/inventory`.
 
 ---
 
-## Notas
-- Todos los endpoints devuelven JSON.
-- Los endpoints de administración (crear, editar, eliminar productos/clientes) deben ser protegidos en frontend para solo ser accesibles por el administrador.
-- El endpoint de ventas permite ventas anónimas (sin cliente) o asociadas a un cliente.
-- El descuento de cliente amigo se aplica automáticamente en el recibo.
-
----
+Nota de seguridad: Recuerda que todas las acciones que modifican datos (como la creación o eliminación de productos y clientes) y las consultas de reportes, están pensadas para ser ejecutadas por administradores. Las interfaces de usuario que se conecten a esta API deben asegurarse de proteger estos accesos.

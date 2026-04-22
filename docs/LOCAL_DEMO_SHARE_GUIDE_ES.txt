@@ -1,114 +1,105 @@
-VitalLogix: guia local para compartir demo gratis con companeros
+VitalLogix: Guía local para compartir una demo gratis con compañeros
 
 Objetivo
-- Permitir que otros dispositivos abran tu app desde tu computadora en la misma red Wi-Fi.
-- Mantener todo local (sin pagar nube).
+La idea es que otros dispositivos puedan abrir la aplicación desde tu computadora estando conectados a la misma red Wi-Fi. Esto mantiene todo de forma local, por lo que no necesitas pagar por servicios en la nube.
 
-Opcion 1: Misma red Wi-Fi (recomendada)
+Opción 1: Misma red Wi-Fi (Recomendada)
 
-1) Iniciar backend
-- Abre terminal en la raiz del proyecto.
-- Ejecuta:
-  cd /Users/diancie/VitalLogix
-  docker compose up -d --build vitallogix-app
+1. Iniciar el backend
+Abre una terminal en la raíz del proyecto y ejecuta:
+cd /Users/diancie/VitalLogix
+docker compose up -d --build vitallogix-app
 
-2) Iniciar frontend en puerto fijo para LAN
-- Ejecutar desde carpeta frontend:
-  cd /Users/diancie/VitalLogix/frontend
-  npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
+2. Iniciar el frontend en un puerto fijo
+Ejecuta esto desde la carpeta del frontend:
+cd /Users/diancie/VitalLogix/frontend
+npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
 
-- O desde la raiz del proyecto:
-  npm --prefix /Users/diancie/VitalLogix/frontend run dev -- --host 0.0.0.0 --port 5173 --strictPort
+O si prefieres, desde la raíz del proyecto:
+npm --prefix /Users/diancie/VitalLogix/frontend run dev -- --host 0.0.0.0 --port 5173 --strictPort
 
-Por que strictPort:
-- Si 5173 esta ocupado, Vite falla en lugar de pasar a 5174/5175.
-- Asi evitas romper CORS durante la demo.
+¿Por qué usar un puerto estricto?
+Si el puerto 5173 ya está ocupado, Vite fallará en lugar de moverse silenciosamente al puerto 5174 o 5175. Esto es importante para evitar problemas de CORS durante tu presentación.
 
-3) Si el puerto 5173 esta ocupado
-- Buscar proceso:
-  macOS/Linux:
-  lsof -nP -iTCP:5173 -sTCP:LISTEN
+3. ¿Qué pasa si el puerto 5173 ya está ocupado?
+Primero, averigua qué proceso lo está usando.
+En macOS o Linux:
+lsof -nP -iTCP:5173 -sTCP:LISTEN
 
-  Windows (PowerShell):
-  netstat -ano | findstr :5173
+En Windows (PowerShell):
+netstat -ano | findstr :5173
 
-- Verificar si es seguro cerrarlo:
-  macOS/Linux:
-  ps -p <PID> -o pid,ppid,comm,args
+Verifica si es seguro detenerlo. En macOS o Linux puedes ver los detalles del proceso con:
+ps -p <PID> -o pid,ppid,comm,args
+Es seguro detenerlo si se trata de un proceso viejo de Vite o Node de tu frontend. Evita cerrar procesos del sistema que no reconozcas.
 
-- Es seguro cerrarlo si es tu proceso viejo de frontend (vite/node).
-- No cierres procesos de sistema o servicios que no reconozcas.
+Para cerrar el proceso:
+macOS/Linux:
+kill <PID>
+(o kill -9 <PID> si se resiste a cerrar)
 
-- Cerrar proceso:
-  macOS/Linux:
-  kill <PID>
-  (si hace falta) kill -9 <PID>
+Windows (PowerShell/cmd):
+taskkill /PID <PID> /F
 
-  Windows (PowerShell/cmd):
-  taskkill /PID <PID> /F
+4. Averigua tu dirección IP local
+macOS:
+ipconfig getifaddr en1
+(Si no te devuelve nada, revisa el nombre de tu interfaz con: networksetup -listallhardwareports)
 
-4) Obtener IP local
-- macOS:
-  ipconfig getifaddr en1
-  Si no devuelve nada, revisar interfaz con:
-  networksetup -listallhardwareports
+Linux:
+hostname -I
+o
+ip -4 addr
 
-- Linux:
-  hostname -I
-  o
-  ip -4 addr
+Windows (PowerShell/cmd):
+ipconfig
 
-- Windows (PowerShell/cmd):
-  ipconfig
+Para los siguientes pasos, asumamos que tu IP es 192.168.1.50.
 
-Ejemplo de IP: 192.168.1.50
+5. Configurar la URL de la API en el frontend
+Debes mantener el frontend configurado mediante variables de entorno. Asegúrate de definir VITE_API_BASE_URL antes de arrancar el frontend.
 
-5) URL del API en frontend (version sanitizada)
-- Mantener frontend con variable de entorno.
-- Definir VITE_API_BASE_URL antes de levantar frontend.
+macOS/Linux:
+export VITE_API_BASE_URL=http://TU_IP_LOCAL:8080/api
 
-Ejemplos:
-- macOS/Linux:
-  export VITE_API_BASE_URL=http://TU_IP_LOCAL:8080/api
+Windows PowerShell:
+$env:VITE_API_BASE_URL="http://TU_IP_LOCAL:8080/api"
 
-- Windows PowerShell:
-  $env:VITE_API_BASE_URL="http://TU_IP_LOCAL:8080/api"
+Después de definirla, vuelve a ejecutar el comando del frontend del paso 2.
 
-Despues ejecuta frontend como en el paso 2.
+6. Configurar CORS para la demo
+Tu backend necesita permitir peticiones desde estos orígenes:
+http://localhost:5173
+http://TU_IP_LOCAL:5173
 
-6) CORS para demo LAN
-- Backend debe permitir origenes:
-  http://localhost:5173
-  http://TU_IP_LOCAL:5173
+Es mejor mantener las reglas de CORS estrictas (sin comodines) para que tu demo local sea más segura.
 
-- Mantener CORS restringido (sin comodin) para demo mas segura.
+7. Abrir la aplicación desde otro dispositivo en el mismo Wi-Fi
+Simplemente abre el navegador en el otro dispositivo y entra a esta URL:
+http://TU_IP_LOCAL:5173
 
-7) Abrir desde otro dispositivo en la misma red
-- URL frontend:
-  http://TU_IP_LOCAL:5173
+8. ¿Qué hacer si no se puede abrir la página en los otros dispositivos?
+Revisa lo siguiente:
+- Que tanto el backend como el frontend sigan corriendo.
+- Que todos estén exactamente en la misma red Wi-Fi.
+- Que la IP local que les compartiste sea la correcta.
+- Que el frontend esté utilizando efectivamente el puerto 5173.
+- Que el firewall de tu sistema operativo no esté bloqueando conexiones entrantes.
 
-8) Si no abre en el otro dispositivo
-- Verifica backend y frontend activos.
-- Verifica misma red Wi-Fi.
-- Verifica IP local correcta.
-- Verifica que frontend corre en 5173.
-- Revisa firewall del sistema operativo.
+Opción 2: Si no pueden estar en la misma red Wi-Fi
+Si por alguna razón no pueden estar en la misma red, puedes usar un túnel gratuito temporal (como Cloudflare Tunnel) como último recurso. Solo recuerda desactivarlo en cuanto termine la demo.
 
-Opcion 2: Si no estan en la misma red Wi-Fi
-- Usa un tunel temporal gratuito (por ejemplo Cloudflare Tunnel) solo si es necesario.
-- Desactivalo al terminar.
+Recordatorios de Seguridad
+- Utiliza únicamente cuentas y contraseñas de demostración.
+- No subas tus direcciones IP locales privadas al repositorio del código.
+- Asegúrate de detener los servicios cuando termines:
+  Frontend: Presiona Ctrl + C
+  Backend/Base de datos: docker compose down
 
-Notas de seguridad
-- Usa cuentas y passwords de demo.
-- No subas IP privada local al repositorio.
-- Al terminar demo:
-  frontend: Ctrl + C
-  backend/db: docker compose down
-
-Checklist rapido
-- Backend activo: si/no
-- Frontend activo en 5173: si/no
-- IP local confirmada: si/no
-- VITE_API_BASE_URL definida: si/no
-- CORS con localhost y IP local: si/no
-- Abierto desde otro dispositivo: si/no
+Checklist Rápido Antes de la Demo
+- ¿El backend está funcionando?
+- ¿El frontend está corriendo en el puerto 5173?
+- ¿Confirmaste cuál es tu IP local?
+- ¿Definiste correctamente VITE_API_BASE_URL?
+- ¿El CORS del backend incluye tanto localhost como tu IP local?
+- ¿Pudiste abrir la aplicación exitosamente desde otro dispositivo?

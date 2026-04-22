@@ -1,114 +1,105 @@
-VitalLogix: local guide to share a free demo with classmates
+VitalLogix: Local guide for sharing a free demo with classmates
 
 Goal
-- Let other devices open your app from your computer on the same Wi-Fi network.
-- Keep it local (no paid cloud required).
+You want to let other devices open your app from your computer on the same Wi-Fi network. This approach keeps everything local, meaning you don't need any paid cloud services.
 
-Option 1: Same Wi-Fi network (recommended)
+Option 1: Same Wi-Fi network (Recommended)
 
-1) Start backend
-- Open a terminal in the project root.
-- Run:
-  cd /Users/diancie/VitalLogix
-  docker compose up -d --build vitallogix-app
+1. Start the backend
+Open a terminal in the project root and run:
+cd /Users/diancie/VitalLogix
+docker compose up -d --build vitallogix-app
 
-2) Start frontend on a fixed LAN port
-- Run from frontend folder:
-  cd /Users/diancie/VitalLogix/frontend
-  npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
+2. Start the frontend on a fixed LAN port
+Run this from the frontend folder:
+cd /Users/diancie/VitalLogix/frontend
+npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
 
-- Or run from project root:
-  npm --prefix /Users/diancie/VitalLogix/frontend run dev -- --host 0.0.0.0 --port 5173 --strictPort
+Or you can run it directly from the project root:
+npm --prefix /Users/diancie/VitalLogix/frontend run dev -- --host 0.0.0.0 --port 5173 --strictPort
 
-Why strict port:
-- If 5173 is busy, Vite fails instead of moving to 5174/5175.
-- This avoids CORS mismatch during demo.
+Why use a strict port?
+If port 5173 is already busy, Vite will fail instead of silently moving to 5174 or 5175. This prevents CORS mismatch issues during your demo.
 
-3) If port 5173 is already in use
-- Find the process:
-  macOS/Linux:
-  lsof -nP -iTCP:5173 -sTCP:LISTEN
+3. What if port 5173 is already in use?
+First, find the process that is using the port.
+On macOS/Linux:
+lsof -nP -iTCP:5173 -sTCP:LISTEN
 
-  Windows (PowerShell):
-  netstat -ano | findstr :5173
+On Windows (PowerShell):
+netstat -ano | findstr :5173
 
-- Check if it is safe to stop:
-  macOS/Linux:
-  ps -p <PID> -o pid,ppid,comm,args
+Check if it is safe to stop. On macOS/Linux, you can see what it is by running:
+ps -p <PID> -o pid,ppid,comm,args
+It's safe to stop if it's just your old Vite or Node frontend process. Avoid killing unknown system processes.
 
-- Safe to stop when it is your old Vite/Node frontend process.
-- Avoid stopping unknown system/service processes.
+To stop the process:
+macOS/Linux:
+kill <PID>
+(or kill -9 <PID> if it refuses to stop)
 
-- Stop process:
-  macOS/Linux:
-  kill <PID>
-  (if needed) kill -9 <PID>
+Windows (PowerShell/cmd):
+taskkill /PID <PID> /F
 
-  Windows (PowerShell/cmd):
-  taskkill /PID <PID> /F
+4. Find your local IP address
+macOS:
+ipconfig getifaddr en1
+(If it returns empty, you can check your interface name with: networksetup -listallhardwareports)
 
-4) Get your local IP address
-- macOS:
-  ipconfig getifaddr en1
-  If empty, check interface name:
-  networksetup -listallhardwareports
+Linux:
+hostname -I
+or
+ip -4 addr
 
-- Linux:
-  hostname -I
-  or
-  ip -4 addr
+Windows (PowerShell/cmd):
+ipconfig
 
-- Windows (PowerShell/cmd):
-  ipconfig
+Let's assume your IP is 192.168.1.50 for the following steps.
 
-Example IP: 192.168.1.50
+5. Set up the Frontend API URL
+You should keep the frontend configured using environment variables. Make sure to set VITE_API_BASE_URL before starting the frontend.
 
-5) Frontend API URL (sanitized approach)
-- Keep frontend configured with environment variable support.
-- Set VITE_API_BASE_URL before running frontend.
+macOS/Linux:
+export VITE_API_BASE_URL=http://YOUR_LOCAL_IP:8080/api
 
-Examples:
-- macOS/Linux:
-  export VITE_API_BASE_URL=http://YOUR_LOCAL_IP:8080/api
+Windows PowerShell:
+$env:VITE_API_BASE_URL="http://YOUR_LOCAL_IP:8080/api"
 
-- Windows PowerShell:
-  $env:VITE_API_BASE_URL="http://YOUR_LOCAL_IP:8080/api"
+After setting this, run the frontend command from step 2 again.
 
-Then run frontend command from step 2.
+6. Handle CORS for the LAN demo
+Your backend needs to allow these origins:
+http://localhost:5173
+http://YOUR_LOCAL_IP:5173
 
-6) CORS for LAN demo
-- Backend must allow these origins:
-  http://localhost:5173
-  http://YOUR_LOCAL_IP:5173
+Keep CORS strict without wildcards for a safer local demo.
 
-- Keep CORS strict (no wildcard) for safer local demo.
+7. Open the app from another device on the same Wi-Fi
+Just go to this URL on the other device:
+http://YOUR_LOCAL_IP:5173
 
-7) Open from another device on same Wi-Fi
-- Frontend URL:
-  http://YOUR_LOCAL_IP:5173
+8. Troubleshooting: What if classmates can't open it?
+Check the following:
+- Both backend and frontend are running.
+- You are all on the exact same Wi-Fi network.
+- The local IP you shared is correct.
+- Port 5173 is the one actively used by the frontend.
+- Your OS firewall isn't blocking incoming connections.
 
-8) Quick checks if classmates cannot open it
-- Backend and frontend are running.
-- Same Wi-Fi network.
-- Correct local IP.
-- Port 5173 is the active frontend port.
-- macOS/OS firewall is not blocking incoming connections.
+Option 2: Not on the same Wi-Fi
+If you can't be on the same network, you can use a temporary free tunnel (like Cloudflare Tunnel) as a last resort. Make sure to disable it as soon as the demo is over.
 
-Option 2: Not on same Wi-Fi
-- Use a temporary free tunnel (for example Cloudflare Tunnel) only when necessary.
-- Disable it after the demo.
+Security Reminders
+- Only use demo accounts and passwords.
+- Don't commit your private local IP addresses to the repository.
+- Always stop the services when you're done:
+  Frontend: Press Ctrl + C
+  Backend/Database: docker compose down
 
-Security notes
-- Use demo accounts/passwords only.
-- Do not commit private local IPs to repo.
-- Stop services after demo:
-  frontend: Ctrl + C
-  backend/db: docker compose down
-
-Quick checklist
-- Backend up: yes/no
-- Frontend up on 5173: yes/no
-- Local IP confirmed: yes/no
-- VITE_API_BASE_URL set: yes/no
-- CORS includes localhost and local IP origins: yes/no
-- Opened from another device: yes/no
+Quick Checklist Before Demo
+- Is the backend up?
+- Is the frontend running on port 5173?
+- Have you confirmed your local IP?
+- Is VITE_API_BASE_URL set correctly?
+- Does CORS include both localhost and your local IP?
+- Have you successfully opened it from another device?

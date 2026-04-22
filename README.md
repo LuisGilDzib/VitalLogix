@@ -23,7 +23,7 @@ VitalLogix covers inventory, sales, customers, reporting, and category managemen
 
 For Spanish-speaking beginners and non-technical readers, we provide a simplified architecture walkthrough:
 
-- [COMO-FUNCIONA.md](COMO-FUNCIONA.md)
+- 👉 **[COMO-FUNCIONA.md](COMO-FUNCIONA.md)**
 
 This guide explains the full data flow (React -> Spring Boot -> PostgreSQL) in plain language.
 
@@ -89,7 +89,7 @@ and we share our experience as a development team in this learning and growth jo
 ## SOLID Evidence (at least 3 principles)
 
 For a comprehensive backend architecture analysis including **5 SOLID principles**, **7 design patterns**, and specific code evidence, see:
-- 📖 [SOLID & Design Patterns Documentation (English)](docs/SOLID_AND_DESIGN_PATTERNS.md)
+- [SOLID & Design Patterns Documentation (English)](docs/SOLID_AND_DESIGN_PATTERNS.md)
 
 ### SRP: Single Responsibility Principle
 
@@ -218,8 +218,6 @@ This ensures anyone who clones the repo can test admin features without sharing 
 Local guide to run and share this project with a free local setup:
 
 - [Documentation Index](docs/README.md)
-- [English docs landing page](docs/en/README.md)
-- [Spanish docs landing page](docs/es/README.md)
 - [Local free demo sharing guide (English)](docs/LOCAL_DEMO_SHARE_GUIDE_EN.txt)
 
 ### Astah Diagrams

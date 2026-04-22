@@ -19,12 +19,12 @@ Sistema de gestión de farmacia construido por nuestro equipo con Java, PostgreS
 
 VitalLogix cubre inventario, ventas, clientes, reportes y gestión de categorías en un flujo web.
 
-## 📖 ¿Quieres entender cómo funciona este proyecto?
+## ¿Quieres entender cómo funciona este proyecto?
 
 Si eres estudiante, junior o simplemente tienes curiosidad sobre la arquitectura de **VitalLogix**,
 preparamos una guía simplificada y sin tecnicismos innecesarios:
 
-👉 **[Haz clic aquí para leer: COMO-FUNCIONA.md](COMO-FUNCIONA.md)**
+👉**[Lee la guía paso a paso: COMO-FUNCIONA.md](COMO-FUNCIONA.md)**
 
 En este archivo explicamos de forma clara cómo se comunica PostgreSQL con el servidor en Java
 y cómo esa información llega al frontend en React.
@@ -99,7 +99,7 @@ y compartimos nuestra experiencia como equipo desarrollador en este viaje de apr
 ## Evidencias SOLID (mínimo 3 principios)
 
 Para un análisis completo de la arquitectura del backend incluyendo **5 principios SOLID**, **7 patrones de diseño** y evidencia específica de código, consulta:
-- 📖 [Principios SOLID y Patrones de Diseño (Español)](docs/SOLID_Y_PATRONES_DISEÑO.md)
+- [Principios SOLID y Patrones de Diseño (Español)](docs/SOLID_Y_PATRONES_DISEÑO.md)
 
 ### SRP: Single Responsibility Principle
 
@@ -225,8 +225,6 @@ Guía local para compartir este proyecto con una configuración gratuita y local
 
 - [Guía local para compartir demo gratis (Español)](docs/LOCAL_DEMO_SHARE_GUIDE_ES.txt)
 - [Índice de documentación](docs/README.md)
-- [Página principal de docs en inglés](docs/en/README.md)
-- [Página principal de docs en español](docs/es/README.md)
 
 ### Diagramas en Astah
 

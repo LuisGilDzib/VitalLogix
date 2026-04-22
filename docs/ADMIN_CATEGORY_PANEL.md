@@ -2,205 +2,103 @@
 
 ## Estado de la Funcionalidad
 
-Resumen funcional:
-- Solo admins pueden crear categorías personalizadas
-- Solo admins pueden aprobar/rechazar categorías nuevas
-- Solo admins pueden editar o desactivar categorías
-- Sistema de auditoría completo (quién creó, quién aprobó, cuándo)
+Este panel permite a los administradores tener un control total sobre las categorías del sistema. Con esta funcionalidad, solo los administradores pueden crear, aprobar, rechazar, editar o desactivar categorías. Además, incluye un sistema de auditoría que registra qué usuario creó o aprobó una categoría y en qué momento lo hizo.
 
 ---
 
-## 🏗️ Arquitectura Implementada
+## Arquitectura Implementada
 
-### Backend (6 archivos Java)
+### Backend
 
-1. **Entity: Category.java**
-   - Campos: id, name, description, status, type, timestamps, audit info
-   - Estados: ACTIVE, INACTIVE, PENDING_APPROVAL
-   - Tipos: PREDEFINED, CUSTOM
-   - Auditoría: createdBy, approvedBy, aprobatedAt
+Para soportar esta funcionalidad se implementaron y modificaron varios archivos en el backend:
 
-2. **Repository: CategoryRepository.java**
-   - Métodos especializados para buscar por estado/tipo
-   - Queries para categorías pendientes
-   - Búsqueda case-insensitive
+1. Entidad Category
+Mantiene la información de la categoría y los datos de auditoría. Controla si una categoría es activa, inactiva o si está pendiente de aprobación, así como si es predefinida del sistema o creada a medida.
 
-3. **Service: CategoryService.java**
-   - `getActiveCategories()` - categorías disponibles
-   - `createCustomCategory(name, userId)` - crea con PENDING_APPROVAL
-   - `approveCategory(id, admin)` - aprueba y activa
-   - `rejectCategory(id)` - elimina categoría pendiente
-   - `updateCategory(id, name, desc)` - edita cualquier categoría
-   - `deactivateCategory(id)` - desactiva sin eliminar
+2. CategoryRepository
+Incluye consultas especializadas para filtrar las categorías según su estado o tipo, y maneja búsquedas ignorando mayúsculas y minúsculas.
 
-4. **Controller: CategoryController.java**
-   - 12 endpoints REST
-   - GET: /active, /predefined, /custom, /pending, /{id}, /
-   - POST: /custom, /predefined
-   - PUT: /{id}, /{id}/approve, /{id}/deactivate
-   - DELETE: /{id}/reject
+3. CategoryService
+Contiene la lógica central. Provee métodos para obtener categorías activas, crear nuevas en estado pendiente, aprobarlas para que se activen, rechazarlas para eliminarlas, o editarlas y desactivarlas sin borrarlas de la base de datos.
 
-5. **DTOs**
-   - `CategoryRequest.java` - para crear/actualizar
-   - `CategoryResponse.java` - para listar/detallar
+4. CategoryController
+Expone los endpoints necesarios para que el frontend se comunique con el backend, cubriendo las operaciones de lectura, creación, actualización, aprobación y rechazo de categorías.
 
-### Frontend (2 archivos React + ajustes)
+5. Objetos de Transferencia (DTOs)
+Se utilizan objetos específicos para recibir datos al crear o actualizar categorías y para enviar respuestas estructuradas cuando se listan o detallan.
 
-1. **Component: CategoryManagementPanel.jsx**
-   - Panel con dos tabs: "Todas" y "Pendientes"
-   - Listar, editar, aprobar, rechazar categorías
-   - Información de auditoría en cada categoría
-   - Sincronización en tiempo real con backend
+### Frontend
 
-2. **Integration: App.jsx changes**
-   - Import de CategoryManagementPanel y createCustomCategory
-   - Nuevo botón en navbar: "📂 Categorías" (solo admin)
-   - Nueva ruta de vista: `view === 'categories'`
+En la interfaz de usuario, se trabajó principalmente en los siguientes componentes:
 
-3. **API Service: api.js**
-   - 8 nuevas funciones para categorías
-   - Integración con endpoints del backend
+1. Componente CategoryManagementPanel
+Es la interfaz donde los administradores gestionan todo. Tiene dos pestañas que separan las categorías activas o inactivas de aquellas que están esperando revisión. Permite hacer todas las operaciones de administración y muestra los datos de auditoría en tiempo real.
+
+2. Integración en la aplicación
+Se agregó el acceso al panel mediante un nuevo botón en la barra de navegación principal, que es exclusivo para administradores, y se configuró la ruta correspondiente para mostrar el componente.
+
+3. Servicio de API
+Se agregaron las funciones necesarias para conectarse con los nuevos endpoints del backend relacionados a las categorías.
 
 ---
 
-## 📊 Flujo Completo
+## Flujo Completo
 
-### Crear Producto con Categoría Custom
+### Crear un Producto con una Nueva Categoría
 
-```
-1. Admin → "Nuevo Producto"
-   ↓
-2. Selecciona dropdown categoría
-   ├─ Opción A: Selecciona "Analgésicos" (predefinida)
-   └─ Opción B: Selecciona "--- Otra (especificar) ---"
-   ↓
-3. Si seleccionó "Otra":
-   - Campo de texto aparece
-   - Escribe "Electrolitos"
-   ↓
-4. Click "Guardar"
-   ↓
-5. Backend:
-   - Crea Product con category="Electrolitos"
-   - Crea Category con status=PENDING_APPROVAL
-   ↓
-6. Nueva categoría está en "Pendientes de Aprobación"
-   ↓
-7. Admin → Tab "📂 Categorías"
-   ↓
-8. Revisa tab "Pendientes", ve "Electrolitos"
-   ↓
-9. Elige: Aprobar o Rechazar
-   ↓
-10. Si Aprobar:
-    - Status cambia a ACTIVE
-    - Aparece en dropdown para futuros productos
-    - Otros admins pueden ver que lo aprobó y cuándo
-```
+Cuando un administrador está registrando un nuevo producto y no encuentra la categoría adecuada, puede seleccionar la opción para especificar otra. Al hacerlo, aparece un campo de texto donde puede escribir, por ejemplo, "Electrolitos".
+
+Al guardar el producto, el backend crea tanto el producto con esa categoría como el registro de la nueva categoría en estado pendiente de aprobación.
+
+Esta nueva categoría aparecerá inmediatamente en la pestaña de pendientes dentro del panel de administración de categorías. Cualquier administrador puede entrar, revisar la lista y decidir si la aprueba o la rechaza. Si decide aprobarla, su estado cambia a activa, quedando disponible en el menú desplegable para que cualquier usuario pueda utilizarla al crear futuros productos, y se registra quién fue el administrador que dio la aprobación.
 
 ---
 
-## 🔐 Permisos (Admin Only)
+## Permisos
 
-| Acción | Permiso |
-|--------|---------|
-| Crear categoría custom | Admin |
-| Crear categoría predefinida | Admin |
-| Ver todas las categorías | Admin |
-| Ver categorías pendientes | Admin |
-| Aprobar categoría | Admin |
-| Rechazar categoría | Admin |
-| Editar categoría | Admin |
-| Desactivar categoría | Admin |
-| Listar categorías activas (dropdown) | Cualquiera |
+El sistema es bastante restrictivo para mantener el orden. Solamente los administradores tienen el poder de crear categorías predefinidas o personalizadas, ver las listas completas (incluyendo las pendientes), y realizar cualquier acción de modificación, como aprobar, rechazar, editar o desactivar.
+
+El único permiso que está abierto para cualquier usuario es el de ver la lista de categorías activas, ya que esto es necesario para poder llenar los menús desplegables al navegar por la aplicación.
 
 ---
 
-## 📁 Archivos Relevantes
+## Archivos Relevantes
 
-**Backend**:
-```
-backend/src/main/java/com/vitallogix/backend/model/Category.java
-backend/src/main/java/com/vitallogix/backend/repository/CategoryRepository.java
-backend/src/main/java/com/vitallogix/backend/service/CategoryService.java
-backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java
-backend/src/main/java/com/vitallogix/backend/dto/CategoryRequest.java
-backend/src/main/java/com/vitallogix/backend/dto/CategoryResponse.java
-```
+Backend:
+- backend/src/main/java/com/vitallogix/backend/model/Category.java
+- backend/src/main/java/com/vitallogix/backend/repository/CategoryRepository.java
+- backend/src/main/java/com/vitallogix/backend/service/CategoryService.java
+- backend/src/main/java/com/vitallogix/backend/controller/CategoryController.java
+- backend/src/main/java/com/vitallogix/backend/dto/CategoryRequest.java
+- backend/src/main/java/com/vitallogix/backend/dto/CategoryResponse.java
 
-**Frontend**:
-```
-frontend/src/components/CategoryManagementPanel.jsx
-frontend/src/services/api.js
-frontend/src/App.jsx
-```
+Frontend:
+- frontend/src/components/CategoryManagementPanel.jsx
+- frontend/src/services/api.js
+- frontend/src/App.jsx
 
-**Documentación**:
-```
-docs/CATEGORY_MANAGEMENT_SYSTEM.md
-docs/ADMIN_CATEGORY_PANEL.md
-```
+Documentación:
+- docs/CATEGORY_MANAGEMENT_SYSTEM.md
+- docs/ADMIN_CATEGORY_PANEL.md
 
 ---
 
-## 🧪 Cómo Probar
+## Cómo Probar la Funcionalidad
 
-### 1. Crear Categoría Custom
-```
-1. Iniciar sesión como ADMIN
-2. Ir a "🛒 Ventas" (inventario)
-3. Click "➕ Nuevo Producto"
-4. Llenar: Nombre, Descripción, Stock, Precio, Expiración
-5. Categoría:
-   - Seleccionar "--- Otra (especificar) ---"
-   - Campo de texto: escribir "Electrolitos"
-6. Click "Guardar"
-```
+1. Crear una categoría nueva:
+Inicia sesión como administrador y ve a la sección de ventas o inventario. Haz clic en "Nuevo Producto" y completa los datos. En el campo de categoría, selecciona la opción para especificar otra y escribe un nombre nuevo, como "Electrolitos". Guarda el producto.
 
-### 2. Revisar en Panel
-```
-1. Click en tab "📂 Categorías"
-2. Click en tab "Pendientes"
-3. Ver "Electrolitos" con status "PENDING_APPROVAL"
-4. Botones: "Aprobar" y "Rechazar"
-```
+2. Revisar el panel de administración:
+Dirígete a la sección de categorías y abre la pestaña de pendientes. Deberías ver "Electrolitos" en la lista esperando revisión.
 
-### 3. Aprobar Categoría
-```
-1. Click "Aprobar"
-2. Mensaje: "Categoría aprobada correctamente"
-3. Volver a "Todas"
-4. Ver "Electrolitos" con status "ACTIVE"
-```
+3. Aprobar la categoría:
+Haz clic en el botón para aprobar "Electrolitos". El sistema te confirmará la acción y podrás ver que la categoría pasó a la pestaña general con estado activo.
 
-### 4. Usar Categoría en Futuro
-```
-1. Crear nuevo producto
-2. Dropdown de categorías → "Electrolitos" aparece en lista
-3. Puede seleccionar directamente sin necesidad de "Otra"
-```
+4. Verificar que esté disponible:
+Intenta crear otro producto nuevo. Al abrir el menú desplegable de categorías, "Electrolitos" ya debería aparecer como una opción normal que puedes seleccionar sin tener que escribirla de nuevo.
 
 ---
 
-## 📦 Base de Datos
+## Base de Datos
 
-Migration SQL para crear tabla (si usas Flyway/Liquibase):
-
-```sql
-CREATE TABLE categories (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) UNIQUE NOT NULL,
-    description VARCHAR(500),
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
-    type VARCHAR(20) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    created_by VARCHAR(100),
-    approved_by VARCHAR(100),
-    approved_at TIMESTAMP,
-    INDEX idx_status (status),
-    INDEX idx_type (type),
-    INDEX idx_created_by (created_by)
-);
-```
-
+Si necesitas crear la tabla manualmente o utilizar una migración, la estructura SQL incluye campos para el identificador, el nombre único, la descripción, el estado y tipo de categoría, además de las fechas de creación y actualización, y los registros de auditoría sobre quién la creó y quién la aprobó, junto con índices para optimizar las búsquedas por estado y tipo.
