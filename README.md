@@ -8,6 +8,14 @@ Pharmacy management platform built by our team with Java, PostgreSQL, and React.
 - [Español](README.es.md)
 - [Documentation Index](docs/README.md)
 
+## Members/Contributors:
+
+- Manuel Avila Lombardi
+- José Rodolfo Hernandez Escamilla
+- Linda Natalia Loeza Suaste
+- Canche uicab perla noemi
+- Luis Gilberto Dzib Pech
+
 ## Quick Links
 
 - [Backend](backend/)
@@ -118,4 +126,4 @@ The following videos document real user testing sessions conducted with external
 | Angel  | [Watch on YouTube](https://youtu.be/wkb87cYDUb8) |
 | Miguel | [Watch on YouTube](https://youtu.be/jwPQBVEvp28) |
 | Victor | [Watch on YouTube](https://youtu.be/8JpEPgOG5L8) |
-| Yupid  | [Watch on YouTube](https://youtu.be/keX_k4XNqZc) |
+| Yupit  | [Watch on YouTube](https://youtu.be/keX_k4XNqZc) |
