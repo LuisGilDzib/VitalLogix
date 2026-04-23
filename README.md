@@ -206,6 +206,18 @@ After logging in as admin, you can create additional users/admins from the admin
 
 This ensures anyone who clones the repo can test admin features without sharing real production credentials.
 
+## User Testing
+
+The following videos document testing sessions with real users interacting with VitalLogix for the first time.
+
+| User   | Video |
+|--------|-------|
+| Carlos | [Watch on YouTube](https://youtu.be/mTcv21Tw1-U) |
+| Angel  | [Watch on YouTube](https://youtu.be/wkb87cYDUb8) |
+| Miguel | [Watch on YouTube](https://youtu.be/jwPQBVEvp28) |
+| Victor | [Watch on YouTube](https://youtu.be/8JpEPgOG5L8) |
+| Yupid  | [Watch on YouTube](https://youtu.be/keX_k4XNqZc) |
+
 ## Important Entry Points
 
 - [SecurityConfig.java](backend/src/main/java/com/vitallogix/backend/config/SecurityConfig.java)
@@ -223,8 +235,10 @@ Local guide to run and share this project with a free local setup:
 ### Astah Diagrams
 
 - [VitalLogix Use Case Diagram](docs/diagrams/UseCase%20VitalLogix.asta)
-- [VitalLogix Class Diagram](docs/diagrams/ClassDiagram%20VitalLogix.asta)
-- [VitalLogix Complete Model Diagram](docs/diagrams/VitalLogixModelComplete.asta)
+- [VitalLogix Class Diagram](docs/diagrams/ClassDiagramN1.asta)
+- [VitalLogix Sequence Diagram](docs/diagrams/SequenceDiagram%20Vitalogix.asta)
+- [VitalLogix Activity Diagram](docs/diagrams/Activity%20VitalLogix.asta.asta)
+- [VitalLogix Full Model Diagram](docs/diagrams/VitalLogixModelComplete.asta)
 
 ### System Notes
 
