@@ -236,3 +236,15 @@ Guía local para compartir este proyecto con una configuración gratuita y local
 
 - [Notas del sistema de categorías](docs/CATEGORY_MANAGEMENT_SYSTEM.md)
 - [Notas del panel de administración de categorías](docs/ADMIN_CATEGORY_PANEL.md)
+
+## Pruebas de Usuario
+
+Los siguientes videos documentan sesiones de prueba con usuarios reales que interactuaron con VitalLogix por primera vez.
+
+| Usuario | Video |
+|---------|-------|
+| Carlos  | [Ver en YouTube](https://youtu.be/mTcv21Tw1-U) |
+| Angel   | [Ver en YouTube](https://youtu.be/wkb87cYDUb8) |
+| Miguel  | [Ver en YouTube](https://youtu.be/jwPQBVEvp28) |
+| Victor  | [Ver en YouTube](https://youtu.be/8JpEPgOG5L8) |
+| Yupid   | [Ver en YouTube](https://youtu.be/keX_k4XNqZc) |
