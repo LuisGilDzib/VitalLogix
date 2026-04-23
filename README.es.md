@@ -8,6 +8,14 @@ Sistema de gestión de farmacia construido por nuestro equipo con Java, PostgreS
 - [Español](README.es.md)
 - [Índice de documentación](docs/README.md)
 
+## Integrantes/Colaboradores:
+
+- Manuel Avila Lombardi
+- José Rodolfo Hernandez Escamilla
+- Linda Natalia Loeza Suaste
+- Canche uicab perla noemi
+- Luis Gilberto Dzib Pech
+
 ## Enlaces Rápidos
 
 - [Backend](backend/)
@@ -126,4 +134,4 @@ Los siguientes videos documentan sesiones de prueba con usuarios reales que inte
 | Angel   | [Ver en YouTube](https://youtu.be/wkb87cYDUb8) |
 | Miguel  | [Ver en YouTube](https://youtu.be/jwPQBVEvp28) |
 | Victor  | [Ver en YouTube](https://youtu.be/8JpEPgOG5L8) |
-| Yupid   | [Ver en YouTube](https://youtu.be/keX_k4XNqZc) |
+| Yupit   | [Ver en YouTube](https://youtu.be/keX_k4XNqZc) |
