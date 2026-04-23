@@ -115,14 +115,14 @@ Ese ciclo se repite para casi todo: crear clientes, aprobar categorías, generar
 
 ## 7) Cómo leer el proyecto sin perderte
 
-Ruta recomendada para alguien junior:
+Ruta recomendada para alguien principiante/junior:
 
 1. Mira primero la pantalla (frontend) para entender qué acciones existen.
 2. Identifica qué llamada API hace esa acción.
 3. Revisa el controlador/servicio del backend que recibe esa llamada.
 4. Sigue hasta el repositorio/modelo para ver qué se guarda en PostgreSQL.
 
-Rutas reales para ubicarte rápido:
+Rutas para ubicarte rápido:
 
 1. Frontend (pantallas y componentes):
 - [frontend/src/components](frontend/src/components)
@@ -135,7 +135,7 @@ Rutas reales para ubicarte rápido:
 - [backend/src/main/java/com/vitallogix/backend/repository](backend/src/main/java/com/vitallogix/backend/repository)
 - [backend/src/main/resources/application.properties](backend/src/main/resources/application.properties)
 
-Si sigues ese camino, el proyecto deja de verse grande y empieza a verse lógico.
+Si sigues ese camino, el proyecto deja de verse grande/raro y empieza a verse lógico.
 
 ## 8) Experiencia de un desarrollador del equipo
 
@@ -157,19 +157,13 @@ Es verdad lo que dicen: "La práctica hace al maestro". Al migrar mi código de 
 
 Hubo un momento en el que quise rendirme y esperar a que me lo enseñaran en la escuela, pero sabía que no podría aportar lo necesario a mi equipo. El aprendizaje compartido y la responsabilidad con mis compañeros me motivó a seguir investigando y superando cada obstáculo.
 
-### La IA como mi "maestro" 24/7
-
-Aprender por cuenta propia puede ser difícil para nosotros los "mortales". Fue ahí donde decidí recurrir a la Inteligencia Artificial, no como un sustituto de mi pensamiento, sino como un profesor particular.
-
-Algunos creen que usar IA es "hacer trampa", pero yo lo veo como cambiar un hacha por una motosierra: sigue siendo tu trabajo, pero con una herramienta que potencia tu avance. Gracias a ese apoyo logré entender mejor la terminal, descubrir funciones útiles de VS Code y comprender conceptos de arquitectura que antes veía muy lejanos.
-
-En esta etapa aprendí algo clave: usar IA como apoyo no reemplaza el aprendizaje; lo acelera cuando uno valida, prueba y entiende cada cambio.
-
-### Implementando desafíos: algoritmo de la mochila (0/1)
+### Implementando desafíos: algoritmo de la mochila (0/1)(Eliminado en versiones posteriores)
 
 Inspirado por la interfaz de Amazon y por lo aprendido en conferencias, decidí implementar el algoritmo de la mochila para el sistema de sugerencias.
 
 El reto fue claro: ¿cómo ofrecerle al usuario la mejor combinación de productos sin exceder su presupuesto?
+
+Pero surgio un problema, el algoritmo Mochila 0/1 exige al usuario escribir un presupuesto, algo ilógco en la realidad. Se reemplazo ese algoritmo por el algoritmo Bandido, usado muy frecuentemente por Amazon, además se implementó campañas para asignar ofertas y descuentos a productos.
 
 ![Referencia visual que inspiró recomendaciones](./img/sugerenciaAmazon.png)
 ![Modelo de recomendación que me llamó la atención](./img/modeloAmazon.png)
