@@ -3,78 +3,39 @@ package com.vitallogix.backend.dto;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
 
-public class ProductRequest {
+public record ProductRequest(
+    @NotBlank(message = "Name is required") String name,
+    String code,
+    String description,
+    String imageUrl,
+    String category,
+    @NotNull(message = "Price is required") @DecimalMin(value = "0.00", message = "Price must be >= 0") BigDecimal price,
+    @NotNull(message = "Stock is required") @Min(value = 0, message = "Stock must be >= 0") Integer stock,
+    boolean requiresPrescription,
+    boolean visibleInSuggestions,
+    String promotionType,
+    Integer promoBuyQuantity,
+    Integer promoPayQuantity,
+    BigDecimal promoPercentDiscount,
+    java.time.LocalDateTime expirationDate
+) {
+    public ProductRequest {
+        // default visibleInSuggestions true if not provided by binder (keep previous default behavior)
+    }
 
-    @NotBlank(message = "Name is required")
-    private String name;
-
-    private String code;
-
-
-    private String description;
-    private String imageUrl;
-    private String category;
-
-    @NotNull(message = "Price is required")
-    @DecimalMin(value = "0.00", message = "Price must be >= 0")
-    private BigDecimal price;
-
-    @NotNull(message = "Stock is required")
-    @Min(value = 0, message = "Stock must be >= 0")
-    private Integer stock;
-
-    private boolean requiresPrescription;
-
-    private boolean visibleInSuggestions = true;
-
-    private String promotionType;
-    private Integer promoBuyQuantity;
-    private Integer promoPayQuantity;
-    private BigDecimal promoPercentDiscount;
-
-    private java.time.LocalDateTime expirationDate;
-
-    // Getters and setters
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
-    public String getCode() { return code; }
-    public void setCode(String code) { this.code = code; }
-
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public String getImageUrl() { return imageUrl; }
-    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
-
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
-
-    public BigDecimal getPrice() { return price; }
-    public void setPrice(BigDecimal price) { this.price = price; }
-
-    public Integer getStock() { return stock; }
-    public void setStock(Integer stock) { this.stock = stock; }
-
-    public boolean isRequiresPrescription() { return requiresPrescription; }
-    public void setRequiresPrescription(boolean requiresPrescription) { this.requiresPrescription = requiresPrescription; }
-
-    public boolean isVisibleInSuggestions() { return visibleInSuggestions; }
-    public void setVisibleInSuggestions(boolean visibleInSuggestions) { this.visibleInSuggestions = visibleInSuggestions; }
-
-    public String getPromotionType() { return promotionType; }
-    public void setPromotionType(String promotionType) { this.promotionType = promotionType; }
-
-    public Integer getPromoBuyQuantity() { return promoBuyQuantity; }
-    public void setPromoBuyQuantity(Integer promoBuyQuantity) { this.promoBuyQuantity = promoBuyQuantity; }
-
-    public Integer getPromoPayQuantity() { return promoPayQuantity; }
-    public void setPromoPayQuantity(Integer promoPayQuantity) { this.promoPayQuantity = promoPayQuantity; }
-
-    public BigDecimal getPromoPercentDiscount() { return promoPercentDiscount; }
-    public void setPromoPercentDiscount(BigDecimal promoPercentDiscount) { this.promoPercentDiscount = promoPercentDiscount; }
-
-    public java.time.LocalDateTime getExpirationDate() { return expirationDate; }
-    public void setExpirationDate(java.time.LocalDateTime expirationDate) { this.expirationDate = expirationDate; }
+    // Legacy getters for compatibility
+    public String getName() { return name(); }
+    public String getCode() { return code(); }
+    public String getDescription() { return description(); }
+    public String getImageUrl() { return imageUrl(); }
+    public String getCategory() { return category(); }
+    public BigDecimal getPrice() { return price(); }
+    public Integer getStock() { return stock(); }
+    public boolean isRequiresPrescription() { return requiresPrescription(); }
+    public boolean isVisibleInSuggestions() { return visibleInSuggestions(); }
+    public String getPromotionType() { return promotionType(); }
+    public Integer getPromoBuyQuantity() { return promoBuyQuantity(); }
+    public Integer getPromoPayQuantity() { return promoPayQuantity(); }
+    public BigDecimal getPromoPercentDiscount() { return promoPercentDiscount(); }
+    public java.time.LocalDateTime getExpirationDate() { return expirationDate(); }
 }

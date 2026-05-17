@@ -96,9 +96,7 @@ public class ComboSuggestionService {
             }
         }
 
-        ComboSuggestionResponse response = new ComboSuggestionResponse();
-        response.setPrioritizedItems(prioritizedItems);
-        response.setPrioritizedCost(prioritizedCost.setScale(2, RoundingMode.HALF_UP));
+        prioritizedCost = prioritizedCost.setScale(2, RoundingMode.HALF_UP);
 
         List<BanditCandidate> candidates = new ArrayList<>();
         for (Product p : products) {
@@ -131,17 +129,25 @@ public class ComboSuggestionService {
             recommendedCost = recommendedCost.add(candidate.product().getPrice());
         }
 
-        response.setRecommendedItems(recommendedItems);
-        response.setRecommendedCost(recommendedCost.setScale(2, RoundingMode.HALF_UP));
-        response.setTotalCost(prioritizedCost.add(recommendedCost).setScale(2, RoundingMode.HALF_UP));
+        recommendedCost = recommendedCost.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalCost = prioritizedCost.add(recommendedCost).setScale(2, RoundingMode.HALF_UP);
         double totalScore = prioritizedScore + recommendedItems.stream()
-                .mapToDouble(item -> item.getScore() / 1000.0)
-                .sum();
-        response.setTotalScore((int) Math.round(totalScore * 1000));
-        response.setMessage(recommendedItems.isEmpty()
-                ? "No hay sugerencias disponibles con los filtros configurados por administracion"
-                : "Sugerencias generadas con motor bandido (exploracion + afinidad)");
-        return response;
+            .mapToDouble(item -> item.score() / 1000.0)
+            .sum();
+        int totalScoreInt = (int) Math.round(totalScore * 1000);
+        String message = recommendedItems.isEmpty()
+            ? "No hay sugerencias disponibles con los filtros configurados por administracion"
+            : "Sugerencias generadas con motor bandido (exploracion + afinidad)";
+
+        return new ComboSuggestionResponse(
+            prioritizedCost,
+            recommendedCost,
+            totalCost,
+            totalScoreInt,
+            message,
+            List.copyOf(prioritizedItems),
+            List.copyOf(recommendedItems)
+        );
     }
 
     // Check if product's category is allowed by admin policy.
@@ -204,13 +210,13 @@ public class ComboSuggestionService {
     // Convert Product entity to response item with bandit score.
     // Score is scaled to 0-1000 for readability in frontend.
     private ComboSuggestionResponse.ComboItem toItem(Product p, double score) {
-        ComboSuggestionResponse.ComboItem item = new ComboSuggestionResponse.ComboItem();
-        item.setId(p.getId());
-        item.setName(p.getName());
-        item.setPrice(p.getPrice());
-        item.setStock(p.getStock());
-        item.setScore((int) Math.round(score * 1000));
-        return item;
+        return new ComboSuggestionResponse.ComboItem(
+                p.getId(),
+                p.getName(),
+                p.getPrice(),
+                p.getStock(),
+                (int) Math.round(score * 1000)
+        );
     }
 
     private record BanditCandidate(Product product, double expectedReward, int pulls) {}
