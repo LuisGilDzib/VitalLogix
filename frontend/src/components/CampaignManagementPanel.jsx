@@ -106,8 +106,10 @@ function CampaignManagementPanel({ onNavigateBack }) {
   }
 
   const openEditCampaignModal = (campaign) => {
-    const startDateTime = new Date(campaign.startDate)
-    const endDateTime = new Date(campaign.endDate)
+    // Robust date parsing without using new Date() to avoid timezone shifts.
+    // Assuming backend sends ISO format: yyyy-MM-ddTHH:mm:ss
+    const [startDatePart, startTimePart] = (campaign.startDate || '').split('T')
+    const [endDatePart, endTimePart] = (campaign.endDate || '').split('T')
 
     setNewCampaign({
       name: campaign.name,
@@ -116,11 +118,11 @@ function CampaignManagementPanel({ onNavigateBack }) {
       promoBuyQuantity: campaign.promoBuyQuantity || '',
       promoPayQuantity: campaign.promoPayQuantity || '',
       promoPercentDiscount: campaign.promoPercentDiscount || '',
-      startDate: startDateTime.toISOString().split('T')[0],
-      startTime: startDateTime.toTimeString().slice(0, 5),
-      endDate: endDateTime.toISOString().split('T')[0],
-      endTime: endDateTime.toTimeString().slice(0, 5),
-      isActive: campaign.isActive,
+      startDate: startDatePart || '',
+      startTime: (startTimePart || '00:00').slice(0, 5),
+      endDate: endDatePart || '',
+      endTime: (endTimePart || '23:59').slice(0, 5),
+      isActive: campaign.active ?? campaign.isActive ?? true,
       productIds: new Set(campaign.productIds || [])
     })
     setIsEditingCampaign(campaign.id)
@@ -166,6 +168,7 @@ function CampaignManagementPanel({ onNavigateBack }) {
       }
     }
 
+    const campaignActive = newCampaign.isActive === true || newCampaign.isActive === false ? newCampaign.isActive : true
     const payload = {
       name: newCampaign.name,
       description: newCampaign.description,
@@ -173,9 +176,10 @@ function CampaignManagementPanel({ onNavigateBack }) {
       promoBuyQuantity: newCampaign.promotionType === 'BUY_X_PAY_Y' ? Number(newCampaign.promoBuyQuantity) : null,
       promoPayQuantity: newCampaign.promotionType === 'BUY_X_PAY_Y' ? Number(newCampaign.promoPayQuantity) : null,
       promoPercentDiscount: newCampaign.promotionType === 'PERCENTAGE' ? Number(newCampaign.promoPercentDiscount) : null,
-      startDate: `${newCampaign.startDate}T${newCampaign.startTime}:00`,
-      endDate: `${newCampaign.endDate}T${newCampaign.endTime}:00`,
-      isActive: newCampaign.isActive,
+      startDate: `${newCampaign.startDate}T${newCampaign.startTime || '00:00'}:00`,
+      endDate: `${newCampaign.endDate}T${newCampaign.endTime || '23:59'}:00`,
+      active: campaignActive,
+      isActive: campaignActive,
       productIds: Array.from(newCampaign.productIds)
     }
 
@@ -254,7 +258,7 @@ function CampaignManagementPanel({ onNavigateBack }) {
     const now = new Date()
     const start = new Date(campaign.startDate)
     const end = new Date(campaign.endDate)
-    return campaign.isActive && now >= start && now <= end
+    return (campaign.active ?? campaign.isActive) && now >= start && now <= end
   }
 
   const filteredCampaigns = campaigns.filter(c =>
@@ -323,12 +327,12 @@ function CampaignManagementPanel({ onNavigateBack }) {
                 <button
                   onClick={() => handleToggleCampaignStatus(campaign.id)}
                   className={`px-4 py-2 rounded-lg font-bold text-xs transition-colors ${
-                    campaign.isActive
+                    campaign.active ?? campaign.isActive
                       ? 'bg-green-200 text-green-900 hover:bg-green-300'
                       : 'bg-red-200 text-red-900 hover:bg-red-300'
                   }`}
                 >
-                  {campaign.isActive ? '✓ Activa' : '✗ Inactiva'}
+                  {(campaign.active ?? campaign.isActive) ? '✓ Activa' : '✗ Inactiva'}
                 </button>
               </div>
 
@@ -340,8 +344,8 @@ function CampaignManagementPanel({ onNavigateBack }) {
                 <div>
                   <p className="font-bold text-slate-600">Vigencia</p>
                   <p className="text-xs text-slate-700">
-                    {new Date(campaign.startDate).toLocaleDateString('es-ES')} a{' '}
-                    {new Date(campaign.endDate).toLocaleDateString('es-ES')}
+                    {campaign.startDate?.split('T')[0]?.split('-').reverse().join('/')} a{' '}
+                    {campaign.endDate?.split('T')[0]?.split('-').reverse().join('/')}
                   </p>
                 </div>
               </div>

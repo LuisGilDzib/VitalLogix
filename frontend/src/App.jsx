@@ -2367,7 +2367,7 @@ function App({ auth, onRequireAuth, onLogout }) {
                     <span className="text-7xl leading-none">{couponFeedback.status === 'valid' ? '✓' : '×'}</span>
                   </div>
                   <p className={`leading-none text-[#3a3a3a] ${couponFeedback.status === 'valid' ? 'text-[42px]' : 'text-[30px]'}`}>
-                    {couponFeedback.status === 'valid' ? 'Código aplicado correctamente' : (couponFeedback.message || 'Invalid redemption code')}
+                    {couponFeedback.status === 'valid' ? 'Código aplicado correctamente' : (couponFeedback.message || 'Código de cupón no válido')}
                   </p>
                 </div>
               </div>
@@ -2409,7 +2409,7 @@ function App({ auth, onRequireAuth, onLogout }) {
                         <div className="space-y-1">
                           {(sale.items || []).slice(0, 3).map((item, idx) => (
                             <p key={`${sale.id}-${idx}`} className="truncate">
-                              {item.productName} x{item.quantity}
+                              {item.product?.name || item.productName || 'Producto desconocido'} x{item.quantity}
                             </p>
                           ))}
                           {(sale.items || []).length > 3 && (

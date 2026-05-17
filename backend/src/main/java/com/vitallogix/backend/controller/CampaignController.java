@@ -8,7 +8,10 @@ import com.vitallogix.backend.repository.CampaignRepository;
 import com.vitallogix.backend.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,6 +21,8 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/campaigns")
 public class CampaignController {
+
+    private static final Logger logger = LoggerFactory.getLogger(CampaignController.class);
 
     @Autowired
     private CampaignRepository campaignRepository;
@@ -61,19 +66,19 @@ public class CampaignController {
         validatePromotionFields(request);
 
         Campaign campaign = new Campaign();
-        campaign.setName(request.getName());
-        campaign.setDescription(request.getDescription());
-        campaign.setPromotionType(request.getPromotionType() != null ? request.getPromotionType() : "NONE");
-        campaign.setPromoBuyQuantity(request.getPromoBuyQuantity());
-        campaign.setPromoPayQuantity(request.getPromoPayQuantity());
-        campaign.setPromoPercentDiscount(request.getPromoPercentDiscount());
-        campaign.setStartDate(request.getStartDate());
-        campaign.setEndDate(request.getEndDate());
-        campaign.setActive(request.isActive());
+        campaign.setName(request.name());
+        campaign.setDescription(request.description());
+        campaign.setPromotionType(request.promotionType() != null ? request.promotionType() : "NONE");
+        campaign.setPromoBuyQuantity(request.promoBuyQuantity());
+        campaign.setPromoPayQuantity(request.promoPayQuantity());
+        campaign.setPromoPercentDiscount(request.promoPercentDiscount());
+        campaign.setStartDate(request.startDate());
+        campaign.setEndDate(request.endDate());
+        campaign.setActive(request.active());
 
         // Assign products
-        if (request.getProductIds() != null && !request.getProductIds().isEmpty()) {
-            Set<Product> products = request.getProductIds().stream()
+        if (request.productIds() != null && !request.productIds().isEmpty()) {
+            Set<Product> products = request.productIds().stream()
                 .map(id -> productRepository.findById(id)
                     .orElseThrow(() -> new RuntimeException("Product not found: " + id)))
                 .collect(Collectors.toSet());
@@ -86,26 +91,28 @@ public class CampaignController {
 
     // Update campaign
     @PutMapping("/{id}")
+    @Transactional
     public ResponseEntity<CampaignResponse> updateCampaign(@PathVariable Long id, @RequestBody CampaignRequest request) {
+        logger.info("Updating campaign {}: name={}, startDate={}, endDate={}", id, request.name(), request.startDate(), request.endDate());
         Campaign campaign = campaignRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("Campaign not found"));
 
         // Validate promotion fields
         validatePromotionFields(request);
 
-        campaign.setName(request.getName());
-        campaign.setDescription(request.getDescription());
-        campaign.setPromotionType(request.getPromotionType() != null ? request.getPromotionType() : "NONE");
-        campaign.setPromoBuyQuantity(request.getPromoBuyQuantity());
-        campaign.setPromoPayQuantity(request.getPromoPayQuantity());
-        campaign.setPromoPercentDiscount(request.getPromoPercentDiscount());
-        campaign.setStartDate(request.getStartDate());
-        campaign.setEndDate(request.getEndDate());
-        campaign.setActive(request.isActive());
+        campaign.setName(request.name());
+        campaign.setDescription(request.description());
+        campaign.setPromotionType(request.promotionType() != null ? request.promotionType() : "NONE");
+        campaign.setPromoBuyQuantity(request.promoBuyQuantity());
+        campaign.setPromoPayQuantity(request.promoPayQuantity());
+        campaign.setPromoPercentDiscount(request.promoPercentDiscount());
+        campaign.setStartDate(request.startDate());
+        campaign.setEndDate(request.endDate());
+        campaign.setActive(request.active());
 
         // Update products
-        if (request.getProductIds() != null) {
-            Set<Product> products = request.getProductIds().stream()
+        if (request.productIds() != null) {
+            Set<Product> products = request.productIds().stream()
                 .map(productId -> productRepository.findById(productId)
                     .orElseThrow(() -> new RuntimeException("Product not found: " + productId)))
                 .collect(Collectors.toSet());
@@ -135,18 +142,13 @@ public class CampaignController {
 
     // Helper method to validate promotion fields
     private void validatePromotionFields(CampaignRequest request) {
-        String promotionType = (request.getPromotionType() != null ? request.getPromotionType() : "NONE").toUpperCase();
+        String promotionType = (request.promotionType() != null ? request.promotionType() : "NONE").toUpperCase();
+        com.vitallogix.backend.strategy.PromotionStrategy strategy = com.vitallogix.backend.strategy.PromotionStrategyFactory.getInstance().getStrategy(promotionType);
         
-        if ("BUY_X_PAY_Y".equals(promotionType)) {
-            Integer buy = request.getPromoBuyQuantity();
-            Integer pay = request.getPromoPayQuantity();
-            if (buy == null || pay == null || buy < 2 || pay < 1 || pay >= buy) {
-                throw new RuntimeException("Invalid BUY_X_PAY_Y promotion: buy must be >= 2 and pay must be between 1 and buy-1");
-            }
-        } else if ("PERCENTAGE".equals(promotionType)) {
-            if (request.getPromoPercentDiscount() == null || request.getPromoPercentDiscount().doubleValue() <= 0 || request.getPromoPercentDiscount().doubleValue() >= 100) {
-                throw new RuntimeException("Invalid PERCENTAGE promotion: discount must be between 0 and 100 (exclusive)");
-            }
+        try {
+            strategy.validate(request.promoBuyQuantity(), request.promoPayQuantity(), request.promoPercentDiscount());
+        } catch (org.springframework.web.server.ResponseStatusException e) {
+            throw new RuntimeException(e.getReason() != null ? e.getReason() : e.getMessage());
         }
     }
 

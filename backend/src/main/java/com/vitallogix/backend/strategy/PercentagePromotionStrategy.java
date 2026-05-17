@@ -13,4 +13,14 @@ public class PercentagePromotionStrategy implements PromotionStrategy {
         }
         return gross;
     }
+
+    @Override
+    public void validate(Integer buy, Integer pay, BigDecimal percent) {
+        if (percent == null || percent.compareTo(BigDecimal.ZERO) <= 0 || percent.compareTo(BigDecimal.valueOf(100)) >= 0) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.BAD_REQUEST, 
+                "Descuento porcentual invalido. Debe ser mayor a 0 y menor a 100."
+            );
+        }
+    }
 }

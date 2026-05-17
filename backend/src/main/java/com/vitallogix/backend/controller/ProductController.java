@@ -126,14 +126,14 @@ public class ProductController {
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/{id}/visibility")
     public ProductResponse updateVisibility(@PathVariable Long id, @RequestBody ProductVisibilityRequest request) {
-        if (request.getVisibleInSuggestions() == null) {
+        if (request.visibleInSuggestions() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe indicar visibilidad de sugerencias");
         }
 
         Product product = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-        product.setVisibleInSuggestions(request.getVisibleInSuggestions());
+        product.setVisibleInSuggestions(request.visibleInSuggestions());
 
         return toResponse(repository.save(product));
     }
@@ -170,7 +170,7 @@ public class ProductController {
         public ProductResponse addStock(@PathVariable Long id, @Valid @RequestBody StockUpdateRequest request) {
         Product product = repository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        product.setStock(product.getStock() + request.getQuantity());
+        product.setStock(product.getStock() + request.quantity());
         return toResponse(repository.save(product));
         }
 
@@ -201,35 +201,24 @@ public class ProductController {
             promotionType = "NONE";
         }
 
+        com.vitallogix.backend.strategy.PromotionStrategy strategy = com.vitallogix.backend.strategy.PromotionStrategyFactory.getInstance().getStrategy(promotionType);
+        strategy.validate(request.getPromoBuyQuantity(), request.getPromoPayQuantity(), request.getPromoPercentDiscount());
+
         product.setPromotionType(promotionType);
 
         if ("BUY_X_PAY_Y".equals(promotionType)) {
-            Integer buyQuantity = request.getPromoBuyQuantity();
-            Integer payQuantity = request.getPromoPayQuantity();
-            if (buyQuantity == null || payQuantity == null || buyQuantity < 2 || payQuantity < 1 || payQuantity >= buyQuantity) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Oferta BUY_X_PAY_Y invalida. Usa buy>=2 y 1<=pay<buy.");
-            }
-            product.setPromoBuyQuantity(buyQuantity);
-            product.setPromoPayQuantity(payQuantity);
+            product.setPromoBuyQuantity(request.getPromoBuyQuantity());
+            product.setPromoPayQuantity(request.getPromoPayQuantity());
             product.setPromoPercentDiscount(null);
-            return;
-        }
-
-        if ("PERCENTAGE".equals(promotionType)) {
-            BigDecimal percent = request.getPromoPercentDiscount();
-            if (percent == null || percent.compareTo(BigDecimal.ZERO) <= 0 || percent.compareTo(BigDecimal.valueOf(100)) >= 0) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Descuento porcentual invalido. Debe ser mayor a 0 y menor a 100.");
-            }
-            product.setPromoPercentDiscount(percent);
+        } else if ("PERCENTAGE".equals(promotionType)) {
+            product.setPromoPercentDiscount(request.getPromoPercentDiscount());
             product.setPromoBuyQuantity(null);
             product.setPromoPayQuantity(null);
-            return;
+        } else {
+            product.setPromoBuyQuantity(null);
+            product.setPromoPayQuantity(null);
+            product.setPromoPercentDiscount(null);
         }
-
-        product.setPromotionType("NONE");
-        product.setPromoBuyQuantity(null);
-        product.setPromoPayQuantity(null);
-        product.setPromoPercentDiscount(null);
     }
 
     // Searches products in priority order: id, code, name, then category.

@@ -1,6 +1,7 @@
 package com.vitallogix.backend.service;
 
-import com.vitallogix.backend.dto.ReportResponse;
+import com.vitallogix.backend.dto.InventoryReportResponse;
+import com.vitallogix.backend.dto.SalesReportResponse;
 import com.vitallogix.backend.model.Sale;
 import com.vitallogix.backend.repository.ProductRepository;
 import com.vitallogix.backend.repository.SaleRepository;
@@ -22,28 +23,24 @@ public class ReportService implements ReportServicePort {
     }
 
     @Override
-    public List<ReportResponse.SaleReport> getSalesReport(LocalDate from, LocalDate to) {
+    public List<SalesReportResponse> getSalesReport(LocalDate from, LocalDate to) {
         return saleRepository.findAll().stream()
                 .filter(s -> !s.getSaleDate().toLocalDate().isBefore(from) && !s.getSaleDate().toLocalDate().isAfter(to))
                 .collect(Collectors.groupingBy(s -> s.getSaleDate().toLocalDate()))
-                .entrySet().stream().map(e -> {
-                    ReportResponse.SaleReport r = new ReportResponse.SaleReport();
-                    r.setDate(e.getKey());
-                    r.setTotalSales(e.getValue().stream().map(Sale::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add));
-                    r.setTotalTransactions(e.getValue().size());
-                    return r;
-                }).collect(Collectors.toList());
+                .entrySet().stream().map(e -> new SalesReportResponse(
+                        e.getKey(),
+                        e.getValue().stream().map(Sale::getTotalAmount).reduce(BigDecimal.ZERO, BigDecimal::add),
+                        e.getValue().size()
+                )).collect(Collectors.toList());
     }
 
     @Override
-    public List<ReportResponse.InventoryReport> getInventoryReport() {
-        return productRepository.findAll().stream().map(p -> {
-            ReportResponse.InventoryReport r = new ReportResponse.InventoryReport();
-            r.setProductName(p.getName());
-            r.setStock(p.getStock());
-            r.setCategory(p.getCategory());
-            r.setExpiration(p.getExpirationDate() != null ? p.getExpirationDate().toString() : "");
-            return r;
-        }).collect(Collectors.toList());
+    public List<InventoryReportResponse> getInventoryReport() {
+        return productRepository.findAll().stream().map(p -> new InventoryReportResponse(
+                p.getName(),
+                p.getStock(),
+                p.getCategory(),
+                p.getExpirationDate() != null ? p.getExpirationDate().toString() : ""
+        )).collect(Collectors.toList());
     }
 }

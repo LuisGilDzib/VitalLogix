@@ -48,8 +48,8 @@ public class AdminController {
 
     @PostMapping("/users")
     public ResponseEntity<?> createAdmin(@RequestBody CreateAdminUserRequest request) {
-        String username = request.getUsername() == null ? "" : request.getUsername().trim();
-        String password = request.getPassword();
+        String username = request.username() == null ? "" : request.username().trim();
+        String password = request.password();
 
         if (username.isEmpty() || password == null || password.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Username and password are required");
@@ -127,14 +127,14 @@ public class AdminController {
     }
 
     private AdminUserResponse toResponse(User user) {
-        AdminUserResponse response = new AdminUserResponse();
-        response.setId(user.getId());
-        response.setUsername(user.getUsername());
-        response.setRoles(user.getRoles());
-        response.setClienteAmigoNumber(user.getClienteAmigoNumber());
-        response.setCouponAvailable(user.getClienteAmigoNumber() != null && !user.isCouponUsed());
-        response.setPurchasesSinceCoupon(user.getPurchasesSinceCoupon() == null ? 0 : user.getPurchasesSinceCoupon());
-        response.setTotalPurchaseCount(saleRepository.countByAccountUsernameIgnoreCase(user.getUsername()));
-        return response;
+        return new AdminUserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getRoles(),
+                user.getClienteAmigoNumber(),
+                user.getClienteAmigoNumber() != null && !user.isCouponUsed(),
+                user.getPurchasesSinceCoupon() == null ? 0 : user.getPurchasesSinceCoupon(),
+                saleRepository.countByAccountUsernameIgnoreCase(user.getUsername())
+        );
     }
 }

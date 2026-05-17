@@ -86,7 +86,7 @@ public class CategoryController {
                                                    @RequestHeader(value = "X-User-ID", required = false) String userId) {
         try {
             String createdBy = userId != null ? userId : "ANONYMOUS";
-            Category category = categoryService.createCustomCategory(request.getName(), createdBy);
+            Category category = categoryService.createCustomCategory(request.name(), createdBy);
             return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(category));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
@@ -97,7 +97,7 @@ public class CategoryController {
     @PostMapping("/predefined")
     public ResponseEntity<?> createPredefinedCategory(@RequestBody CategoryRequest request) {
         try {
-            Category category = categoryService.createPredefinedCategory(request.getName(), request.getDescription());
+            Category category = categoryService.createPredefinedCategory(request.name(), request.description());
             return ResponseEntity.status(HttpStatus.CREATED).body(mapToResponse(category));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
@@ -132,7 +132,7 @@ public class CategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<Object> updateCategory(@PathVariable Long id, @RequestBody CategoryRequest request) {
         try {
-            Category category = categoryService.updateCategory(id, request.getName(), request.getDescription());
+            Category category = categoryService.updateCategory(id, request.name(), request.description());
             return ResponseEntity.ok(mapToResponse(category));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
@@ -181,11 +181,11 @@ public class CategoryController {
     // visibleInSuggestions field is required in request body.
     @PatchMapping("/{id}/suggestion-visibility")
     public ResponseEntity<?> setSuggestionVisibility(@PathVariable Long id, @RequestBody CategoryRequest request) {
-        if (request.getVisibleInSuggestions() == null) {
+        if (request.visibleInSuggestions() == null) {
             return ResponseEntity.badRequest().body(new ErrorResponse("visibleInSuggestions es obligatorio"));
         }
         try {
-            Category category = categoryService.setCategorySuggestionVisibility(id, request.getVisibleInSuggestions());
+            Category category = categoryService.setCategorySuggestionVisibility(id, request.visibleInSuggestions());
             return ResponseEntity.ok(mapToResponse(category));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResponse(e.getMessage()));

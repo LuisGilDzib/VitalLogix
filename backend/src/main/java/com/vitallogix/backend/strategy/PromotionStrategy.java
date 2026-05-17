@@ -4,4 +4,5 @@ import java.math.BigDecimal;
 
 public interface PromotionStrategy {
     BigDecimal calculateNet(BigDecimal unitPrice, int quantity, Integer buy, Integer pay, BigDecimal percent);
+    void validate(Integer buy, Integer pay, BigDecimal percent);
 }
