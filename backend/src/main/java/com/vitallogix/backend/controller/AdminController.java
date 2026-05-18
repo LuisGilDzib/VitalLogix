@@ -55,7 +55,7 @@ public class AdminController {
             return ResponseEntity.badRequest().body("Username and password are required");
         }
 
-        if (userRepository.findByUsername(username).isPresent()) {
+        if (userRepository.findByNormalizedUsername(username).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
 

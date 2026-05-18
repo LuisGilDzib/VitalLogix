@@ -25,12 +25,12 @@ public class AuthController {
     }
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> data) {
-        String username = data.get("username");
+        String username = data.get("username") == null ? null : data.get("username").trim();
         String password = data.get("password");
-        if (username == null || password == null) {
+        if (username == null || username.isEmpty() || password == null || password.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Username and password required");
         }
-        if (userRepository.findByUsername(username).isPresent()) {
+        if (userRepository.findByNormalizedUsername(username).isPresent()) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Username already exists");
         }
         User user = new User();
@@ -46,14 +46,14 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginData) {
-        String username = loginData.get("username");
+        String username = loginData.get("username") == null ? null : loginData.get("username").trim();
         String password = loginData.get("password");
 
-        if (username == null || password == null) {
+        if (username == null || username.isEmpty() || password == null || password.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Username and password required");
         }
 
-        User user = userRepository.findByUsername(username).orElse(null);
+        User user = userRepository.findByNormalizedUsername(username).orElse(null);
         if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }

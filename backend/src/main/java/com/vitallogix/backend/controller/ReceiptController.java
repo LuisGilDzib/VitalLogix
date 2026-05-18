@@ -52,7 +52,7 @@ public class ReceiptController {
         Integer purchasesToNextCoupon = null;
         String accountUsername = sale.getAccountUsername();
         if (accountUsername != null && !accountUsername.isBlank()) {
-            purchasesSinceCoupon = userRepository.findByUsername(accountUsername)
+            purchasesSinceCoupon = userRepository.findByNormalizedUsername(accountUsername)
                 .map(user -> user.getPurchasesSinceCoupon() == null ? 0 : user.getPurchasesSinceCoupon())
                 .orElse(null);
             if (purchasesSinceCoupon != null) purchasesToNextCoupon = Math.max(0, 5 - purchasesSinceCoupon);

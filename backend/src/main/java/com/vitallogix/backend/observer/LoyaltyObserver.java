@@ -1,7 +1,6 @@
 package com.vitallogix.backend.observer;
 
 import com.vitallogix.backend.model.Sale;
-import com.vitallogix.backend.model.User;
 import com.vitallogix.backend.repository.UserRepository;
 import org.springframework.stereotype.Component;
 
@@ -24,7 +23,7 @@ public class LoyaltyObserver implements SaleObserver {
             return;
         }
 
-        userRepository.findByUsername(username.trim()).ifPresent(accountUser -> {
+        userRepository.findByNormalizedUsername(username).ifPresent(accountUser -> {
             int nextCounter = (accountUser.getPurchasesSinceCoupon() == null ? 0 : accountUser.getPurchasesSinceCoupon()) + 1;
 
             if (nextCounter >= 5) {

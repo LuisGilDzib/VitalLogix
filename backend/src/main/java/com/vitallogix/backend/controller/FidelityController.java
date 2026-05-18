@@ -71,7 +71,7 @@ public class FidelityController {
         if (username == null || username.isBlank()) {
             throw new RuntimeException("No se pudo identificar la cuenta autenticada.");
         }
-        return userRepository.findByUsername(username)
+        return userRepository.findByNormalizedUsername(username)
                 .orElseThrow(() -> new RuntimeException("Cuenta no encontrada."));
     }
 }

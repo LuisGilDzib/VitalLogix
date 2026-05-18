@@ -9,7 +9,8 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User, Long> {
-    Optional<User> findByUsername(String username);
+    @Query("SELECT u FROM User u WHERE LOWER(TRIM(u.username)) = LOWER(TRIM(:username))")
+    Optional<User> findByNormalizedUsername(@Param("username") String username);
     boolean existsByClienteAmigoNumberIgnoreCase(String clienteAmigoNumber);
 
     @Modifying

@@ -178,7 +178,7 @@ public class SaleService {
 
     private User resolveAccountUser(String username) {
         if (isBlank(username)) return null;
-        return userRepository.findByUsername(username.trim()).orElse(null);
+        return userRepository.findByNormalizedUsername(username).orElse(null);
     }
 
     private Customer resolveCustomer(SaleRequest request) {

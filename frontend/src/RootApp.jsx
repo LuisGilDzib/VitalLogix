@@ -15,12 +15,13 @@ function RootApp() {
 
   const handleLogin = async (username, password) => {
     try {
-      const res = await apiLogin(username, password);
+      const normalizedUsername = username?.trim();
+      const res = await apiLogin(normalizedUsername, password);
       const { token, roles } = res.data;
       localStorage.setItem('token', token);
-      localStorage.setItem('username', username);
+      localStorage.setItem('username', normalizedUsername);
       localStorage.setItem('role', roles.includes('ADMIN') ? 'admin' : 'user');
-      setAuth({ logged: true, role: roles.includes('ADMIN') ? 'admin' : 'user', username });
+      setAuth({ logged: true, role: roles.includes('ADMIN') ? 'admin' : 'user', username: normalizedUsername });
       setShowAuthModal(false);
     } catch (e) {
       if (!e.response) {
@@ -44,13 +45,14 @@ function RootApp() {
 
   const handleRegister = async (username, password) => {
     try {
-      await apiRegister(username, password);
-      await handleLogin(username, password);
+      const normalizedUsername = username?.trim();
+      await apiRegister(normalizedUsername, password);
+      await handleLogin(normalizedUsername, password);
     } catch (e) {
       if (!e.response) {
         throw new Error('No se pudo conectar al backend. Verifica Docker y que el backend esté en puerto 8080.');
       } else if (e.response.status === 409) {
-        throw new Error('El usuario ya existe.');
+        throw new Error('Ese nombre de usuario ya está en uso. No se distingue entre mayúsculas, minúsculas ni espacios al inicio o final.');
       } else {
         throw new Error('Error al registrar usuario.');
       }

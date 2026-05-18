@@ -114,12 +114,14 @@ public class DataInitializer {
             return;
         }
 
-        if (userRepository.findByUsername(username).isPresent()) {
+        String normalizedUsername = username.trim();
+
+        if (userRepository.findByNormalizedUsername(normalizedUsername).isPresent()) {
             return;
         }
 
         User u = new User();
-        u.setUsername(username.trim());
+        u.setUsername(normalizedUsername);
         u.setPassword(encoder.encode(password));
         u.setRoles(roles);
         userRepository.save(u);
