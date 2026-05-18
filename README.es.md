@@ -114,7 +114,7 @@ Guía local para compartir este proyecto con una configuración gratuita y local
 ### Diagramas en Astah
 
 - [Diagrama de casos de uso VitalLogix](docs/diagrams/UseCase%20VitalLogix.asta)
-- [Diagrama de clases VitalLogix](docs/diagrams/ClassDiagramN1.asta)
+- [Diagrama de clases VitalLogix](docs/diagrams/ClassDiagram%20VitalLogix.asta)
 - [Diagrama de Secuencia VitalLogix](docs/diagrams/SequenceDiagram%20Vitalogix.asta)
 - [Diagrama de actividad VitalLogix](docs/diagrams/Activity%20VitalLogix.asta.asta)
 - [Diagrama completo modelo VitalLogix](docs/diagrams/VitalLogixModelComplete.asta)
