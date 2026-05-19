@@ -106,7 +106,7 @@ Local guide to run and share this project with a free local setup:
 ### Astah Diagrams
 
 - [VitalLogix Use Case Diagram](docs/diagrams/UseCase%20VitalLogix.asta)
-- [VitalLogix Class Diagram](docs/diagrams/ClassDiagramN1.asta)
+- [VitalLogix Class Diagram](docs/diagrams/ClassDiagram%20VitalLogix.asta)
 - [VitalLogix Sequence Diagram](docs/diagrams/SequenceDiagram%20Vitalogix.asta)
 - [VitalLogix Activity Diagram](docs/diagrams/Activity%20VitalLogix.asta.asta)
 - [VitalLogix Full Model Diagram](docs/diagrams/VitalLogixModelComplete.asta)
