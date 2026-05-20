@@ -19,8 +19,8 @@ Pharmacy management platform built by our team with Java, PostgreSQL, and React.
 ## Final Document 
 - [View Final Document (PDF)](docs/VitalLogixDocumentoFinal.pdf)
 
-### Project Demonstration
-You can watch the full project demonstration video [here](https://youtu.be/D90ekEZowrc). This video showcases the system in action and provides a detailed walkthrough of both the functional and non-functional requirements.
+## Project Demonstration
+You can watch the full project demonstration video [VitalLogix video here](https://youtu.be/D90ekEZowrc). This video showcases the system in action and provides a detailed walkthrough of both the functional and non-functional requirements.
 
 ## Quick Links
 
