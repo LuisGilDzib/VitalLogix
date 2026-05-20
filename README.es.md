@@ -20,7 +20,7 @@ Sistema de gestión de farmacia construido por nuestro equipo con Java, PostgreS
 - [Ver Documento Final (PDF)](docs/VitalLogixDocumentoFinal.pdf)
 
 ## Demostración del Proyecto
-Puedes ver el video completo de demostración del proyecto [aquí (Video de VitalLogix)](https://youtu.be/D90ekEZowrc). Este video muestra el sistema en funcionamiento y ofrece un recorrido detallado tanto por los requisitos funcionales como por los no funcionales.
+Puedes ver el video completo de demostración del proyecto [aquí (https://youtu.be/D90ekEZowrc)](https://youtu.be/D90ekEZowrc). Este video muestra el sistema en funcionamiento y ofrece un recorrido detallado tanto por los requisitos funcionales como por los no funcionales.
 
 ## Enlaces Rápidos
 
