@@ -15,7 +15,7 @@ Pharmacy management platform built by our team with Java, PostgreSQL, and React.
 - Linda Natalia Loeza Suaste
 - Canche uicab perla noemi
 - Luis Gilberto Dzib Pech
-- 
+
 ## Final Document 
 - [View Final Document (PDF)](docs/VitalLogixDocumentoFinal.pdf)
 
