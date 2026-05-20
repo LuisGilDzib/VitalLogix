@@ -7,6 +7,8 @@ Pharmacy management platform built by our team with Java, PostgreSQL, and React.
 - [English](README.md)
 - [Español](README.es.md)
 - [Documentation Index](docs/README.md)
+## Final Document 
+- [View Final Document (PDF)](docs/VitalLogixDocumentoFinal.pdf)
 
 ## Members/Contributors:
 
@@ -22,6 +24,7 @@ Pharmacy management platform built by our team with Java, PostgreSQL, and React.
 - [Frontend](frontend/)
 - Desktop module: reserved for future work, currently empty.
 - [Documentation](docs/)
+- [View Final Document (PDF)](docs/VitalLogixDocumentoFinal.pdf)
 
 ## Overview
 
