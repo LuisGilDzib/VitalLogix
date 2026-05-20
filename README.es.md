@@ -16,6 +16,12 @@ Sistema de gestión de farmacia construido por nuestro equipo con Java, PostgreS
 - Canche uicab perla noemi
 - Luis Gilberto Dzib Pech
 
+## Documento Final 
+- [Ver Documento Final (PDF)](docs/VitalLogixDocumentoFinal.pdf)
+
+## Demostración del Proyecto
+Puedes ver el video completo de demostración del proyecto [aquí (Video de VitalLogix)](https://youtu.be/D90ekEZowrc). Este video muestra el sistema en funcionamiento y ofrece un recorrido detallado tanto por los requisitos funcionales como por los no funcionales.
+
 ## Enlaces Rápidos
 
 - [Backend](backend/)
